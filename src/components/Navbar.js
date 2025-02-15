@@ -34,6 +34,12 @@ const Navbar = () => {
               Products
             </Link>
             <Link 
+              to="/blog" 
+              className="text-gray-600 dark:text-gray-300 hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors duration-200"
+            >
+              Blog
+            </Link>
+            <Link 
               to="/about" 
               className="text-gray-600 dark:text-gray-300 hover:text-[#E91E63] dark:hover:text-[#E91E63] transition-colors duration-200"
             >
