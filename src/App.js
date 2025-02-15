@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
+import Blog from './pages/Blog';
 import Footer from './components/Footer';
 import SkinTest from './pages/SkinTest';
 import Login from './pages/Login';
@@ -11,7 +12,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import UserProfile from './pages/UserProfile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import { useState, useEffect } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 function App() {
@@ -24,6 +24,7 @@ function App() {
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/blog" element={<Blog />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/skin-test" element={<SkinTest />} />
