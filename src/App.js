@@ -13,6 +13,7 @@ import UserProfile from './pages/UserProfile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import { ThemeProvider } from './contexts/ThemeContext';
+import Products from './pages/Products'; // Đảm bảo đường dẫn đúng
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
                 />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/products" element={<Products />} /> {/* Sửa từ component thành element */}
               </Routes>
             </main>
             <Footer />
@@ -56,4 +58,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
