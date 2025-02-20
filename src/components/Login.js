@@ -13,7 +13,7 @@ const Login = () => {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate('/');
+      navigate('/'); // Chuyển hướng sau khi đăng nhập thành công
     } catch (error) {
       setError('Failed to login');
     }
@@ -55,4 +55,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;

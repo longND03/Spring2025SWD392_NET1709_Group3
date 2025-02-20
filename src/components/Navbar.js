@@ -13,7 +13,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <span className="text-2xl font-bold text-[#E91E63] hover:text-pink-400 transition-colors duration-200">
-              BeautyCare
+              Diana Shop
             </span>
           </Link>
 

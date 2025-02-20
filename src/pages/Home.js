@@ -14,7 +14,7 @@ const Home = () => {
       <section className="relative h-[80vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="/images/hero-bg.jpg" // Thêm ảnh hero đẹp vào public/images/
+            src="/images/banner.jpg" // Đảm bảo đường dẫn đúng
             alt="Beauty Care"
             className="w-full h-full object-cover"
           />
@@ -161,7 +161,7 @@ const features = [
 // Data for best sellers section
 const bestSellers = [
   {
-    image: "/images/product1.jpg", // Thêm ảnh sản phẩm vào public/images/
+    image: "/images/product1.jpg", // Đảm bảo đường dẫn đúng
     name: "Hydrating Serum",
     description: "Deep hydration for all skin types",
     price: 39.99

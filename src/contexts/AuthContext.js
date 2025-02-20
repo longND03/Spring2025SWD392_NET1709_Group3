@@ -11,13 +11,42 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       // Gọi API đăng nhập ở đây
-      const response = await fetch('/api/login', {
+      const response = await fetch('http://localhost:5296/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
         headers: { 'Content-Type': 'application/json' }
       });
+      
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
       const data = await response.json();
       
+      setUser(data.user);
+      localStorage.setItem('token', data.token);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (username, email, password, location, phone) => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:5296/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ username, email, password, location, phone }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+
+      const data = await response.json();
       setUser(data.user);
       localStorage.setItem('token', data.token);
     } catch (error) {
@@ -86,6 +115,7 @@ export const AuthProvider = ({ children }) => {
       value={{ 
         user, 
         login, 
+        register,
         logout, 
         loading,
         resetPassword,
