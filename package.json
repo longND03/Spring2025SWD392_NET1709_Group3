@@ -22,6 +22,7 @@
     "react-icons": "^5.4.0",
     "react-router-dom": "^7.1.5",
     "react-scripts": "5.0.1",
+    "react-toastify": "^11.0.3",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
     "url": "^0.11.4",
@@ -58,6 +59,5 @@
     "html-loader": "^5.1.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17"
-    
   }
 }

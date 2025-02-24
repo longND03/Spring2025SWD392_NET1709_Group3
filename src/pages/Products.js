@@ -1,15 +1,24 @@
 import { Container, Grid, Card, CardMedia, CardContent, Typography, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { useCart } from '../contexts/CartContext';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState([]);
+  const { addToCart } = useCart();
 
-  const addToCart = (product) => {
-    setCart(prevCart => [...prevCart, product]);
-    console.log("Product added to cart:", product);
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    toast.success('Product added to cart!', {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
   };
 
   useEffect(() => {
@@ -19,6 +28,7 @@ const Products = () => {
         setProducts(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
+        toast.error('Failed to fetch products');
       } finally {
         setLoading(false);
       }
@@ -57,7 +67,18 @@ const Products = () => {
                   <Typography variant="h6" sx={{ mt: 1 }}>
                     ${product.price}
                   </Typography>
-                  <Button variant="contained" color="primary" sx={{ mt: 1 }} onClick={() => addToCart(product)}>
+                  <Button 
+                    variant="contained" 
+                    color="primary" 
+                    sx={{ 
+                      mt: 1,
+                      bgcolor: '#E91E63',
+                      '&:hover': {
+                        bgcolor: '#C2185B'
+                      }
+                    }} 
+                    onClick={() => handleAddToCart(product)}
+                  >
                     Add to Cart
                   </Button>
                 </CardContent>
