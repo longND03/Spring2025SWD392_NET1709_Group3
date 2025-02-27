@@ -43,9 +43,11 @@ export const AuthProvider = ({ children }) => {
       // Lấy thông tin người dùng từ data.user
       const userData = {
         id: data.data.user.id,
-        email: data.data.user.email,
         username: data.data.user.username,
-        role: data.data.user.role,
+        email: data.data.user.email,
+        phone: data.data.user.phone,
+        location: data.data.user.location,
+        role: data.data.user.userRoles,
         token: data.data.token
       };
 
