@@ -21,47 +21,46 @@ import Checkout from './pages/Checkout';
 
 function App() {
   return (
-      <AuthProvider>
-        <CartProvider>
-          <Router>
-            <div className="min-h-screen bg-white dark:bg-[#1B2028] dark:text-white transition-colors duration-200">
-              <Navbar />
-              <main className="flex-grow">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/blog" element={<Blog />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/skin-test" element={<SkinTest />} />
-                  <Route
-                    path="/admin"
-                    element={
-                      <PrivateRoute requiredRole="admin">
-                        <AdminDashboard />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/profile"
-                    element={
-                      <PrivateRoute>
-                        <UserProfile />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password/:token" element={<ResetPassword />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                </Routes>
-              </main>
-              <Footer />
-              <ToastContainer />
-            </div>
-          </Router>
-        </CartProvider>
-      </AuthProvider>
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <div className="min-h-screen bg-white dark:bg-[#1B2028] dark:text-white transition-colors duration-200">
+            <Navbar />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/skin-test" element={<SkinTest />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <PrivateRoute requiredRole="admin">
+                      <AdminDashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <PrivateRoute>
+                      <UserProfile />
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/cart" element={<Cart />} />
+              </Routes>
+            </main>
+            <Footer />
+            <ToastContainer />
+          </div>
+        </Router>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 
