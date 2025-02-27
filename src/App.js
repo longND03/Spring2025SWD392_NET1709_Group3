@@ -17,6 +17,7 @@ import Products from './pages/Products';
 import Cart from './components/Cart';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Checkout from './pages/Checkout';
 
 function App() {
   return (

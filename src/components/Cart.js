@@ -1,4 +1,6 @@
 import { useCart } from '../contexts/CartContext';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@mui/material';
 
 const Cart = () => {
   const { 
@@ -8,6 +10,11 @@ const Cart = () => {
     getCartTotal,
     getCartItemsCount 
   } = useCart();
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    navigate('/checkout');
+  };
 
   if (cart.length === 0) {
     return (
@@ -72,12 +79,18 @@ const Cart = () => {
             Total: ${getCartTotal()}
           </p>
         </div>
-        <button
-          className="bg-[#E91E63] text-white py-2 px-6 rounded-lg 
-                   hover:bg-pink-700 transition-colors duration-200"
+        <Button
+          onClick={handleCheckout}
+          variant="contained"
+          sx={{ 
+            bgcolor: '#E91E63',
+            '&:hover': {
+              bgcolor: '#C2185B'
+            }
+          }}
         >
-          Checkout
-        </button>
+          Proceed to Checkout
+        </Button>
       </div>
     </div>
   );
