@@ -10,7 +10,7 @@ const Footer = () => {
           <div className="space-y-4">
             <Link to="/" className="flex items-center">
               <span className="text-2xl font-bold text-[#E91E63] hover:text-pink-400 transition-colors duration-200">
-                BeautyCare
+                Diana Shop
               </span>
             </Link>
             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -134,7 +134,7 @@ const Footer = () => {
         <div className="border-t border-gray-300 dark:border-gray-700 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              © {new Date().getFullYear()} BeautyCare. All rights reserved.
+              © {new Date().getFullYear()} Diana Shop. All rights reserved.
             </p>
             <div className="flex space-x-4 mt-4 md:mt-0">
               <Link to="/privacy" className="text-sm text-gray-600 hover:text-[#E91E63] dark:text-gray-400 dark:hover:text-[#E91E63] transition-colors duration-200">
