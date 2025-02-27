@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
-import { ThemeProvider } from './contexts/ThemeContext';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -21,7 +20,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
-    <ThemeProvider>
       <AuthProvider>
         <CartProvider>
           <Router>
@@ -62,7 +60,6 @@ function App() {
           </Router>
         </CartProvider>
       </AuthProvider>
-    </ThemeProvider>
   );
 }
 
