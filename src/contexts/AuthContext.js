@@ -1,33 +1,72 @@
-import { createContext, useState, useContext } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
-
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    // Kiểm tra localStorage khi khởi tạo
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [loading, setLoading] = useState(false);
+
+  // Lưu user vào localStorage khi có thay đổi
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
 
   const login = async (email, password) => {
     setLoading(true);
     try {
-      // Gọi API đăng nhập ở đây
       const response = await fetch('http://localhost:5296/api/auth/login', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
-        headers: { 'Content-Type': 'application/json' }
       });
-      
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
 
       const data = await response.json();
-      
-      setUser(data.user);
-      localStorage.setItem('token', data.token);
+      console.log('Login response:', data);
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || 'Login failed'
+        };
+      }
+
+      // Lấy thông tin người dùng từ data.user
+      const userData = {
+        id: data.data.user.id,
+        email: data.data.user.email,
+        username: data.data.user.username,
+        role: data.data.user.role,
+        token: data.data.token
+      };
+
+      console.log('User data being set:', userData);
+
+      // Lưu user vào state và localStorage
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', data.data.token);
+
+      return {
+        success: true,
+        user: userData
+      };
+
     } catch (error) {
-      console.error(error);
-      throw error;
+      console.error('Login error:', error);
+      return {
+        success: false,
+        message: error.message || 'Network error occurred'
+      };
     } finally {
       setLoading(false);
     }
@@ -38,8 +77,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch('http://localhost:5296/api/auth/register', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password, location, phone }),
-        headers: { 'Content-Type': 'application/json' }
       });
 
       if (!response.ok) {
@@ -49,6 +88,7 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       setUser(data.user);
       localStorage.setItem('token', data.token);
+      return data;
     } catch (error) {
       console.error(error);
       throw error;
@@ -58,15 +98,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem('token');
+    setLoading(true);
+    try {
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetPassword = async (email) => {
     setLoading(true);
     try {
-      // Gọi API reset password
-      const response = await fetch('/api/reset-password', {
+      const response = await fetch('http://localhost:5296/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +123,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Failed to reset password');
       }
 
-      // API sẽ gửi email chứa link reset password
+      return await response.json();
     } catch (error) {
       console.error('Reset password error:', error);
       throw error;
@@ -87,11 +132,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Thêm hàm xử lý reset password với token
   const confirmPasswordReset = async (token, newPassword) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/confirm-reset-password', {
+      const response = await fetch('http://localhost:5296/api/auth/confirm-reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,6 +146,8 @@ export const AuthProvider = ({ children }) => {
       if (!response.ok) {
         throw new Error('Failed to confirm password reset');
       }
+
+      return await response.json();
     } catch (error) {
       console.error('Confirm reset password error:', error);
       throw error;
@@ -110,21 +156,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const value = {
+    user,
+    loading,
+    login,
+    register,
+    logout,
+    isAuthenticated: !!user,
+    resetPassword,
+    confirmPasswordReset
+  };
+
   return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        login, 
-        register,
-        logout, 
-        loading,
-        resetPassword,
-        confirmPasswordReset 
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext); 
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}; 

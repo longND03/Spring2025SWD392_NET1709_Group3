@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 
@@ -7,6 +7,17 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const { getCartItemsCount } = useCart();
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-gray-100 shadow-md transition-colors duration-300">
@@ -96,19 +107,59 @@ const Navbar = () => {
               )}
             </Link>
 
-            {/* Auth Buttons */}
-            <Link
-              to="/login"
-              className="px-4 py-2 text-gray-600 hover:text-[#E91E63] transition-colors duration-200"
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="px-4 py-2 text-white bg-[#E91E63] hover:bg-pink-700 rounded-lg transition-colors duration-200"
-            >
-              Sign Up
-            </Link>
+            {/* Auth Buttons or Profile */}
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  <div className="w-8 h-8 rounded-full bg-[#E91E63] flex items-center justify-center text-white">
+                    {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <span className="text-gray-700">{user.username}</span>
+                </button>
+
+                {/* Profile Dropdown */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      to="/orders"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      My Orders
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-gray-600 hover:text-[#E91E63] transition-colors duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 text-white bg-[#E91E63] hover:bg-pink-700 rounded-lg transition-colors duration-200"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}

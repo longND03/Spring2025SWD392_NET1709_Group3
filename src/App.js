@@ -17,6 +17,7 @@ import Products from './pages/Products';
 import Cart from './components/Cart';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Checkout from './pages/Checkout';
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
                   <Route path="/reset-password/:token" element={<ResetPassword />} />
                   <Route path="/products" element={<Products />} />
                   <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
                 </Routes>
               </main>
               <Footer />
