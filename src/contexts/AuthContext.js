@@ -45,8 +45,6 @@ export const AuthProvider = ({ children }) => {
         id: data.data.user.id,
         username: data.data.user.username,
         email: data.data.user.email,
-        phone: data.data.user.phone,
-        location: data.data.user.location,
         role: data.data.user.userRoles,
         token: data.data.token
       };
