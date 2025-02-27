@@ -22,7 +22,7 @@ import Checkout from './pages/Checkout';
 
 function App() {
   return (
-    <ThemeProvider>
+    
       <AuthProvider>
         <CartProvider>
           <Router>
@@ -64,7 +64,7 @@ function App() {
           </Router>
         </CartProvider>
       </AuthProvider>
-    </ThemeProvider>
+   
   );
 }
 

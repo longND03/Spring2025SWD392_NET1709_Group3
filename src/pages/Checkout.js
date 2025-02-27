@@ -134,7 +134,7 @@ const Checkout = () => {
   }
 
   return (
-    <Container sx={{ py: 8 }}>
+    <Container sx={{ py: 8, bgcolor: '#f9f9f9', borderRadius: '8px' }}>
       <Typography variant="h4" gutterBottom>
         Checkout
       </Typography>
@@ -265,7 +265,7 @@ const Checkout = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Box sx={{ p: 3, border: '1px solid #e0e0e0', borderRadius: 2 }}>
+          <Box sx={{ p: 3, border: '1px solid #e0e0e0', borderRadius: 2, bgcolor: '#fff' }}>
             <Typography variant="h6" gutterBottom>
               Order Summary
             </Typography>
