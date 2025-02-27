@@ -1,39 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import CircularProgress from '@mui/material/CircularProgress';
+import axios from '../api/axios';
 
 const UserProfile = () => {
   const { user } = useAuth();
   const [userInfo, setUserInfo] = useState(null);
+  const [test, setTest] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [selectedMenu, setSelectedMenu] = useState('profile');
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const res = await axios.get("/api/product?PageNumber=2&PageSize=2");
+        const data = res;
+
+        setTest(data);
+        console.log(data.data); // list
+        console.log(data.TotalPages); // ko truy cap list
+      } catch (error) {
+        console.error('Profile fetch error:', error);
+        toast.error('Failed to load profile information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetch();
+  }, []);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        if (!user || !user.id) {
-          toast.error('Please login to view profile');
-          navigate('/login');
-          return;
-        }
+        const res = await axios.get(`/api/user/${user.id}`);
+        const data = res.data;
 
-        const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5296/api/user/${user.id}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user information');
-        }
-
-        const data = await response.json();
-        console.log('Profile data:', data);
-        setUserInfo(data.user);
+        setUserInfo(data);
       } catch (error) {
         console.error('Profile fetch error:', error);
         toast.error('Failed to load profile information');
@@ -43,34 +47,66 @@ const UserProfile = () => {
     };
 
     fetchUserInfo();
-  }, [user, navigate]);
+  }, [user]);
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-    </div>;
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <CircularProgress />
+      </div>
+    );
   }
 
-  const displayUser = userInfo || user;
-
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-4xl font-bold mb-6 text-center text-gray-800">User Profile</h1>
-      <div className="shadow-lg rounded-lg p-8">
-        <div className="flex flex-col items-center">
-          {displayUser?.img && (
-            <img src={displayUser.img} alt="User Avatar" className="w-32 h-32 rounded-full mb-4 border-2 border-gray-300" />
-          )}
-          <div className="space-y-4 w-full">
-            <p className="font-semibold text-lg">Name: <span className="font-normal">{displayUser?.username || 'N/A'}</span></p>
-            <p className="font-semibold text-lg">Email: <span className="font-normal">{displayUser?.email || 'N/A'}</span></p>
-            <p className="font-semibold text-lg">Phone: <span className="font-normal">{displayUser?.phone || 'N/A'}</span></p>
-            <p className="font-semibold text-lg">Location: <span className="font-normal">{displayUser?.location || 'N/A'}</span></p>
-            <p className="font-semibold text-lg">Role: <span className="font-normal">{displayUser?.role || 'N/A'}</span></p>
-            <p className="font-semibold text-lg">Joined: <span className="font-normal">{displayUser?.createdAt ? new Date(displayUser.createdAt).toLocaleDateString() : 'N/A'}</span></p>
+    <div className="grid grid-cols-[240px_1fr] min-h-[calc(100vh-4rem)]">
+      <aside className="bg-[#FADADD] border-r border-gray-200">
+        <div className="bg-[#FFB7C5]">
+          <div className="p-4 flex flex-col items-center">
+            {userInfo?.image ? (
+              <img
+                src={userInfo?.image}
+                alt="User Avatar"
+                className="w-24 h-24 rounded-full mb-4"
+              />
+            ) : (
+              <div className="w-24 h-24 text-5xl rounded-full bg-[#E91E63] flex items-center justify-center text-white mb-4">
+                {userInfo?.username ? userInfo.username.charAt(0).toUpperCase() : 'U'}
+              </div>
+            )}
+            <h2 className="text-xl font-semibold mt-2 mb-2">
+              {userInfo?.username || 'User'}
+            </h2>
           </div>
         </div>
-      </div>
+        <nav>
+            {[
+              { text: 'Profile', value: 'profile' },
+              { text: 'Orders History', value: 'orders' },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setSelectedMenu(item.value)}
+                className={`w-full text-left font-semibold px-4 py-2 hover:bg-gray-100 transition-colors ${selectedMenu === item.value ? 'bg-gray-100 border-r-4 border-[#E91E63]' : ''
+                  }`}
+              >
+                {item.text}
+              </button>
+            ))}
+        </nav>
+      </aside>
+
+      {/* Profile */}
+      <main className="p-6 bg-gray-50">
+        <h1 className="text-4xl font-bold mb-6 text-center text-gray-800">Profile</h1>
+        <div className="bg-white shadow-lg rounded-lg p-8 min-h-[calc(100vh-10rem)]">
+          <div className="space-y-4">
+            <p className="font-semibold text-lg">Name: <span className="font-normal">{userInfo?.username || 'N/A'}</span></p>
+            <p className="font-semibold text-lg">Email: <span className="font-normal">{userInfo?.email || 'N/A'}</span></p>
+            <p className="font-semibold text-lg">Phone: <span className="font-normal">{userInfo?.phone || 'N/A'}</span></p>
+            <p className="font-semibold text-lg">Location: <span className="font-normal">{userInfo?.location || 'N/A'}</span></p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
