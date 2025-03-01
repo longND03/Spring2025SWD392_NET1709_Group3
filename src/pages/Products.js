@@ -1,25 +1,13 @@
-import { Container, Grid, Card, CardMedia, CardContent, Typography, Button } from '@mui/material';
+import { Container, Grid2 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useCart } from '../contexts/CartContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import CircularProgress from '@mui/material/CircularProgress';
+import ProductCard from '../components/ProductCard';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { addToCart } = useCart();
-
-  const handleAddToCart = (product) => {
-    addToCart(product);
-    toast.success('Product added to cart!', {
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    });
-  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -38,57 +26,34 @@ const Products = () => {
   }, []);
 
   if (loading) {
-    return <Typography variant="h6">Loading...</Typography>;
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <CircularProgress />
+      </div>
+    )
   }
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Recommended Products
-      </Typography>
-      <Grid container spacing={3}>
-        {products.length > 0 ? (
-          products.map(product => (
-            <Grid item xs={12} sm={6} md={4} key={product.id}>
-              <Card>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={product.image}
-                  alt={product.name}
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h6">
-                    {product.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Suitable for {product.skinType} skin
-                  </Typography>
-                  <Typography variant="h6" sx={{ mt: 1 }}>
-                    ${product.price}
-                  </Typography>
-                  <Button 
-                    variant="contained" 
-                    color="primary" 
-                    sx={{ 
-                      mt: 1,
-                      bgcolor: '#E91E63',
-                      '&:hover': {
-                        bgcolor: '#C2185B'
-                      }
-                    }} 
-                    onClick={() => handleAddToCart(product)}
-                  >
-                    Add to Cart
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
+      <h1 className="text-4xl font-semibold text-[#2C3E50] mb-20">
+        Available Products
+      </h1>
+      <Grid2 container spacing={3}>
+        {products.items?.length > 0 ? (
+          products.items.map(product => (
+            <Grid2 
+              size={2.4}      // 4 cards per row on medium screens
+              key={product.id}
+            >
+              <ProductCard product={product} />
+            </Grid2>
           ))
         ) : (
-          <Typography variant="body1">No products available.</Typography>
+          <Grid2>
+            <p className="text-base">No products available.</p>
+          </Grid2>
         )}
-      </Grid>
+      </Grid2>
     </Container>
   );
 };
