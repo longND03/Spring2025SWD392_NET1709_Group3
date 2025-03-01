@@ -56,7 +56,7 @@ function App() {
               </Routes>
             </main>
             <Footer />
-            <ToastContainer />
+            <ToastContainer limit={2}/>
           </div>
         </Router>
       </CartProvider>
