@@ -53,6 +53,7 @@ function App() {
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
               </Routes>
             </main>
             <Footer />
@@ -61,6 +62,7 @@ function App() {
         </Router>
       </CartProvider>
     </AuthProvider>
+
   );
 }
 

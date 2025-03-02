@@ -1,7 +1,10 @@
 import { Container, Grid2 } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 import ProductCard from '../components/ProductCard';
 
@@ -9,14 +12,39 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAddToCart = async (product) => {
+    try {
+      if (!user) {
+        toast.error('Vui lòng đăng nhập để thêm vào giỏ hàng');
+        navigate('/login');
+        return;
+      }
+
+      if (product.stockQuantity < 1) {
+        toast.error('Sản phẩm đã hết hàng');
+        return;
+      }
+
+      await addToCart(product, 1);
+    } catch (error) {
+      console.error('Lỗi thêm vào giỏ hàng:', error);
+      toast.error('Không thể thêm vào giỏ hàng');
+    }
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setLoading(true);
         const response = await axios.get('http://localhost:5296/api/product');
         setProducts(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
-        toast.error('Failed to fetch products');
+        toast.error('Không thể tải danh sách sản phẩm');
       } finally {
         setLoading(false);
       }
@@ -30,7 +58,7 @@ const Products = () => {
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <CircularProgress />
       </div>
-    )
+    );
   }
 
   return (
@@ -42,10 +70,13 @@ const Products = () => {
         {products.items?.length > 0 ? (
           products.items.map(product => (
             <Grid2 
-              size={2.4}      // 4 cards per row on medium screens
+              size={2.4}
               key={product.id}
             >
-              <ProductCard product={product} />
+              <ProductCard 
+                product={product} 
+                onAddToCart={handleAddToCart}
+              />
             </Grid2>
           ))
         ) : (
