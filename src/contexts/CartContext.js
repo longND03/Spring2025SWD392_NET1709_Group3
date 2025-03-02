@@ -142,44 +142,48 @@ export const CartProvider = ({ children }) => {
     try {
       if (quantity < 1) return;
 
-      // Cập nhật state trước
-      setCart(prevCart => {
-        const updatedCart = prevCart.map(item =>
-          item.id === productId ? { ...item, quantity } : item
-        );
-        return updatedCart;
-      });
-
       if (!user?.id) {
-        localStorage.setItem('cart', JSON.stringify(cart));
+        setCart(prevCart => {
+          const updatedCart = prevCart.map(item =>
+            item.id === productId ? { ...item, quantity } : item
+          );
+          localStorage.setItem('cart', JSON.stringify(updatedCart));
+          return updatedCart;
+        });
         return;
       }
 
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Vui lòng đăng nhập');
 
-      const response = await fetch(`http://localhost:5296/api/cart/update-quantity`, {
+      const response = await fetch(`http://localhost:5296/api/cart/update-product`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId: user.id,
-          productId: productId,
-          quantity: quantity
+          userId: parseInt(user.id),
+          productId: parseInt(productId),
+          quantity: parseInt(quantity)
         })
       });
 
       if (!response.ok) {
-        throw new Error('Không thể cập nhật số lượng');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Không thể cập nhật số lượng');
       }
+
+      setCart(prevCart => 
+        prevCart.map(item =>
+          item.id === productId ? { ...item, quantity } : item
+        )
+      );
 
       toast.success('Đã cập nhật số lượng');
     } catch (error) {
       console.error('Lỗi cập nhật số lượng:', error);
-      toast.error(error.message);
-      // Nếu có lỗi, fetch lại cart để đồng bộ
+      toast.error(error.message || 'Không thể cập nhật số lượng');
       await fetchCart();
     }
   };
