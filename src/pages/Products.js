@@ -1,14 +1,22 @@
-import { Container, Grid, Card, CardMedia, CardContent, Typography, Button } from '@mui/material';
+import { Container, Grid2 } from '@mui/material';
 import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+=======
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import CircularProgress from '@mui/material/CircularProgress';
+import ProductCard from '../components/ProductCard';
+>>>>>>> main
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -37,6 +45,8 @@ const Products = () => {
       toast.error('Không thể thêm vào giỏ hàng');
     }
   };
+=======
+>>>>>>> main
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -60,14 +70,22 @@ const Products = () => {
 
   if (loading) {
     return (
+<<<<<<< HEAD
       <Container sx={{ py: 4, textAlign: 'center' }}>
         <Typography>Đang tải...</Typography>
       </Container>
     );
+=======
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <CircularProgress />
+      </div>
+    )
+>>>>>>> main
   }
 
   return (
     <Container sx={{ py: 4 }}>
+<<<<<<< HEAD
       <Typography variant="h4" gutterBottom>
         Sản phẩm
       </Typography>
@@ -126,8 +144,27 @@ const Products = () => {
           ))
         ) : (
           <Typography variant="body1">Không có sản phẩm.</Typography>
+=======
+      <h1 className="text-4xl font-semibold text-[#2C3E50] mb-20">
+        Available Products
+      </h1>
+      <Grid2 container spacing={3}>
+        {products.items?.length > 0 ? (
+          products.items.map(product => (
+            <Grid2 
+              size={2.4}      // 4 cards per row on medium screens
+              key={product.id}
+            >
+              <ProductCard product={product} />
+            </Grid2>
+          ))
+        ) : (
+          <Grid2>
+            <p className="text-base">No products available.</p>
+          </Grid2>
+>>>>>>> main
         )}
-      </Grid>
+      </Grid2>
     </Container>
   );
 };
