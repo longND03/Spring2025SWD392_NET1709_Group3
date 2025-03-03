@@ -33,27 +33,24 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-        <CircularProgress />
-      </div>
-    );
-  }
-
   return (
     <Container sx={{ py: 4 }}>
       <h1 className="text-4xl font-semibold text-[#2C3E50] mb-20">
         Available Products
       </h1>
-      <Grid2 container spacing={3}>
-        {products.items?.length > 0 ? (
-          products.items.map(product => (
-            <Grid2 
-              size={2.4}
-              key={product.id}
-            >
-              <ProductCard 
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+          <CircularProgress />
+        </div>
+      ) : (
+        <Grid2 container spacing={3}>
+          {products.items?.length > 0 ? (
+            products.items.map(product => (
+              <Grid2
+                size={2.4}      // 4 cards per row on medium screens
+                key={product.id}
+              >
+                <ProductCard 
                 product={product} 
                 onAddToCart={async () => {
                   if (!user) {
@@ -71,14 +68,15 @@ const Products = () => {
                   toast.success(`${product.name} added to cart!`);
                 }}
               />
-            </Grid2>
-          ))
+              </Grid2>
+            ))
         ) : (
           <Grid2>
             <p className="text-base">No products available.</p>
           </Grid2>
         )}
       </Grid2>
+      )}
     </Container>
   );
 };
