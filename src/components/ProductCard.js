@@ -34,9 +34,12 @@ const ProductCard = ({ product }) => {
           <p className="text-sm text-gray-600">
             Suitable for {product.skinType} skin
           </p>
+          <h3 className='text-lg font-semibold mt-2 text-green-600'>
+            {`Quantity: ${product.stockQuantity}`}
+          </h3>
         </div>
         <div>
-          <p className="text-xl font-semibold mt-4 text-[#E91E63]">
+          <p className="text-xl font-semibold mt-3 text-[#E91E63]">
             ${product.price}
           </p>
           <Button 
