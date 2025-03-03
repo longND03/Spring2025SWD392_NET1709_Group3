@@ -1,7 +1,9 @@
-import axios from 'axios';
+import axios from '../api/axios';
+import { Container, Grid2 } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
+import ProductCard from '../components/ProductCard';
 
 const SkinTest = () => {
   const [questions, setQuestions] = useState([]);
@@ -11,17 +13,18 @@ const SkinTest = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
 
   const [recSkintypeId, setRecSkintypeId] = useState([]);
   const [recProduct, setRecProduct] = useState([]);
-  const [isRecommendLoading, setIsRecommendLoading] = useState(false);
+  const [isRecommendLoading, setIsRecommendLoading] = useState(true);
 
   const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const res = await axios.get("http://localhost:5296/api/skintypetest/questions");
+        const res = await axios.get("/api/skintypetest/questions");
         setQuestions(res.data);
       } catch (error) {
         console.error("Error fetching questions:", error);
@@ -38,16 +41,39 @@ const SkinTest = () => {
   useEffect(() => {
     const fetchRecommendProductBySkintypeId = async () => {
       try {
-        
+        setIsRecommendLoading(true);
+        console.log(recSkintypeId);
+
+        const queryString = recSkintypeId.map(id => `&SkinTypeIds=${id}`).join('');
+        const res = await axios.get(`/api/product?PageNumber=1&PageSize=5${queryString}`);
+
+        setRecProduct(res.data.items);
       } catch (error) {
-        
+        console.log("Cant fetch recommendations!")
       } finally {
-        
+        setIsRecommendLoading(false);
       }
     }
 
     fetchRecommendProductBySkintypeId();
   }, [recSkintypeId]);
+
+  const resolveRecProduct = (res) => {
+    // Combine all items from all responses into a single array
+    const dirtyData = res.reduce((acc, response) => {
+      return acc.concat(response.data.items);
+    }, []);
+
+    // Remove duplicates based on product id
+    const seen = new Set();
+    const uniqueData = dirtyData.filter(obj => {
+      if (seen.has(obj.id)) return false;
+      seen.add(obj.id);
+      return true;
+    });
+
+    return uniqueData;
+  };
 
   const handleAnswerSelect = (questionId, value) => {
     // Hide results when any answer changes
@@ -65,6 +91,8 @@ const SkinTest = () => {
     // Auto advance to next question only if this is the first answer for this question
     if (isFirstAnswer && currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
+    } else if (isFirstAnswer && currentQuestionIndex === questions.length - 1) {
+      handleSubmit();
     }
   };
 
@@ -77,6 +105,7 @@ const SkinTest = () => {
   };
 
   const handleSubmit = () => {
+    setHasSubmittedOnce(true);
     // Count occurrences of each skin type and store their IDs
     const skinTypeData = {};
     const totalQuestions = Object.keys(answers).length;
@@ -102,7 +131,7 @@ const SkinTest = () => {
 
     // Get all skin types with the highest percentage
     const highestSkinTypes = sortedSkinTypes.filter(([, data]) => data.percentage === highestPercentage);
-    
+
     // Set all highest percentage skin type IDs
     const highestSkinTypeIds = highestSkinTypes.map(([, data]) => data.id);
     setRecSkintypeId(highestSkinTypeIds);
@@ -243,15 +272,17 @@ const SkinTest = () => {
             className={`px-6 py-3 rounded-lg font-medium transition-all duration-200
               ${Object.keys(answers).length === questions.length
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
+              ${!hasSubmittedOnce && 'hidden'}`}
             disabled={Object.keys(answers).length < questions.length}
           >
-            Submit
+            Re-submit
           </button>
         </div>
       </div>
 
-      {showResults && (!isRecommendLoading ?
+      {/* Show result section */}
+      {showResults && (
         <div>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-20 rounded-xl shadow-lg overflow-hidden bg-white p-6">
@@ -260,13 +291,33 @@ const SkinTest = () => {
             </div>
           </div>
 
-          <p className="text-4xl text-left font-extrabold pl-10 mb-10">Recommendations for your skin type</p>
-
-          
-        </div>
-        :
-        <div className="flex items-center justify-center mt-20">
-          <CircularProgress />
+          <p className="text-4xl text-center font-extrabold pl-10 mb-10">Recommendations for your skin type</p>
+          {isRecommendLoading ? (
+            <div className="flex items-center justify-center mt-20">
+              <CircularProgress />
+            </div>
+          ) : (
+            <Container sx={{ py: 4 }}>
+              <Grid2 container spacing={3}>
+                {recProduct.length > 0 ? (
+                  recProduct.map(product => (
+                    <Grid2
+                      size={2.4}      // 4 cards per row on medium screens
+                      key={product.id}
+                    >
+                      <ProductCard
+                        product={product}
+                      />
+                    </Grid2>
+                  ))
+                ) : (
+                  <Grid2>
+                    <p className="text-base">No products available.</p>
+                  </Grid2>
+                )}
+              </Grid2>
+            </Container>
+          )}
         </div>
       )}
     </div>

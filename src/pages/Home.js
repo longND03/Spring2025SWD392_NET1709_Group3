@@ -1,11 +1,27 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import axios from "../api/axios";
 
 const Home = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [bestSellers, setBestSellers] = useState([]);
 
   useEffect(() => {
     setIsVisible(true);
+  }, []);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:5296/api/product?PageSize=4');
+        setBestSellers(response.data.items);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   return (
@@ -14,7 +30,7 @@ const Home = () => {
       <section className="relative h-[80vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="/images/banner.jpg" // Đảm bảo đường dẫn đúng
+            src="https://static.vecteezy.com/system/resources/previews/050/508/298/non_2x/natural-skincare-products-with-flowers-and-stones-photo.jpg"
             alt="Beauty Care"
             className="w-full h-full object-cover"
           />
@@ -51,7 +67,7 @@ const Home = () => {
           <h2 className="text-3xl font-bold text-center mb-12 dark:text-white">Why Choose BeautyCare</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div 
+              <div
                 key={index}
                 className="p-6 bg-white dark:bg-[#2A303C] rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
               >
@@ -66,28 +82,52 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Skincare Test Banner */}
+      <section className="py-16 bg-gradient-to-r from-pink-500 to-[#E91E63]">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="md:w-1/2 text-white mb-8 md:mb-0">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Not Sure About Your Skin Type?</h2>
+              <p className="text-lg text-pink-100 mb-6">Take our professional skin analysis test to discover the perfect products for your unique skin type.</p>
+              <Link to="/skin-test">
+                <button className="px-8 py-4 bg-white text-[#E91E63] hover:bg-pink-100 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
+                  Take Skin Test Now
+                </button>
+              </Link>
+            </div>
+            <div className="md:w-1/3">
+              <img 
+                src="https://t3.ftcdn.net/jpg/06/76/28/82/360_F_676288295_47mfVBtgdIM7WSfPhFSuWwFDFNcpUHuv.jpg" 
+                alt="Skin Test" 
+                className="w-full h-auto rounded-lg shadow-xl transform hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Best Sellers Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12 dark:text-white">Best Sellers</h2>
           <div className="grid md:grid-cols-4 gap-8">
-            {bestSellers.map((product, index) => (
-              <div 
-                key={index}
-                className="group relative bg-white dark:bg-[#2A303C] rounded-xl shadow-lg overflow-hidden"
+            {bestSellers.map((p) => (
+              <div
+                key={p.id}
+                className="group relative bg-white dark:bg-[#2A303C] rounded-xl shadow-lg overflow-hidden flex flex-col h-full"
               >
-                <div className="aspect-w-1 aspect-h-1 overflow-hidden">
+                <div className="aspect-w-1 aspect-h-1 w-full h-48 overflow-hidden">
                   <img
-                    src={product.image}
-                    alt={product.name}
+                    src={p.productImages[0]}
+                    alt={p.name}
                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-2 dark:text-white">{product.name}</h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-2">{product.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-[#E91E63]">${product.price}</span>
+                <div className="p-4 flex flex-col flex-grow">
+                  <h3 className="text-lg font-semibold mb-2 dark:text-white line-clamp-1">{p.name}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 flex-grow">{p.description}</p>
+                  <div className="flex justify-between items-center mt-auto">
+                    <span className="text-xl font-bold text-[#E91E63]">${p.price}</span>
                     <button className="px-4 py-2 bg-[#E91E63] hover:bg-pink-700 text-white rounded-full text-sm transition-colors duration-300">
                       Add to Cart
                     </button>
@@ -155,34 +195,6 @@ const features = [
     ),
     title: "100% Satisfaction",
     description: "Love it or get your money back with our 30-day guarantee."
-  }
-];
-
-// Data for best sellers section
-const bestSellers = [
-  {
-    image: "/images/product1.jpg", // Đảm bảo đường dẫn đúng
-    name: "Hydrating Serum",
-    description: "Deep hydration for all skin types",
-    price: 39.99
-  },
-  {
-    image: "/images/product2.jpg",
-    name: "Vitamin C Cream",
-    description: "Brightening & anti-aging formula",
-    price: 49.99
-  },
-  {
-    image: "/images/product3.jpg",
-    name: "Night Repair",
-    description: "Overnight skin regeneration",
-    price: 59.99
-  },
-  {
-    image: "/images/product4.jpg",
-    name: "Clay Mask",
-    description: "Deep cleansing & pore refining",
-    price: 29.99
   }
 ];
 
