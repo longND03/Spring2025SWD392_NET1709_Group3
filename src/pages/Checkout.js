@@ -34,17 +34,35 @@ const Checkout = () => {
   const [showQR, setShowQR] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
-  // Add useEffect to set user information as default values
+  // Thêm state mới để lưu thông tin người dùng
+  const [userData, setUserData] = useState(null);
+
+  // Thêm useEffect để lấy thông tin người dùng từ API
   useEffect(() => {
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        fullName: user.fullName || '',
-        email: user.email || '',
-        phone: user.phoneNumber || '',
-        // Add other fields if needed
-      }));
-    }
+    const fetchUserData = async () => {
+      if (user && user.id) {
+        try {
+          const response = await axios.get(`http://localhost:5296/api/user/${user.id}`);
+          console.log('User data from API:', response.data); // Để debug dữ liệu
+
+          // Điền sẵn form với dữ liệu người dùng từ API
+          setFormData(prev => ({
+            ...prev,
+            // Đảm bảo truy cập đúng tên trường từ API response
+            fullName: response.data.username || '', // Thay đổi từ fullName thành name
+            email: response.data.email || '',
+            phone: response.data.phone || '', // Thay đổi từ phoneNumber thành phone
+          }));
+
+          setUserData(response.data);
+        } catch (error) {
+          console.error('Lỗi khi lấy thông tin người dùng:', error);
+          toast.error('Không thể tải thông tin người dùng');
+        }
+      }
+    };
+
+    fetchUserData();
   }, [user]);
 
   // Fetch city data when component mounts
@@ -141,26 +159,27 @@ const Checkout = () => {
   // Modal displaying QR and success message
   const SuccessModal = () => (
     <Dialog open={showQR} onClose={() => setShowQR(false)}>
-      <DialogTitle>Order Successful!</DialogTitle>
+      <DialogTitle>QR Payment</DialogTitle>
       <DialogContent>
         <Box sx={{ textAlign: 'center', py: 2 }}>
           <Typography variant="h6" gutterBottom>
-            Total Amount: ${getCartTotal()}
+            Amount: ${getCartTotal()}
           </Typography>
           <QRCodeComponent 
             value={`Pay for order: ${getCartTotal()} USD`}
           />
           <Typography variant="body1" sx={{ mt: 2 }}>
-            Scan the QR code to pay
+            Scan QR code to pay
           </Typography>
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={() => {
           setShowQR(false);
+          clearCart();
           navigate('/orders');
         }} color="primary">
-          View Order
+          View Orders
         </Button>
       </DialogActions>
     </Dialog>
@@ -175,9 +194,12 @@ const Checkout = () => {
       
       const fullAddress = `${formData.streetAddress}, ${selectedWard}, ${selectedDistrict}, ${selectedCity}`;
 
-      // Gọi API để tạo đơn hàng
+      // Create order with user information from form
       const orderResponse = await axios.post('http://localhost:5296/api/order/create-order', {
         userId: user.id,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
         address: fullAddress,
         paymentMethod: paymentMethod,
         orderItems: cart.map(item => ({
@@ -188,20 +210,25 @@ const Checkout = () => {
       });
 
       if (orderResponse.data) {
-        // Nếu phương thức thanh toán là QR
         if (paymentMethod === 'QR') {
-          const paymentResponse = await axios.post('http://localhost:5296/api/payment/create-payment', {
-            orderID: orderResponse.data.orderID, // Giả sử bạn nhận được orderID từ phản hồi
-            paymentMethodID: 1, // ID cho phương thức thanh toán QR
-            address: fullAddress
-          });
+          try {
+            // Call API to create payment according to Swagger structure
+            const paymentResponse = await axios.post('http://localhost:5296/api/payment/create-payment', {
+              orderID: orderResponse.data.id,
+              paymentMethodID: 2, // 2 for QR payment
+              address: fullAddress
+            });
 
-          if (paymentResponse.data) {
-            toast.success('Payment created successfully');
-            clearCart();
-            navigate('/');
+            if (paymentResponse.data) {
+              setShowQR(true); // Show QR code
+              toast.success('Please scan the QR code to complete payment');
+            }
+          } catch (paymentError) {
+            console.error('Error creating payment:', paymentError);
+            toast.error('Unable to create QR payment: ' + (paymentError.response?.data?.message || 'Please try again'));
           }
         } else {
+          // COD payment
           toast.success('Order placed successfully');
           clearCart();
           navigate('/');
