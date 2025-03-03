@@ -63,24 +63,13 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (product, quantity = 1) => {
     try {
       if (!user?.id) {
-        const updatedCart = [...cart];
-        const existingItem = updatedCart.find(item => item.id === product.id);
-        
-        if (existingItem) {
-          existingItem.quantity += quantity;
-        } else {
-          updatedCart.push({ ...product, quantity });
-        }
-        
-        setCart(updatedCart);
-        localStorage.setItem('cart', JSON.stringify(updatedCart));
-        toast.success('Đã thêm vào giỏ hàng');
+        toast.error('Please log in to add items to your cart');
         return;
       }
 
       const token = localStorage.getItem('token');
       if (!token) {
-        toast.error('Vui lòng đăng nhập');
+        toast.error('Please log in');
         return;
       }
 
@@ -89,8 +78,6 @@ export const CartProvider = ({ children }) => {
         productId: parseInt(product.id),
         quantity: parseInt(quantity)
       };
-
-      console.log('Gửi request:', cartRequest);
 
       const response = await fetch(`http://localhost:5296/api/cart/add-product`, {
         method: 'POST',
@@ -101,11 +88,9 @@ export const CartProvider = ({ children }) => {
         body: JSON.stringify(cartRequest)
       });
 
-      const responseData = await response.json();
-      console.log('API Response:', responseData);
-
       if (!response.ok) {
-        throw new Error(responseData.message || 'Không thể thêm vào giỏ hàng');
+        const responseData = await response.json();
+        throw new Error(responseData.message || 'Unable to add to cart');
       }
 
       const newItem = {
@@ -133,8 +118,8 @@ export const CartProvider = ({ children }) => {
 
       toast.success('Đã thêm vào giỏ hàng');
     } catch (error) {
-      console.error('Lỗi thêm vào giỏ hàng:', error);
-      toast.error(error.message || 'Không thể thêm vào giỏ hàng');
+      console.error('Error adding to cart:', error);
+      toast.error(error.message || 'Unable to add to cart');
     }
   };
 

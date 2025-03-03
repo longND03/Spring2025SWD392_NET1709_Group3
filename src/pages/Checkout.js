@@ -8,6 +8,7 @@ import {
   FormControlLabel, FormControl, FormLabel
 } from '@mui/material';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
@@ -24,7 +25,7 @@ const Checkout = () => {
     city: '',
     district: '',
     ward: '',
-    streetAddress: '', // Địa chỉ nhà cụ thể
+    streetAddress: '', // Specific home address
     paymentMethod: 'COD'
   });
 
@@ -33,7 +34,7 @@ const Checkout = () => {
   const [showQR, setShowQR] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
-  // Thêm useEffect để set thông tin user làm giá trị mặc định
+  // Add useEffect to set user information as default values
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
@@ -41,12 +42,12 @@ const Checkout = () => {
         fullName: user.fullName || '',
         email: user.email || '',
         phone: user.phoneNumber || '',
-        // Thêm các trường khác nếu cần
+        // Add other fields if needed
       }));
     }
   }, [user]);
 
-  // Fetch dữ liệu thành phố khi component mount
+  // Fetch city data when component mounts
   useEffect(() => {
     const fetchCities = async () => {
       try {
@@ -61,7 +62,7 @@ const Checkout = () => {
     fetchCities();
   }, []);
 
-  // Fetch quận/huyện khi chọn thành phố
+  // Fetch districts when a city is selected
   useEffect(() => {
     const fetchDistricts = async () => {
       if (!formData.city) return;
@@ -77,7 +78,7 @@ const Checkout = () => {
     fetchDistricts();
   }, [formData.city]);
 
-  // Fetch phường/xã khi chọn quận/huyện
+  // Fetch wards when a district is selected
   useEffect(() => {
     const fetchWards = async () => {
       if (!formData.district) return;
@@ -101,34 +102,34 @@ const Checkout = () => {
     }));
   };
 
-  // Modal chọn phương thức thanh toán
+  // Payment method selection modal
   const PaymentMethodModal = () => (
     <Dialog open={openPaymentModal} onClose={() => setOpenPaymentModal(false)}>
-      <DialogTitle>Chọn phương thức thanh toán</DialogTitle>
+      <DialogTitle>Select Payment Method</DialogTitle>
       <DialogContent>
         <FormControl component="fieldset">
-          <FormLabel component="legend">Phương thức thanh toán</FormLabel>
+          <FormLabel component="legend">Payment Method</FormLabel>
           <RadioGroup
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
           >
-            <FormControlLabel value="COD" control={<Radio />} label="Thanh toán khi nhận hàng (COD)" />
-            <FormControlLabel value="QR" control={<Radio />} label="Thanh toán qua QR" />
+            <FormControlLabel value="COD" control={<Radio />} label="Cash on Delivery (COD)" />
+            <FormControlLabel value="QR" control={<Radio />} label="QR Payment" />
           </RadioGroup>
         </FormControl>
       </DialogContent>
       <DialogActions>
         <Button onClick={() => setOpenPaymentModal(false)} color="primary">
-          Hủy
+          Cancel
         </Button>
         <Button onClick={handlePaymentSubmit} color="primary" variant="contained">
-          Xác nhận
+          Confirm
         </Button>
       </DialogActions>
     </Dialog>
   );
 
-  // Thay vì dùng qrcode.react, ta có thể dùng URL của QR trực tiếp
+  // Instead of using qrcode.react, we can use the QR URL directly
   const QRCodeComponent = ({ value }) => (
     <img 
       src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(value)}`}
@@ -137,20 +138,20 @@ const Checkout = () => {
     />
   );
 
-  // Modal hiển thị QR và thông báo thành công
+  // Modal displaying QR and success message
   const SuccessModal = () => (
     <Dialog open={showQR} onClose={() => setShowQR(false)}>
-      <DialogTitle>Đặt hàng thành công!</DialogTitle>
+      <DialogTitle>Order Successful!</DialogTitle>
       <DialogContent>
         <Box sx={{ textAlign: 'center', py: 2 }}>
           <Typography variant="h6" gutterBottom>
-            Tổng tiền: ${getCartTotal()}
+            Total Amount: ${getCartTotal()}
           </Typography>
           <QRCodeComponent 
-            value={`Thanh toan don hang: ${getCartTotal()} USD`}
+            value={`Pay for order: ${getCartTotal()} USD`}
           />
           <Typography variant="body1" sx={{ mt: 2 }}>
-            Quét mã QR để thanh toán
+            Scan the QR code to pay
           </Typography>
         </Box>
       </DialogContent>
@@ -159,15 +160,14 @@ const Checkout = () => {
           setShowQR(false);
           navigate('/orders');
         }} color="primary">
-          Xem đơn hàng
+          View Order
         </Button>
       </DialogActions>
     </Dialog>
   );
 
-  const handlePaymentSubmit = async () => {
-    setOpenPaymentModal(false);
-    
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
     try {
       const selectedCity = cities.find(c => c.code === formData.city)?.name || '';
       const selectedDistrict = districts.find(d => d.code === formData.district)?.name || '';
@@ -175,66 +175,54 @@ const Checkout = () => {
       
       const fullAddress = `${formData.streetAddress}, ${selectedWard}, ${selectedDistrict}, ${selectedCity}`;
 
-      const orderRequest = {
-        userId: parseInt(user.id),
-        orderDetails: cart.map(item => ({
+      // Gọi API để tạo đơn hàng
+      const orderResponse = await axios.post('http://localhost:5296/api/order/create-order', {
+        userId: user.id,
+        address: fullAddress,
+        paymentMethod: paymentMethod,
+        orderItems: cart.map(item => ({
           productId: parseInt(item.id),
           quantity: parseInt(item.quantity),
           price: parseFloat(item.price)
-        })),
-        shippingAddress: {
-          recipientName: formData.fullName,
-          phone: formData.phone,
-          email: formData.email,
-          address: fullAddress,
-          ward: selectedWard,
-          district: selectedDistrict,
-          city: selectedCity
-        },
-        totalAmount: parseFloat(getCartTotal()),
-        paymentMethod: paymentMethod
-      };
-
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5296/api/order/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(orderRequest)
+        }))
       });
 
-      if (!response.ok) {
-        throw new Error('Đặt hàng thất bại');
-      }
+      if (orderResponse.data) {
+        // Nếu phương thức thanh toán là QR
+        if (paymentMethod === 'QR') {
+          const paymentResponse = await axios.post('http://localhost:5296/api/payment/create-payment', {
+            orderID: orderResponse.data.orderID, // Giả sử bạn nhận được orderID từ phản hồi
+            paymentMethodID: 1, // ID cho phương thức thanh toán QR
+            address: fullAddress
+          });
 
-      setOrderSuccess(true);
-      clearCart();
-      
-      if (paymentMethod === 'QR') {
-        setShowQR(true);
-      } else {
-        toast.success('Đặt hàng thành công!');
-        navigate('/orders');
+          if (paymentResponse.data) {
+            toast.success('Payment created successfully');
+            clearCart();
+            navigate('/');
+          }
+        } else {
+          toast.success('Order placed successfully');
+          clearCart();
+          navigate('/');
+        }
       }
-      
     } catch (error) {
-      console.error('Lỗi đặt hàng:', error);
-      toast.error('Đặt hàng thất bại. Vui lòng thử lại.');
+      console.error('Error placing order:', error);
+      toast.error('Order failed: ' + (error.response?.data?.message || 'Please try again later'));
     }
   };
 
-  // Sửa lại hàm handleSubmit
+  // Modify handleSubmit function
   const handleSubmit = (e) => {
     e.preventDefault();
     setOpenPaymentModal(true);
   };
 
-  // Kiểm tra đăng nhập trước khi render form
+  // Check login before rendering form
   useEffect(() => {
     if (!user) {
-      toast.error('Vui lòng đăng nhập để đặt hàng');
+      toast.error('Please log in to place an order');
       navigate('/login');
     }
   }, [user, navigate]);
@@ -257,7 +245,7 @@ const Checkout = () => {
   return (
     <Container sx={{ py: 8, bgcolor: '#f9f9f9', borderRadius: '8px' }}>
       <Typography variant="h4" gutterBottom>
-        Thông tin đặt hàng
+        Order Information
       </Typography>
       
       <Grid container spacing={4}>
@@ -268,11 +256,11 @@ const Checkout = () => {
                 <TextField
                   required
                   fullWidth
-                  label="Họ và tên"
+                  label="Full Name"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
-                  helperText="Bạn có thể thay đổi tên người nhận"
+                  helperText="You can change the recipient's name"
                 />
               </Grid>
               <Grid item xs={12}>
@@ -284,18 +272,18 @@ const Checkout = () => {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  helperText="Email để nhận thông tin đơn hàng"
+                  helperText="Email to receive order information"
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   required
                   fullWidth
-                  label="Số điện thoại"
+                  label="Phone Number"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  helperText="Số điện thoại để nhận hàng"
+                  helperText="Phone number for delivery"
                 />
               </Grid>
 
@@ -304,11 +292,11 @@ const Checkout = () => {
                   select
                   required
                   fullWidth
-                  label="Tỉnh/Thành phố"
+                  label="City"
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  helperText="Chọn tỉnh/thành phố"
+                  helperText="Select a city"
                 >
                   {cities.map((city) => (
                     <MenuItem key={city.code} value={city.code}>
@@ -323,12 +311,12 @@ const Checkout = () => {
                   select
                   required
                   fullWidth
-                  label="Quận/Huyện"
+                  label="District"
                   name="district"
                   value={formData.district}
                   onChange={handleChange}
                   disabled={!formData.city}
-                  helperText={!formData.city ? "Vui lòng chọn tỉnh/thành phố trước" : "Chọn quận/huyện"}
+                  helperText={!formData.city ? "Please select a city first" : "Select a district"}
                 >
                   {districts.map((district) => (
                     <MenuItem key={district.code} value={district.code}>
@@ -343,12 +331,12 @@ const Checkout = () => {
                   select
                   required
                   fullWidth
-                  label="Phường/Xã"
+                  label="Ward"
                   name="ward"
                   value={formData.ward}
                   onChange={handleChange}
                   disabled={!formData.district}
-                  helperText={!formData.district ? "Vui lòng chọn quận/huyện trước" : "Chọn phường/xã"}
+                  helperText={!formData.district ? "Please select a district first" : "Select a ward"}
                 >
                   {wards.map((ward) => (
                     <MenuItem key={ward.code} value={ward.code}>
@@ -362,14 +350,14 @@ const Checkout = () => {
                 <TextField
                   required
                   fullWidth
-                  label="Địa chỉ cụ thể"
+                  label="Specific Address"
                   name="streetAddress"
                   multiline
                   rows={2}
                   value={formData.streetAddress}
                   onChange={handleChange}
-                  placeholder="Nhập số nhà, tên đường..."
-                  helperText="VD: Số 123 đường ABC"
+                  placeholder="Enter house number, street name..."
+                  helperText="E.g.: No. 123 ABC Street"
                 />
               </Grid>
             </Grid>
@@ -387,7 +375,7 @@ const Checkout = () => {
                 }
               }}
             >
-              Đặt hàng
+              Place Order
             </Button>
           </form>
         </Grid>

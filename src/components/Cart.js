@@ -4,21 +4,21 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
-// Tách CartItem thành component riêng và memo
+// Separate CartItem into its own memoized component
 const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
   const handleQuantityChange = async (newQuantity) => {
     try {
       if (newQuantity > item.stockQuantity) {
-        toast.error('Số lượng vượt quá hàng tồn kho');
+        toast.error('Quantity exceeds stock available');
         return;
       }
       if (newQuantity < 1) {
-        toast.error('Số lượng phải lớn hơn 0');
+        toast.error('Quantity must be greater than 0');
         return;
       }
       await onUpdateQuantity(item.id, newQuantity, item.stockQuantity);
     } catch (error) {
-      console.error('Lỗi cập nhật số lượng:', error);
+      console.error('Error updating quantity:', error);
     }
   };
 
@@ -27,7 +27,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
       <div className="flex items-center space-x-4">
         <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden">
           <img 
-            src={item.productImage || item.product?.productImages?.[0]} 
+            src={item.productImage || item.imageURL}
             alt={item.name}
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -41,7 +41,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
           <p className="text-gray-600">${item.price.toFixed(2)}</p>
           {item.stockQuantity !== undefined && (
             <p className="text-sm text-gray-500">
-              Còn lại: {item.stockQuantity}
+              Stock available: {item.stockQuantity}
             </p>
           )}
         </div>
@@ -76,7 +76,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
           onClick={() => onRemove(item.id)}
           className="text-red-500 hover:text-red-700 transition-colors"
         >
-          Xóa
+          Remove
         </button>
       </div>
     </div>
@@ -84,64 +84,56 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
 });
 
 const Cart = () => {
-  const { cart, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount, isLoading } = useCart();
+  const { cart, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount, addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleUpdateQuantity = async (productId, newQuantity, stockQuantity) => {
     try {
       if (newQuantity > stockQuantity) {
-        toast.error('Số lượng vượt quá hàng tồn kho');
+        toast.error('Quantity exceeds stock available');
         return;
       }
       if (newQuantity < 1) {
-        toast.error('Số lượng phải lớn hơn 0');
+        toast.error('Quantity must be greater than 0');
         return;
       }
       await updateQuantity(productId, newQuantity);
-      toast.success('Đã cập nhật số lượng');
+      toast.success('Quantity updated');
     } catch (error) {
-      console.error('Lỗi cập nhật số lượng:', error);
-      toast.error('Không thể cập nhật số lượng');
+      console.error('Error updating quantity:', error);
+      toast.error('Unable to update quantity');
     }
   };
 
   const handleRemoveFromCart = async (productId) => {
     try {
       await removeFromCart(productId);
-      toast.success('Đã xóa sản phẩm');
+      toast.success('Product removed');
     } catch (error) {
-      console.error('Lỗi xóa sản phẩm:', error);
-      toast.error('Không thể xóa sản phẩm');
+      console.error('Error removing product:', error);
+      toast.error('Unable to remove product');
     }
   };
 
   const handleCheckout = () => {
     if (!user) {
-      toast.error('Vui lòng đăng nhập để thanh toán');
+      toast.error('Please log in to proceed to checkout');
       navigate('/login');
       return;
     }
     navigate('/checkout');
   };
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">Đang tải giỏ hàng...</p>
-      </div>
-    );
-  }
-
   if (!cart || cart.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600">Giỏ hàng trống</p>
+        <p className="text-gray-600">Your cart is empty</p>
         <button
           onClick={() => navigate('/products')}
           className="mt-4 px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
         >
-          Tiếp tục mua sắm
+          Continue Shopping
         </button>
       </div>
     );
@@ -149,7 +141,7 @@ const Cart = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-2xl font-bold mb-4">Giỏ hàng</h2>
+      <h2 className="text-2xl font-bold mb-4">Shopping Cart</h2>
       <div className="space-y-4">
         {cart.map(item => (
           <CartItem
@@ -162,14 +154,14 @@ const Cart = () => {
       </div>
       <div className="mt-8 flex justify-between items-center">
         <div>
-          <p className="text-lg">Tổng sản phẩm: {getCartItemsCount()}</p>
-          <p className="text-xl font-bold">Tổng tiền: ${getCartTotal().toFixed(2)}</p>
+          <p className="text-lg">Total items: {getCartItemsCount()}</p>
+          <p className="text-xl font-bold">Total amount: ${getCartTotal().toFixed(2)}</p>
         </div>
         <button
           onClick={handleCheckout}
           className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
         >
-          Thanh toán
+          Checkout
         </button>
       </div>
     </div>

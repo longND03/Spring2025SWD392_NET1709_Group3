@@ -1,13 +1,19 @@
 import { Card, CardMedia, CardContent, Button } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
+  const { user } = useAuth();
 
   const handleAddToCart = () => {
+    if (!user) {
+      toast.error('Please log in to add items to your cart');
+      return;
+    }
     addToCart(product);
-    toast.success(`${ product.name } added to cart!`, {
+    toast.success(`${product.name} added to cart!`, {
       position: "bottom-center",
       autoClose: 1000,
       hideProgressBar: true,
