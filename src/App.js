@@ -34,9 +34,9 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/skin-test" element={<SkinTest />} />
                 <Route
-                  path="/admin"
+                  path="/admindashboard"
                   element={
-                    <PrivateRoute requiredRole="admin">
+                    <PrivateRoute requiredRole="Manager">
                       <AdminDashboard />
                     </PrivateRoute>
                   }
@@ -62,7 +62,6 @@ function App() {
         </Router>
       </CartProvider>
     </AuthProvider>
-
   );
 }
 

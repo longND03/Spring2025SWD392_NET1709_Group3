@@ -29,43 +29,38 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
       console.log('Login response:', data);
-
+  
       if (!response.ok) {
         return {
           success: false,
-          message: data.message || 'Login failed'
+          message: data.message || 'Login failed',
         };
       }
-
-      // Lấy thông tin người dùng từ data.user
+  
       const userData = {
         id: data.data.user.id,
         username: data.data.user.username,
         email: data.data.user.email,
         role: data.data.user.userRoles,
-        token: data.data.token
+        token: data.data.token,
       };
-
-      console.log('User data being set:', userData);
-
-      // Lưu user vào state và localStorage
+  
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', data.data.token);
-
+  
       return {
         success: true,
-        user: userData
+        user: userData,
       };
-
     } catch (error) {
       console.error('Login error:', error);
       return {
         success: false,
-        message: error.message || 'Network error occurred'
+        message: error.message || 'Network error occurred',
       };
     } finally {
       setLoading(false);

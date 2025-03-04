@@ -22,10 +22,10 @@ const Checkout = () => {
     fullName: '',
     email: '',
     phone: '',
-    city: '',
-    district: '',
-    ward: '',
-    streetAddress: '', // Specific home address
+    city: '1',
+    district: '1',
+    ward: '1',
+    streetAddress: '',
     paymentMethod: 'COD'
   });
 
@@ -111,6 +111,27 @@ const Checkout = () => {
     };
     fetchWards();
   }, [formData.district]);
+
+  // Thêm useEffect để tự động fetch districts và wards khi component mount
+  useEffect(() => {
+    const fetchInitialLocations = async () => {
+      try {
+        // Fetch districts của Hà Nội
+        const districtResponse = await fetch('https://provinces.open-api.vn/api/p/01?depth=2');
+        const districtData = await districtResponse.json();
+        setDistricts(districtData.districts);
+
+        // Fetch wards của Ba Đình
+        const wardResponse = await fetch('https://provinces.open-api.vn/api/d/001?depth=2');
+        const wardData = await wardResponse.json();
+        setWards(wardData.wards);
+      } catch (error) {
+        console.error('Error fetching initial locations:', error);
+      }
+    };
+
+    fetchInitialLocations();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -12,8 +12,18 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      navigate('/'); // Chuyển hướng sau khi đăng nhập thành công
+      const result = await login(email, password);
+      if (result.success) {
+        // Kiểm tra vai trò người dùng
+        const userRole = result.user.role[0].roleName; // Lấy vai trò đầu tiên
+        if (userRole === "Manager") {
+          navigate('/admindashboard'); // Chuyển hướng đến AdminDashboard
+        } else {
+          navigate('/'); // Chuyển hướng đến trang chính
+        }
+      } else {
+        setError(result.message);
+      }
     } catch (error) {
       setError('Failed to login');
     }
