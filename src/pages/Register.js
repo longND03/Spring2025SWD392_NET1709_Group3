@@ -122,7 +122,7 @@ const Register = () => {
                 placeholder="Enter your phone number"
               />
             </div>
-            <div>
+            {/* <div>
               <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Location
               </label>
@@ -139,7 +139,7 @@ const Register = () => {
                          focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
                 placeholder="Enter your location"
               />
-            </div>
+            </div> */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Password
