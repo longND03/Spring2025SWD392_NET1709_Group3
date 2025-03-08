@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useCart } from './CartContext';
 
 const AuthContext = createContext();
 
@@ -9,6 +10,8 @@ export const AuthProvider = ({ children }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [loading, setLoading] = useState(false);
+
+  const { clearCart } = useCart();
 
   // Lưu user vào localStorage khi có thay đổi
   useEffect(() => {
@@ -104,6 +107,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      clearCart();
     } finally {
       setLoading(false);
     }
