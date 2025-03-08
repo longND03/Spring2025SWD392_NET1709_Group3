@@ -33,7 +33,7 @@ const Register = () => {
     try {
       setError('');
       await register(formData.username, formData.email, formData.password, formData.location, formData.phone);
-      navigate('/'); // Chuyển hướng sau khi đăng ký thành công
+      navigate('/login'); // Chuyển hướng sau khi đăng ký thành công
     } catch (err) {
       console.error('Signup error:', err);
       setError('Failed to register');
