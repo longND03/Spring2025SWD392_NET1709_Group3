@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import axios from '../api/axios';
+import { useCart } from './CartContext';
 
 const AuthContext = createContext();
 
@@ -9,6 +11,8 @@ export const AuthProvider = ({ children }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [loading, setLoading] = useState(false);
+
+  const { clearCart } = useCart();
 
   // Lưu user vào localStorage khi có thay đổi
   useEffect(() => {
@@ -44,7 +48,11 @@ export const AuthProvider = ({ children }) => {
       const userData = {
         id: data.data.user.id,
         username: data.data.user.username,
+        phone: data.data.user.phone,
         email: data.data.user.email,
+        image: data.data.user.image,
+        location: data.data.user.location,
+        voucherStorage: data.data.user.voucherStorage[0].storages,
         role: data.data.user.userRoles,
         token: data.data.token
       };
@@ -103,6 +111,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      clearCart();
     } finally {
       setLoading(false);
     }
@@ -158,6 +167,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    setUser,
     loading,
     login,
     register,
