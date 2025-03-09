@@ -4,10 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import axios from '../api/axios';
+import useShippingCalculator from '../hooks/useShippingCalculator';
 
 const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
   const { user } = useAuth();
+  const { shippingFee, loading: calculatingShipping, error: shippingError, calculateShipping } = useShippingCalculator();
 
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -135,13 +137,28 @@ const Checkout = () => {
         ward: wardCode
       }));
 
-      // Fetch dependent data
-      if (provinceCode) {
-        fetchDistricts(provinceCode);
-      }
-      if (districtCode) {
-        fetchWards(districtCode);
-      }
+      // Fetch dependent data and calculate shipping
+      const initializeLocationData = async () => {
+        try {
+          if (provinceCode) {
+            await fetchDistricts(provinceCode);
+            // Get province name and calculate shipping
+            const response = await fetch('https://provinces.open-api.vn/api/p/');
+            const provincesData = await response.json();
+            const provinceName = provincesData.find(p => p.code.toString() === provinceCode)?.name;
+            if (provinceName) {
+              calculateShipping(provinceName);
+            }
+          }
+          if (districtCode) {
+            await fetchWards(districtCode);
+          }
+        } catch (error) {
+          console.error('Error initializing location data:', error);
+        }
+      };
+
+      initializeLocationData();
     }
 
     fetchVoucherDetails();
@@ -178,6 +195,11 @@ const Checkout = () => {
 
     if (selectedProvince) {
       await fetchDistricts(selectedProvince);
+      // Get province name from the provinces array and calculate shipping
+      const provinceName = provinces.find(p => p.code.toString() === selectedProvince)?.name;
+      if (provinceName) {
+        calculateShipping(provinceName);
+      }
     }
   };
 
@@ -472,7 +494,17 @@ const Checkout = () => {
             </div>
             <div className="flex justify-between text-sm text-gray-600 mt-2">
               <span>Shipping</span>
-              <span>Calculated at next step</span>
+              <span>
+                {calculatingShipping ? (
+                  'Calculating...'
+                ) : shippingError ? (
+                  'Error calculating shipping'
+                ) : shippingFee ? (
+                  `$${shippingFee.toFixed(2)}`
+                ) : (
+                  'Select province'
+                )}
+              </span>
             </div>
             {selectedVoucher && (
               <div className="flex justify-between text-sm text-green-600 mt-2">
@@ -482,7 +514,7 @@ const Checkout = () => {
             )}
             <div className="flex justify-between font-bold text-lg mt-4">
               <span>Total</span>
-              <span>${(getCartTotal() - getDiscountAmount()).toFixed(2)}</span>
+              <span>${(getCartTotal() - getDiscountAmount() + (shippingFee || 0)).toFixed(2)}</span>
             </div>
           </div>
         </div>
