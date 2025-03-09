@@ -45,16 +45,16 @@ const { logout } = useAuth();
   };
 
   return (
-    <main className="p-5 bg-gray-50">
-      <h1 className="text-6xl font-bold mb-5 text-center text-[#E91E63]">Security</h1>
-      <div className="bg-white shadow-lg rounded-lg p-6 min-h-[calc(100vh-8rem)]">
-        <div className="space-y-3">
-          <h2 className='text-3xl font-semibold'>Change password</h2>
+    <main className="p-4 bg-gray-50">
+      <h1 className="text-4xl font-bold mb-4 text-center text-[#E91E63]">Security</h1>
+      <div className="bg-white shadow-lg rounded-lg p-4 min-h-[calc(100vh-6rem)]">
+        <div className="space-y-2">
+          <h2 className='text-2xl font-semibold'>Change password</h2>
           <Divider />
-          <form onSubmit={handlePasswordReset} className="mt-5 space-y-5 max-w-md">
+          <form onSubmit={handlePasswordReset} className="mt-4 space-y-4 max-w-md">
             <FormControl fullWidth variant="outlined" className="relative">
               <div className="flex items-center gap-3">
-                <label htmlFor="currentPassword" className="text-base text-gray-700 font-medium whitespace-nowrap w-40">
+                <label htmlFor="currentPassword" className="text-sm text-gray-700 font-medium whitespace-nowrap w-32">
                   Current Password
                 </label>
                 <input
@@ -62,7 +62,7 @@ const { logout } = useAuth();
                   type="password"
                   name="currentPassword"
                   placeholder="Enter current password"
-                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-pink-500 text-sm"
                   required
                 />
               </div>
@@ -70,7 +70,7 @@ const { logout } = useAuth();
             
             <FormControl fullWidth variant="outlined" className="relative">
               <div className="flex items-center gap-3">
-                <label htmlFor="newPassword" className="text-base text-gray-700 font-medium whitespace-nowrap w-40">
+                <label htmlFor="newPassword" className="text-sm text-gray-700 font-medium whitespace-nowrap w-32">
                   New Password
                 </label>
                 <input
@@ -78,7 +78,7 @@ const { logout } = useAuth();
                   type="password"
                   name="newPassword"
                   placeholder="Enter new password"
-                  className={`flex-1 px-3 py-1.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 
+                  className={`flex-1 px-3 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-pink-500 text-sm
                     ${passwordError ? 'border-red-500 animate-shake' : 'border-gray-300'}`}
                   required
                 />
@@ -87,7 +87,7 @@ const { logout } = useAuth();
 
             <FormControl fullWidth variant="outlined" className="relative">
               <div className="flex items-center gap-3">
-                <label htmlFor="confirmPassword" className="text-base text-gray-700 font-medium whitespace-nowrap w-40">
+                <label htmlFor="confirmPassword" className="text-sm text-gray-700 font-medium whitespace-nowrap w-32">
                   Confirm Password
                 </label>
                 <input
@@ -95,7 +95,7 @@ const { logout } = useAuth();
                   type="password"
                   name="confirmPassword"
                   placeholder="Confirm new password"
-                  className={`flex-1 px-3 py-1.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 
+                  className={`flex-1 px-3 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-pink-500 text-sm
                     ${passwordError ? 'border-red-500 animate-shake' : 'border-gray-300'}`}
                   required
                 />
@@ -104,7 +104,7 @@ const { logout } = useAuth();
 
             <button
               type="submit"
-              className="w-full bg-[#E91E63] text-white py-2 px-4 rounded-md hover:bg-[#D81B60] transition-colors duration-200"
+              className="w-full bg-[#E91E63] text-white py-1.5 px-3 rounded-md hover:bg-[#D81B60] transition-colors duration-200 text-sm"
             >
               Change Password
             </button>
@@ -117,8 +117,8 @@ const { logout } = useAuth();
         onClose={() => setOpenSuccessModal(false)}
       >
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                      bg-white rounded-lg shadow-xl p-5 w-80 text-center">
-          <h2 className="text-lg font-semibold text-[#E91E63] mb-3">
+                      bg-white rounded-lg shadow-xl p-4 w-72 text-center">
+          <h2 className="text-base font-semibold text-[#E91E63] mb-2">
             Password Updated Successfully
           </h2>
           <p className="text-sm text-gray-600">
