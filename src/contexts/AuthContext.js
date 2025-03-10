@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
         email: data.data.user.email,
         image: data.data.user.image,
         location: data.data.user.location,
-        voucherStorage: data.data.user.voucherStorage[0].storages,
+        voucherStorage: data.data.user.voucherStorage?.[0]?.storages || [],
         role: data.data.user.userRoles,
         token: data.data.token,
       };

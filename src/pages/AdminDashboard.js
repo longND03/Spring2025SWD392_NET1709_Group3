@@ -205,7 +205,7 @@ const AdminDashboard = () => {
                       className="text-red-500 hover:text-red-700"
                       disabled={loading}
                     >
-                      Delete
+                      Deactive
                     </button>
                   </td>
                 </tr>
