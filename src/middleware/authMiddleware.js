@@ -23,7 +23,7 @@ const authorize = (roles = []) => {
         }
 
         // Kiểm tra role nếu được yêu cầu
-        if (roles.length && !roles.includes(decoded.role)) {
+        if (roles.length && (!decoded.role || !roles.includes(decoded.role))) {
           return res.status(403).json({
             success: false,
             message: 'Unauthorized access'

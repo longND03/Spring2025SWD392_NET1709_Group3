@@ -28,7 +28,15 @@ const Login = () => {
       
       if (result.success) {
         toast.success('Login successful!');
-        navigate('/'); // Chuyển về trang chủ sau khi đăng nhập
+        
+        // Kiểm tra vai trò người dùng
+        const userRole = result.user.role?.[0]?.roleName || 'User';
+      console.log('User role:', userRole);// Sử dụng optional chaining
+        if (userRole === 'Manager') {
+          navigate('/admindashboard');
+        } else {
+          navigate('/');
+        }
       } else {
         toast.error(result.message || 'Failed to login');
       }
@@ -38,7 +46,7 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  };
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#1B2028] py-12 px-4 sm:px-6 lg:px-8">
