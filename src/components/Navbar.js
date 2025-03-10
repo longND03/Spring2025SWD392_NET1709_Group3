@@ -62,6 +62,15 @@ const Navbar = () => {
             >
               Contact
             </Link>
+            {/* Thêm Dashboard link cho admin */}
+            {user && user.role && user.role[0].roleName === 'Manager' && (
+              <Link 
+                to="/admindashboard" 
+                className="text-gray-600 hover:text-[#E91E63] transition-colors duration-200 font-semibold"
+              >
+                Dashboard
+              </Link>
+            )}
           </div>
 
           {/* Right Side Items */}
@@ -121,6 +130,14 @@ const Navbar = () => {
 
                 {/* Profile Dropdown */}
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 invisible group-hover:visible transition-all duration-200 opacity-0 group-hover:opacity-100">
+                  {user.role && user.role[0].roleName === 'Manager' && (
+                    <Link
+                      to="/admindashboard"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Dashboard
+                    </Link>
+                  )}
                   <Link
                     to="/profile"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -181,6 +198,17 @@ const Navbar = () => {
       {isOpen && (
         <div className="md:hidden bg-gray-100 border-t border-gray-200 transition-colors duration-200">
           <div className="px-2 pt-2 pb-3 space-y-1">
+            {/* Thêm Dashboard cho mobile menu */}
+            {user && user.role && user.role[0].roleName === 'Manager' && (
+              <Link
+                to="/admindashboard"
+                className="block px-3 py-2 rounded-md text-gray-600 
+                         hover:text-[#E91E63] 
+                         hover:bg-gray-200 transition-colors duration-200 font-semibold"
+              >
+                Dashboard
+              </Link>
+            )}
             <Link
               to="/"
               className="block px-3 py-2 rounded-md text-gray-600 
