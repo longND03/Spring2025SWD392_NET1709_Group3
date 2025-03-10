@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 import ProductCard from '../components/ProductCard';
+import messages from '../constants/message.json';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -24,7 +25,7 @@ const Products = () => {
         setProducts(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
-        toast.error('Cannot load product list');
+        toast.error(messages.error.loadProducts);
       } finally {
         setLoading(false);
       }
@@ -54,25 +55,25 @@ const Products = () => {
                 product={product} 
                 onAddToCart={async () => {
                   if (!user) {
-                    toast.error('Please log in to add items to your cart');
+                    toast.error(messages.error.addToCart.requireLogin);
                     navigate('/login');
                     return;
                   }
 
                   if (product.stockQuantity < 1) {
-                    toast.error('Product is out of stock');
+                    toast.error(messages.error.addToCart.outOfStock);
                     return;
                   }
 
                   await addToCart(product, 1);
-                  toast.success(`${product.name} added to cart!`);
+                  toast.success(messages.success.addToCart.replace('{productName}', product.name));
                 }}
               />
               </Grid2>
             ))
         ) : (
           <Grid2>
-            <p className="text-base">No products available.</p>
+            <p className="text-base">{messages.info.noProducts}</p>
           </Grid2>
         )}
       </Grid2>

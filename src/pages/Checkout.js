@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import axios from '../api/axios';
 import useShippingCalculator from '../hooks/useShippingCalculator';
+import messages from '../constants/message.json';
 
 const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
@@ -47,7 +48,7 @@ const Checkout = () => {
       setProvinces(data);
     } catch (error) {
       console.error('Error fetching provinces:', error);
-      toast.error('Could not load provinces');
+      toast.error(messages.error.location.provinces);
     }
   };
 
@@ -60,7 +61,7 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error('Error fetching districts:', error);
-      toast.error('Could not load districts');
+      toast.error(messages.error.location.districts);
     }
   };
 
@@ -73,13 +74,13 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error('Error fetching wards:', error);
-      toast.error('Could not load wards');
+      toast.error(messages.error.location.wards);
     }
   };
 
   useEffect(() => {
     if (!user) {
-      toast.error('Please log in to place an order');
+      toast.error(messages.error.checkout.requireLogin);
       navigate('/login');
       return;
     }
@@ -119,7 +120,7 @@ const Checkout = () => {
           setVouchers(sortedVouchers);
         } catch (error) {
           console.error('Error fetching voucher details:', error);
-          toast.error('Failed to load vouchers');
+          toast.error(messages.error.vouchers.load);
         }
       }
     };
@@ -235,13 +236,13 @@ const Checkout = () => {
   const handleProceedToPayment = () => {
     // Validate required fields
     if (!formData.phone || !formData.province || !formData.district || !formData.ward || !formData.specificAddress) {
-      toast.error('Please fill in all required address fields');
+      toast.error(messages.error.checkout.addressRequired);
       return;
     }
 
     // Validate payment method selection
     if (!selectedPaymentMethod) {
-      toast.error('Please select a payment method');
+      toast.error(messages.error.checkout.paymentRequired);
       return;
     }
 
@@ -279,7 +280,7 @@ const Checkout = () => {
         break;
 
       default:
-        toast.error('Invalid payment method');
+        toast.error(messages.error.payment.invalid);
         return;
     }
   };

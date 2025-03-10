@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import messages from '../constants/message.json';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -22,7 +23,7 @@ const Login = () => {
           navigate('/'); // Chuyển hướng đến trang chính
         }
       } else {
-        setError(result.message);
+        setError(messages.error.login);
       }
     } catch (error) {
       setError('Failed to login');

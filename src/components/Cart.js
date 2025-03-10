@@ -3,17 +3,18 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import messages from '../constants/message.json';
 
 // Separate CartItem into its own memoized component
 const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
   const handleQuantityChange = async (newQuantity) => {
     try {
       if (newQuantity > item.stockQuantity) {
-        toast.error('Quantity exceeds stock available');
+        toast.error(messages.error.cart.exceedStock);
         return;
       }
       if (newQuantity < 1) {
-        toast.error('Quantity must be greater than 0');
+        toast.error(messages.error.cart.minQuantity);
         return;
       }
       await onUpdateQuantity(item.id, newQuantity, item.stockQuantity);
@@ -91,34 +92,34 @@ const Cart = () => {
   const handleUpdateQuantity = async (productId, newQuantity, stockQuantity) => {
     try {
       if (newQuantity > stockQuantity) {
-        toast.error('Quantity exceeds stock available');
+        toast.error(messages.error.cart.exceedStock);
         return;
       }
       if (newQuantity < 1) {
-        toast.error('Quantity must be greater than 0');
+        toast.error(messages.error.cart.minQuantity);
         return;
       }
       await updateQuantity(productId, newQuantity);
-      toast.success('Quantity updated');
+      toast.success(messages.success.updateQuantity);
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('Unable to update quantity');
+      toast.error(messages.error.cart.updateQuantity);
     }
   };
 
   const handleRemoveFromCart = async (productId) => {
     try {
       await removeFromCart(productId);
-      toast.success('Product removed');
+      toast.success(messages.success.removeProduct);
     } catch (error) {
       console.error('Error removing product:', error);
-      toast.error('Unable to remove product');
+      toast.error(messages.error.cart.removeProduct);
     }
   };
 
   const handleCheckout = () => {
     if (!user) {
-      toast.error('Please log in to proceed to checkout');
+      toast.error(messages.error.checkout.requireLogin);
       navigate('/login');
       return;
     }
@@ -128,12 +129,12 @@ const Cart = () => {
   if (!cart || cart.length === 0) {
     return (
       <div className="text-center py-8 min-h-[100vh] flex flex-col items-center justify-center">
-        <p className="text-gray-600">Your cart is empty</p>
+        <p className="text-gray-600">{messages.info.cart.empty}</p>
         <button
           onClick={() => navigate('/products')}
           className="mt-4 px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
         >
-          Continue Shopping
+          {messages.info.cart.continueShopping}
         </button>
       </div>
     );

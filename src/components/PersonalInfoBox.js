@@ -4,6 +4,7 @@ import { FaPencilAlt } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
+import messages from '../constants/message.json';
 
 const PersonalInfoBox = ({ userInfo }) => {
   const { setUser } = useAuth();
@@ -162,15 +163,15 @@ const PersonalInfoBox = ({ userInfo }) => {
   const validateForm = () => {
     const newErrors = {};
     if (!editedInfo.username.trim()) {
-      newErrors.username = 'Username is required';
+      newErrors.username = messages.validation.required.username;
     }
     if (!editedInfo.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = messages.validation.required.email;
     } else if (!/\S+@\S+\.\S+/.test(editedInfo.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = messages.validation.invalid.email;
     }
     if (!editedInfo.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = messages.validation.required.phone;
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -179,16 +180,16 @@ const PersonalInfoBox = ({ userInfo }) => {
   const validateShippingForm = () => {
     const newErrors = {};
     if (!editedShipping.specificAddress.trim()) {
-      newErrors.specificAddress = 'Specific address is required';
+      newErrors.specificAddress = messages.validation.required.address.specific;
     }
     if (!editedShipping.province) {
-      newErrors.province = 'Province is required';
+      newErrors.province = messages.validation.required.address.province;
     }
     if (!editedShipping.district) {
-      newErrors.district = 'District is required';
+      newErrors.district = messages.validation.required.address.district;
     }
     if (!editedShipping.ward) {
-      newErrors.ward = 'Ward is required';
+      newErrors.ward = messages.validation.required.address.ward;
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -233,11 +234,11 @@ const PersonalInfoBox = ({ userInfo }) => {
         setUser(updatedUser);
         
         setIsEditing(false);
-        toast.success('Profile updated successfully');
+        toast.success(messages.success.updateProfile);
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      toast.error(messages.error.profile.update);
     }
   };
 
@@ -261,11 +262,11 @@ const PersonalInfoBox = ({ userInfo }) => {
         setUser(updatedUser);
 
         setIsEditingShipping(false);
-        toast.success('Shipping information updated successfully');
+        toast.success(messages.success.updateShipping);
       }
     } catch (error) {
       console.error('Error updating shipping info:', error);
-      toast.error('Failed to update shipping information');
+      toast.error(messages.error.profile.shipping);
     }
   };
 

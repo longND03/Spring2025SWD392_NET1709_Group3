@@ -1,0 +1,77 @@
+{
+  "success": {
+    "login": "Login successful!",
+    "register": "Account created successfully!",
+    "addToCart": "{productName} has been added to cart!",
+    "subscribe": "Successfully subscribed to newsletter!",
+    "updateQuantity": "Quantity updated",
+    "removeProduct": "Product removed",
+    "updateProfile": "Profile updated successfully",
+    "updateShipping": "Shipping information updated successfully"
+  },
+  "error": {
+    "login": "Failed to login",
+    "register": "Failed to register",
+    "loadProducts": "Cannot load product list",
+    "addToCart": {
+      "requireLogin": "Please log in to add items to your cart",
+      "outOfStock": "Product is out of stock"
+    },
+    "cart": {
+      "updateQuantity": "Unable to update quantity",
+      "removeProduct": "Unable to remove product",
+      "exceedStock": "Quantity exceeds stock available",
+      "minQuantity": "Quantity must be greater than 0"
+    },
+    "checkout": {
+      "requireLogin": "Please log in to place an order",
+      "addressRequired": "Please fill in all required address fields",
+      "paymentRequired": "Please select a payment method"
+    },
+    "location": {
+      "provinces": "Could not load provinces",
+      "districts": "Could not load districts",
+      "wards": "Could not load wards"
+    },
+    "profile": {
+      "update": "Failed to update profile",
+      "shipping": "Failed to update shipping information"
+    },
+    "server": "Server error",
+    "network": "Network error",
+    "vouchers": {
+      "load": "Failed to load vouchers"
+    },
+    "payment": {
+      "invalid": "Invalid payment method"
+    }
+  },
+  "info": {
+    "loading": "Loading...",
+    "creatingAccount": "Creating account...",
+    "noProducts": "No products available.",
+    "newsletter": "Subscribe to our newsletter for exclusive offers and beauty tips",
+    "cart": {
+      "empty": "Your cart is empty",
+      "continueShopping": "Continue Shopping"
+    }
+  },
+  "validation": {
+    "required": {
+      "email": "Email is required",
+      "password": "Password is required",
+      "username": "Username is required",
+      "phone": "Phone number is required",
+      "address": {
+        "specific": "Specific address is required",
+        "province": "Province is required",
+        "district": "District is required",
+        "ward": "Ward is required"
+      }
+    },
+    "invalid": {
+      "email": "Invalid email format"
+    },
+    "passwordMatch": "Passwords do not match"
+  }
+} 
