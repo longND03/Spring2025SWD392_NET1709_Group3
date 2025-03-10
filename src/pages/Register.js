@@ -33,7 +33,7 @@ const Register = () => {
     try {
       setError('');
       await register(formData.username, formData.email, formData.password, formData.location, formData.phone);
-      navigate('/'); // Chuyển hướng sau khi đăng ký thành công
+      navigate('/login'); // Chuyển hướng sau khi đăng ký thành công
     } catch (err) {
       console.error('Signup error:', err);
       setError('Failed to register');
@@ -122,7 +122,7 @@ const Register = () => {
                 placeholder="Enter your phone number"
               />
             </div>
-            <div>
+            {/* <div>
               <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Location
               </label>
@@ -139,7 +139,7 @@ const Register = () => {
                          focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
                 placeholder="Enter your location"
               />
-            </div>
+            </div> */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Password

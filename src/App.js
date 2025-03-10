@@ -22,8 +22,8 @@ import Checkout from './pages/Checkout';
 
 function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
+    <CartProvider>
+      <AuthProvider>
         <Router>
           <div className="min-h-screen bg-white dark:bg-[#1B2028] dark:text-white transition-colors duration-200">
             <Navbar />
@@ -66,11 +66,12 @@ function App() {
               </Routes>
             </main>
             <Footer />
-            <ToastContainer limit={2}/>
+            <ToastContainer limit={2} />
           </div>
         </Router>
-      </CartProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </CartProvider>
+
   );
 }
 
