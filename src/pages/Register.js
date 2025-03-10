@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import messages from '../constants/message.json';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -27,7 +28,7 @@ const Register = () => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      return setError('Passwords do not match');
+      return setError(messages.validation.passwordMatch);
     }
 
     try {
@@ -36,7 +37,7 @@ const Register = () => {
       navigate('/login'); // Chuyển hướng sau khi đăng ký thành công
     } catch (err) {
       console.error('Signup error:', err);
-      setError('Failed to register');
+      setError(messages.error.register);
     }
   };
 
