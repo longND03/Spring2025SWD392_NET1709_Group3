@@ -3,6 +3,7 @@ import { FormControl, Modal, Divider } from '@mui/material';
 import axios from '../api/axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
+import messages from '../constants/message.json';
 
 const SecurityBox = ({ user }) => {
 const { logout } = useAuth();
@@ -40,7 +41,7 @@ const { logout } = useAuth();
       }
     } catch (error) {
       console.error('Password reset error:', error);
-      toast.error(error.response?.data?.message || 'Failed to reset password');
+      toast.error(messages.error.server);
     }
   };
 

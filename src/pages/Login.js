@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
+import messages from '../constants/message.json';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +19,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error('Please enter both email and password');
+      toast.error(messages.validation.required.email + ' and ' + messages.validation.required.password);
       return;
     }
 
@@ -27,26 +28,26 @@ const Login = () => {
       const result = await login(email, password);
       
       if (result.success) {
-        toast.success('Login successful!');
+        toast.success(messages.success.login);
         
         // Kiểm tra vai trò người dùng
         const userRole = result.user.role?.[0]?.roleName || 'User';
-      console.log('User role:', userRole);// Sử dụng optional chaining
+        console.log('User role:', userRole);// Sử dụng optional chaining
         if (userRole === 'Manager') {
           navigate('/admindashboard');
         } else {
           navigate('/');
         }
       } else {
-        toast.error(result.message || 'Failed to login');
+        toast.error(result.message || messages.error.login);
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('An error occurred during login');
+      toast.error(messages.error.server);
     } finally {
       setLoading(false);
     }
-};
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#1B2028] py-12 px-4 sm:px-6 lg:px-8">
