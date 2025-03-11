@@ -4,6 +4,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
 import ProductCard from '../components/ProductCard';
+import messages from '../constants/message.json';
 
 const SkinTest = () => {
   const [questions, setQuestions] = useState([]);
@@ -28,7 +29,7 @@ const SkinTest = () => {
         setQuestions(res.data);
       } catch (error) {
         console.error("Error fetching questions:", error);
-        toast.error('Failed to fetch products');
+        toast.error(messages.error.loadProducts);
         setError("Failed to fetch products! X.X");
       } finally {
         setIsLoading(false);

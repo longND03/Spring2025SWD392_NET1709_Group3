@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from 'react-hot-toast';
+import messages from '../constants/message.json';
 
 const CartContext = createContext();
 
@@ -48,43 +49,43 @@ export const CartProvider = ({ children }) => {
         return updatedCart;
       });
 
-      toast.success('Added to cart');
+      toast.success(messages.success.addToCart.replace('{productName}', product.name));
     } catch (error) {
       console.error('Error adding to cart:', error);
-      toast.error('Unable to add to cart');
+      toast.error(messages.error.addToCart.requireLogin);
     }
   };
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = async (productId, newQuantity) => {
     try {
-      if (quantity < 1) return;
+      if (newQuantity < 1) return;
 
       setCart(prevCart => {
         const updatedCart = prevCart.map(item =>
-          item.id === productId ? { ...item, quantity } : item
+          item.id === productId ? { ...item, quantity: newQuantity } : item
         );
         localStorage.setItem('cart', JSON.stringify(updatedCart));
         return updatedCart;
       });
 
-      toast.success('Quantity updated');
+      toast.success(messages.success.updateQuantity);
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('Unable to update quantity');
+      toast.error(messages.error.cart.updateQuantity);
     }
   };
 
-  const removeFromCart = (productId) => {
+  const removeFromCart = async (productId) => {
     try {
       setCart(prevCart => {
         const updatedCart = prevCart.filter(item => item.id !== productId);
         localStorage.setItem('cart', JSON.stringify(updatedCart));
         return updatedCart;
       });
-      toast.success('Item removed');
+      toast.success(messages.success.removeProduct);
     } catch (error) {
       console.error('Error removing item:', error);
-      toast.error('Unable to remove item');
+      toast.error(messages.error.cart.removeProduct);
     }
   };
 
