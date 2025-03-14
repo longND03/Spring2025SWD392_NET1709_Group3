@@ -7,6 +7,7 @@ import PersonalInfoBox from '../components/PersonalInfoBox';
 import SecurityBox from '../components/SecurityBox';
 import OrdersHistoryBox from '../components/OrdersHistoryBox';
 import { useSearchParams } from 'react-router-dom';
+import PointVoucherBox from '../components/PointVoucherBox';
 
 const UserProfile = () => {
   const { user } = useAuth();
@@ -82,7 +83,7 @@ const UserProfile = () => {
       ) : selectedMenu === "security" ? (
         <SecurityBox user={user} />
       ) : selectedMenu === "points" ? (
-        <OrdersHistoryBox userInfo={user} />
+        <PointVoucherBox userInfo={user} />
       ) : selectedMenu === "orders" ? (
         <OrdersHistoryBox userInfo={user} />
       ) : (
