@@ -40,6 +40,8 @@ const ProductDetail = () => {
     toast.success(messages.success.addToCart.replace('{productName}', product.name));
   };
 
+  const isCustomer = user?.role?.[0]?.roleName === 'Customer';
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -115,7 +117,7 @@ const ProductDetail = () => {
                 }
               }}
               onClick={handleAddToCart}
-              disabled={product.stockQuantity < 1}
+              disabled={product.stockQuantity < 1 || !isCustomer}
             >
               {product.stockQuantity < 1 ? 'Out of Stock' : 'Add to Cart'}
             </Button>
