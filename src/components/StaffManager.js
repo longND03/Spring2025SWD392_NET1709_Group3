@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import StaffVoucher from './StaffVoucher';
 
 const StaffManager = () => {
   const [activeTab, setActiveTab] = useState('products');
@@ -37,7 +38,7 @@ const StaffManager = () => {
 
       <div className="flex-grow p-6">
         {activeTab === 'products' && <div>Product Management Content</div>}
-        {activeTab === 'vouchers' && <div>Voucher Management Content</div>}
+        {activeTab === 'vouchers' && <StaffVoucher />}
         {activeTab === 'orders' && <div>Order Management Content</div>}
         {activeTab === 'blogs' && <div>Blog Management Content</div>}
       </div>
