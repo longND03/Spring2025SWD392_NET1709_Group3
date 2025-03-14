@@ -82,7 +82,16 @@ function App() {
               </Routes>
             </main>
             <Footer />
-            <ToastContainer limit={2} />
+            <ToastContainer
+              stacked
+              hideProgressBar
+              newestOnTop={true}
+              closeOnClick
+              pauseOnFocusLoss={false}
+              draggable={false}
+              pauseOnHover={false}
+              autoClose={2000}
+            />
           </div>
         </Router>
       </AuthProvider>
