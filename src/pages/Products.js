@@ -48,7 +48,7 @@ const Products = () => {
           {products.items?.length > 0 ? (
             products.items.map(product => (
               <Grid2
-                size={2.4}      // 4 cards per row on medium screens
+                size={3}      // 3 cards per row on medium screens
                 key={product.id}
               >
                 <ProductCard 

@@ -24,6 +24,7 @@ import StaffManager from './components/StaffManager';
 
 import About from './pages/About';
 import Contact from './pages/Contact';
+import ProductDetail from './pages/ProductDetail';
 
 
 function App() {
@@ -42,6 +43,8 @@ function App() {
                 <Route path="/skin-test" element={<SkinTest />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/products/:id" element={<ProductDetail />} />
                 <Route
                   path="/admindashboard"
                   element={
@@ -68,7 +71,6 @@ function App() {
                 />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
-                <Route path="/products" element={<Products />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route
