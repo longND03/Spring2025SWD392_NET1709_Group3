@@ -5,9 +5,13 @@ const About = () => {
         <div className="min-h-screen bg-white">
             {/* Hero Section with gradient image */}
             <div className="relative h-[40vh] mb-16">
-                {/* Placeholder for background image */}
+                {/* Background image with gradient overlay */}
+                <img 
+                    src="https://cld.accentuate.io/3526913327187/1674193646322/0924_GT_Website_Ecomm2.jpg?v=1738130306453&options=&transform=&resize=1340"
+                    alt="About Us Background"
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-500/80 to-purple-500/80">
-                    {/* Image will be added here */}
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                     <h1 className="text-6xl font-bold text-white">
