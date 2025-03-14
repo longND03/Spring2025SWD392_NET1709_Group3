@@ -12,12 +12,45 @@ const Register = () => {
     location: '',
     phone: ''
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({
+    passwordMatch: '',
+    passwordLength: '',
+    phoneLength: '',
+    phoneFormat: ''
+  });
   const { register, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Handle phone input validation
+    if (name === 'phone') {
+      // Only allow numbers
+      if (!/^\d*$/.test(value)) {
+        setErrors(prev => ({
+          ...prev,
+          phoneFormat: 'Phone number must contain only digits'
+        }));
+        return;
+      }
+      // Clear phone-related errors when typing valid numbers
+      setErrors(prev => ({
+        ...prev,
+        phoneFormat: '',
+        phoneLength: ''
+      }));
+    }
+
+    // Clear password-related errors when typing
+    if (name === 'password' || name === 'confirmPassword') {
+      setErrors(prev => ({
+        ...prev,
+        passwordMatch: '',
+        passwordLength: ''
+      }));
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -27,17 +60,58 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Reset errors
+    setErrors({
+      passwordMatch: '',
+      passwordLength: '',
+      phoneLength: '',
+      phoneFormat: ''
+    });
+
+    // Validate phone number
+    if (!/^\d+$/.test(formData.phone)) {
+      setErrors(prev => ({
+        ...prev,
+        phoneFormat: 'Phone number must contain only digits'
+      }));
+      return;
+    }
+
+    if (formData.phone.length < 10) {
+      setErrors(prev => ({
+        ...prev,
+        phoneLength: 'Phone number must be at least 10 digits long'
+      }));
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 8) {
+      setErrors(prev => ({
+        ...prev,
+        passwordLength: 'Password must be at least 8 characters long'
+      }));
+      return;
+    }
+
+    // Validate password match
     if (formData.password !== formData.confirmPassword) {
-      return setError(messages.validation.passwordMatch);
+      setErrors(prev => ({
+        ...prev,
+        passwordMatch: messages.validation.passwordMatch
+      }));
+      return;
     }
 
     try {
-      setError('');
       await register(formData.username, formData.email, formData.password, formData.location, formData.phone);
-      navigate('/login'); // Chuyển hướng sau khi đăng ký thành công
+      navigate('/login'); // Redirect after successful registration
     } catch (err) {
       console.error('Signup error:', err);
-      setError(messages.error.register);
+      setErrors(prev => ({
+        ...prev,
+        general: messages.error.register
+      }));
     }
   };
 
@@ -61,9 +135,11 @@ const Register = () => {
           </p>
         </div>
 
-        {error && (
+        {(errors.passwordMatch || errors.passwordLength || errors.phoneLength || errors.phoneFormat || errors.general) && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{error}</span>
+            <span className="block sm:inline">
+              {errors.passwordMatch || errors.passwordLength || errors.phoneLength || errors.phoneFormat || errors.general}
+            </span>
           </div>
         )}
 
@@ -112,16 +188,20 @@ const Register = () => {
               <input
                 id="phone"
                 name="phone"
-                type="text"
+                type="tel"
                 required
                 value={formData.phone}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 
-                         placeholder-gray-500 text-gray-900 dark:text-white rounded-lg 
+                className={`appearance-none relative block w-full px-4 py-3 border ${
+                  errors.phoneLength || errors.phoneFormat ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } placeholder-gray-500 text-gray-900 dark:text-white rounded-lg 
                          bg-white dark:bg-[#1B2028]
-                         focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your phone number"
+                         focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm`}
+                placeholder="Enter your phone number (minimum 10 digits)"
               />
+              {(errors.phoneLength || errors.phoneFormat) && (
+                <p className="mt-1 text-sm text-red-600">{errors.phoneLength || errors.phoneFormat}</p>
+              )}
             </div>
             {/* <div>
               <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -152,12 +232,16 @@ const Register = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 
-                         placeholder-gray-500 text-gray-900 dark:text-white rounded-lg 
+                className={`appearance-none relative block w-full px-4 py-3 border ${
+                  errors.passwordLength ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } placeholder-gray-500 text-gray-900 dark:text-white rounded-lg 
                          bg-white dark:bg-[#1B2028]
-                         focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
-                placeholder="Create a password"
+                         focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm`}
+                placeholder="Create a password (minimum 8 characters)"
               />
+              {errors.passwordLength && (
+                <p className="mt-1 text-sm text-red-600">{errors.passwordLength}</p>
+              )}
             </div>
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -170,12 +254,16 @@ const Register = () => {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 
-                         placeholder-gray-500 text-gray-900 dark:text-white rounded-lg 
+                className={`appearance-none relative block w-full px-4 py-3 border ${
+                  errors.passwordMatch ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } placeholder-gray-500 text-gray-900 dark:text-white rounded-lg 
                          bg-white dark:bg-[#1B2028]
-                         focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
+                         focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm`}
                 placeholder="Confirm your password"
               />
+              {errors.passwordMatch && (
+                <p className="mt-1 text-sm text-red-600">{errors.passwordMatch}</p>
+              )}
             </div>
           </div>
 

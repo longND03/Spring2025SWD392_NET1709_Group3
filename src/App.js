@@ -19,7 +19,12 @@ import StaffProductManagement from './pages/StaffProductManagement';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Checkout from './pages/Checkout';
+
 import StaffManager from './components/StaffManager';
+
+import About from './pages/About';
+import Contact from './pages/Contact';
+
 
 function App() {
   return (
@@ -35,6 +40,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/skin-test" element={<SkinTest />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
                 <Route
                   path="/admindashboard"
                   element={

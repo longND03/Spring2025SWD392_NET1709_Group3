@@ -85,29 +85,18 @@ const Checkout = () => {
       return;
     }
 
-    // Pre-fill basic user data
-    setFormData(prev => ({
-      ...prev,
-      username: user.username || '',
-      email: user.email || '',
-      phone: user.phone || ''
-    }));
-
-    // Fetch provinces first
-    fetchProvinces();
-
-    // Fetch voucher details
     const fetchVoucherDetails = async () => {
-      if (user.voucherStorage) {
-        try {
-          const voucherPromises = user.voucherStorage.map(async (storage) => {
-            const response = await axios.get(`/api/voucher/${storage.voucherId}`);
-            return {
-              ...response.data,
-              quantity: storage.quantity,
-              isAvailable: response.data.minimumPurchase <= getCartTotal()
-            };
-          });
+      if (!user.voucherStorage) return;
+
+      try {
+        const voucherPromises = user.voucherStorage.map(async (storage) => {
+          const response = await axios.get(`/api/voucher/${storage.voucherId}`);
+          return {
+            ...response.data,
+            quantity: storage.quantity,
+            isAvailable: response.data.minimumPurchase <= getCartTotal()
+          };
+        });
 
           const voucherDetails = await Promise.all(voucherPromises);
           // Sort vouchers: available first (by percentage), then unavailable
@@ -122,14 +111,40 @@ const Checkout = () => {
           console.error('Error fetching voucher details:', error);
           toast.error(messages.error.vouchers.load);
         }
+      };
+
+    const initializeLocationData = async (provinceCode, districtCode) => {
+      try {
+        if (provinceCode) {
+          await fetchDistricts(provinceCode);
+          // Get province name and calculate shipping
+          const response = await fetch('https://provinces.open-api.vn/api/p/');
+          const provincesData = await response.json();
+          const provinceName = provincesData.find(p => p.code.toString() === provinceCode)?.name;
+          if (provinceName) {
+            calculateShipping(provinceName);
+          }
+        }
+        if (districtCode) {
+          await fetchWards(districtCode);
+        }
+      } catch (error) {
+        console.error('Error initializing location data:', error);
       }
     };
 
-    // If user has location data, parse and set it
+    // Initialize user data
+    setFormData(prev => ({
+      ...prev,
+      username: user.username || '',
+      email: user.email || '',
+      phone: user.phone || ''
+    }));
+
+    // Initialize location data if available
     if (user.location) {
       const [specificAddress, wardCode, districtCode, provinceCode] = user.location.split('|');
-
-      // Set the specific address immediately
+      
       setFormData(prev => ({
         ...prev,
         specificAddress,
@@ -138,32 +153,14 @@ const Checkout = () => {
         ward: wardCode
       }));
 
-      // Fetch dependent data and calculate shipping
-      const initializeLocationData = async () => {
-        try {
-          if (provinceCode) {
-            await fetchDistricts(provinceCode);
-            // Get province name and calculate shipping
-            const response = await fetch('https://provinces.open-api.vn/api/p/');
-            const provincesData = await response.json();
-            const provinceName = provincesData.find(p => p.code.toString() === provinceCode)?.name;
-            if (provinceName) {
-              calculateShipping(provinceName);
-            }
-          }
-          if (districtCode) {
-            await fetchWards(districtCode);
-          }
-        } catch (error) {
-          console.error('Error initializing location data:', error);
-        }
-      };
-
-      initializeLocationData();
+      initializeLocationData(provinceCode, districtCode);
     }
 
+    // Fetch initial data
+    fetchProvinces();
     fetchVoucherDetails();
-  }, [user, navigate, getCartTotal]);
+
+  }, [user, navigate, getCartTotal, calculateShipping]);
 
   useEffect(() => {
     const fetchAddressData = async () => {
@@ -320,7 +317,7 @@ const Checkout = () => {
 
       {/* Two Column Layout for Shipping and Voucher */}
       <div className="grid grid-cols-2 gap-8 mb-8">
-        
+
         {/* Left Column - Shipping Information */}
         <div className="bg-white p-6 rounded-lg shadow h-[600px] overflow-y-auto">
           <h2 className="text-xl font-semibold mb-4">Shipping Information</h2>
@@ -536,11 +533,10 @@ const Checkout = () => {
               onClick={() => setSelectedPaymentMethod(method)}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-4 h-4 rounded-full border ${
-                  selectedPaymentMethod?.id === method.id
+                <div className={`w-4 h-4 rounded-full border ${selectedPaymentMethod?.id === method.id
                     ? 'border-4 border-[#E91E63]'
                     : 'border-gray-300'
-                }`} />
+                  }`} />
                 <span className="font-medium">{method.methodName}</span>
               </div>
             </div>
