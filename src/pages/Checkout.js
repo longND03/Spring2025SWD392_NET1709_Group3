@@ -79,14 +79,12 @@ const Checkout = () => {
   };
 
   useEffect(() => {
-    // Early return if no user
     if (!user) {
       toast.error(messages.error.checkout.requireLogin);
       navigate('/login');
       return;
     }
 
-    // Function declarations
     const fetchVoucherDetails = async () => {
       if (!user.voucherStorage) return;
 

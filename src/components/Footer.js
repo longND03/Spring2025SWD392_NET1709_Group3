@@ -55,11 +55,11 @@ const Footer = () => {
                   Skin Test
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link to="/consultation" className="text-gray-600 hover:text-[#E91E63] dark:text-gray-400 dark:hover:text-[#E91E63] transition-colors duration-200">
                   Consultation
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link to="/about" className="text-gray-600 hover:text-[#E91E63] dark:text-gray-400 dark:hover:text-[#E91E63] transition-colors duration-200">
                   About Us
@@ -79,7 +79,7 @@ const Footer = () => {
                   FAQ
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link to="/shipping" className="text-gray-600 hover:text-[#E91E63] dark:text-gray-400 dark:hover:text-[#E91E63] transition-colors duration-200">
                   Shipping Info
                 </Link>
@@ -88,7 +88,7 @@ const Footer = () => {
                 <Link to="/returns" className="text-gray-600 hover:text-[#E91E63] dark:text-gray-400 dark:hover:text-[#E91E63] transition-colors duration-200">
                   Returns Policy
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link to="/contact" className="text-gray-600 hover:text-[#E91E63] dark:text-gray-400 dark:hover:text-[#E91E63] transition-colors duration-200">
                   Contact Us
