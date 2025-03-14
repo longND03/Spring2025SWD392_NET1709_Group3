@@ -19,8 +19,12 @@ import StaffProductManagement from './pages/StaffProductManagement';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Checkout from './pages/Checkout';
+
+import StaffManager from './components/StaffManager';
+
 import About from './pages/About';
 import Contact from './pages/Contact';
+
 
 function App() {
   return (
@@ -67,6 +71,14 @@ function App() {
                 <Route path="/products" element={<Products />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route
+                  path="/staff-manager"
+                  element={
+                    <PrivateRoute requiredRole={ "Staff"}>
+                      <StaffManager />
+                    </PrivateRoute>
+                  }
+                />
               </Routes>
             </main>
             <Footer />
@@ -75,7 +87,6 @@ function App() {
         </Router>
       </AuthProvider>
     </CartProvider>
-
   );
 }
 
