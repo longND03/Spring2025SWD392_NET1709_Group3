@@ -1,6 +1,6 @@
 import { Divider } from '@mui/material';
-import { useState, useEffect } from 'react';
-import { FaPencilAlt } from 'react-icons/fa';
+import { useState, useEffect, useRef } from 'react';
+import { FaPencilAlt, FaCamera } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +10,9 @@ const PersonalInfoBox = ({ userInfo }) => {
   const { setUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingShipping, setIsEditingShipping] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const fileInputRef = useRef(null);
 
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -217,13 +220,66 @@ const PersonalInfoBox = ({ userInfo }) => {
     }
   };
 
+  const handleImageClick = () => {
+    if (isEditing) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Check file size (10MB = 10 * 1024 * 1024 bytes)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Image size must be less than 10MB');
+        return;
+      }
+
+      // Preview the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setSelectedImage(file);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedImage) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedImage);
+
+      const imageResponse = await axios.post(`/api/image/profile/${userInfo.id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (imageResponse.status === 200) {
+        const updatedUser = {
+          ...userInfo,
+          image: imageResponse.data.imageUrl
+        };
+        setUser(updatedUser);
+        setSelectedImage(null);
+        setPreviewImage(null);
+        toast.success('Profile picture updated successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    }
+  };
+
   const handleSave = async () => {
     if (!validateForm()) {
       return;
     }
 
     try {
-      console.log(editedInfo);
       const response = await axios.put(`/api/user/${userInfo.id}`, editedInfo);
       
       if (response.status === 200) {
@@ -411,7 +467,11 @@ const PersonalInfoBox = ({ userInfo }) => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setIsEditing(false)}
+                        onClick={() => {
+                          setIsEditing(false);
+                          setSelectedImage(null);
+                          setPreviewImage(null);
+                        }}
                         className="flex-1 border border-gray-300 text-gray-700 py-1.5 px-3 rounded-md hover:bg-gray-50 transition-colors duration-200 text-sm"
                       >
                         Cancel
@@ -420,16 +480,55 @@ const PersonalInfoBox = ({ userInfo }) => {
                   </form>
                 )}
               </div>
-              <div className='flex justify-center items-center w-1/2'>
-                {userInfo?.image ? (
-                  <img
-                    src={userInfo?.image}
-                    alt="User Avatar"
-                    className="w-40 h-40 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-32 h-32 text-5xl rounded-full bg-[#E91E63] flex items-center justify-center text-white">
-                    {userInfo?.username ? userInfo.username.charAt(0).toUpperCase() : 'U'}
+              <div className='flex flex-col items-center w-1/2 gap-4'>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <div 
+                  onClick={handleImageClick}
+                  className={`relative ${isEditing ? 'cursor-pointer group' : ''}`}
+                >
+                  {previewImage || userInfo?.image ? (
+                    <img
+                      src={previewImage || userInfo?.image}
+                      alt="User Avatar"
+                      className={`w-40 h-40 rounded-full object-cover ${
+                        isEditing ? 'transition-opacity group-hover:opacity-70' : ''
+                      }`}
+                    />
+                  ) : (
+                    <div className={`w-32 h-32 text-5xl rounded-full bg-[#E91E63] flex items-center justify-center text-white ${
+                      isEditing ? 'transition-opacity group-hover:opacity-70' : ''
+                    }`}>
+                      {userInfo?.username ? userInfo.username.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
+                  {isEditing && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                      <FaCamera className="text-4xl text-white" />
+                    </div>
+                  )}
+                </div>
+                {isEditing && (
+                  <div className="flex flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleImageUpload}
+                      disabled={!selectedImage}
+                      className={`py-2 px-6 rounded-md transition-colors duration-200 text-sm flex items-center gap-2
+                        ${selectedImage 
+                          ? 'bg-[#E91E63] hover:bg-[#D81B60] text-white cursor-pointer' 
+                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                    >
+                      <FaCamera className="text-sm" /> Upload Image
+                    </button>
+                    <p className="text-xs text-gray-500">
+                      {selectedImage ? 'Click to upload your new profile picture' : 'Click on the avatar to select an image'}
+                    </p>
                   </div>
                 )}
               </div>
