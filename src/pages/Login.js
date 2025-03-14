@@ -7,45 +7,30 @@ import messages from '../constants/message.json';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [error, setError] = useState('');
+  const { login, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Lấy redirect path từ location state hoặc mặc định là '/'
-  const redirectPath = location.state?.from || '/';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error(messages.validation.required.email + ' and ' + messages.validation.required.password);
-      return;
-    }
-
     try {
-      setLoading(true);
       const result = await login(email, password);
-      
       if (result.success) {
-        toast.success(messages.success.login);
-        
         // Kiểm tra vai trò người dùng
-        const userRole = result.user.role?.[0]?.roleName || 'User';
-        console.log('User role:', userRole);// Sử dụng optional chaining
-        if (userRole === 'Manager') {
-          navigate('/admindashboard');
+        const userRole = result.user.role[0].roleName; // Lấy vai trò đầu tiên
+        if (userRole === "Staff") {
+          navigate('/staff-manager'); // Chuyển hướng đến StaffManager
+        } else if (userRole === "Manager") {
+          navigate('/admindashboard'); // Chuyển hướng đến AdminDashboard
         } else {
-          navigate('/');
+          navigate('/'); // Chuyển hướng đến trang chính
         }
       } else {
-        toast.error(result.message || messages.error.login);
+        setError(messages.error.login);
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error(messages.error.server);
-    } finally {
-      setLoading(false);
+      setError('Failed to login');
     }
   };
 
@@ -70,6 +55,7 @@ const Login = () => {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && <div className="text-red-500 mb-4">{error}</div>}
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -128,12 +114,9 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg
-                     text-sm font-medium text-white bg-[#E91E63] hover:bg-pink-700
-                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500
-                     disabled:opacity-50"
+            className="w-full bg-[#E91E63] text-white p-2 rounded"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Loading...' : 'Login'}
           </button>
         </form>
       </div>

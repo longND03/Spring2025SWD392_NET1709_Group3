@@ -17,8 +17,10 @@ const Login = () => {
       if (result.success) {
         // Kiểm tra vai trò người dùng
         const userRole = result.user.role[0].roleName; // Lấy vai trò đầu tiên
-        if (userRole === "Manager") {
-          navigate('/admindashboard'); // Chuyển hướng đến AdminDashboard
+        if (userRole === "Staff") {
+          navigate('/staff-manager'); // Chuyển hướng đến StaffManager
+        } else if (userRole === "Manager") {
+          navigate('/admindashboard'); 
         } else {
           navigate('/'); // Chuyển hướng đến trang chính
         }
