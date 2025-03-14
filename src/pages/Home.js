@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from "../api/axios";
+import toast from 'react-hot-toast';
 
 const Home = () => {
   const [isVisible, setIsVisible] = useState(false);
