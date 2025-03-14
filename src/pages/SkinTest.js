@@ -303,7 +303,7 @@ const SkinTest = () => {
                 {recProduct.length > 0 ? (
                   recProduct.map(product => (
                     <Grid2
-                      size={2.4}      // 4 cards per row on medium screens
+                      size={3}      // 3 cards per row on medium screens
                       key={product.id}
                     >
                       <ProductCard
