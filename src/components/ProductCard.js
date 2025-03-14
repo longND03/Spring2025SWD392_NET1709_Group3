@@ -14,7 +14,9 @@ const ProductCard = ({ product }) => {
       return;
     }
     addToCart(product);
-    toast.success(messages.success.addToCart.replace('{productName}', product.name));
+    toast.success(messages.success.addToCart.replace('{productName}', product.name), {
+      position: 'top-left',
+    });
   };
 
   return (
