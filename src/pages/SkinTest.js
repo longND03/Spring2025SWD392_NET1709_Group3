@@ -46,7 +46,7 @@ const SkinTest = () => {
         console.log(recSkintypeId);
 
         const queryString = recSkintypeId.map(id => `&SkinTypeIds=${id}`).join('');
-        const res = await axios.get(`/api/product?PageNumber=1&PageSize=5${queryString}`);
+        const res = await axios.get(`/api/product?PageNumber=1&PageSize=5&IsDeleted=false${queryString}`);
 
         setRecProduct(res.data.items);
       } catch (error) {
@@ -58,23 +58,6 @@ const SkinTest = () => {
 
     fetchRecommendProductBySkintypeId();
   }, [recSkintypeId]);
-
-  const resolveRecProduct = (res) => {
-    // Combine all items from all responses into a single array
-    const dirtyData = res.reduce((acc, response) => {
-      return acc.concat(response.data.items);
-    }, []);
-
-    // Remove duplicates based on product id
-    const seen = new Set();
-    const uniqueData = dirtyData.filter(obj => {
-      if (seen.has(obj.id)) return false;
-      seen.add(obj.id);
-      return true;
-    });
-
-    return uniqueData;
-  };
 
   const handleAnswerSelect = (questionId, value) => {
     // Hide results when any answer changes

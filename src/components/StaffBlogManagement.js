@@ -103,7 +103,8 @@ const StaffBlogManagement = () => {
             <table className="min-w-full bg-white border border-gray-300 table-fixed">
                 <thead>
                     <tr>
-                        <th className="py-2 px-4 border-b text-left w-64">Title</th>
+                        <th className="py-2 px-4 border-b text-left w-24">ID</th>
+                        <th className="py-2 px-4 border-b text-left w-56">Title</th>
                         <th className="py-2 px-4 border-b text-left w-32">Author</th>
                         <th className="py-2 px-4 border-b text-left w-40">Created Date</th>
                         <th className="py-2 px-4 border-b text-left w-40">Published Date</th>
@@ -115,7 +116,10 @@ const StaffBlogManagement = () => {
                     {posts.items.length > 0 ? (
                         posts.items.map((post) => (
                             <tr key={post.id}>
-                                <td className="py-2 px-4 border-b truncate w-64">
+                                <td className="py-2 px-4 border-b truncate w-24">
+                                    {post.id}
+                                </td>
+                                <td className="py-2 px-4 border-b truncate w-56">
                                     <Link
                                         to={`/posts/${post.id}`}
                                         className="text-blue-600 hover:text-blue-800 hover:underline"
@@ -168,7 +172,7 @@ const StaffBlogManagement = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="6" className="py-4 text-center text-gray-500">
+                            <td colSpan="7" className="py-4 text-center text-gray-500">
                                 No {isDraft ? 'draft' : 'published'} posts found
                             </td>
                         </tr>

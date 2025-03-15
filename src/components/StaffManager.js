@@ -28,7 +28,7 @@ const StaffManager = () => {
             className={`py-2 px-4 rounded-lg ${activeTab === 'products' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
             onClick={() => handleTabClick('products')}
           >
-            Products
+            Products & Batchs
           </button>
           <button
             className={`py-2 px-4 rounded-lg ${activeTab === 'vouchers' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
