@@ -5,31 +5,34 @@ import { Pagination, CircularProgress, Button } from '@mui/material';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import StaffCreateBlog from './StaffCreateBlog';
+import StaffUpdateBlog from './StaffUpdateBlog';
 
 const StaffBlogManagement = () => {
     const { user } = useAuth();
-    const [draftPosts, setDraftPosts] = useState([]);
-    const [publishedPosts, setPublishedPosts] = useState([]);
+    const [draftPosts, setDraftPosts] = useState({ items: [], totalPages: 1 });
+    const [publishedPosts, setPublishedPosts] = useState({ items: [], totalPages: 1 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [publishedPage, setPublishedPage] = useState(1);
     const [draftPage, setDraftPage] = useState(1);
-    const [publishedTotalPages, setPublishedTotalPages] = useState(1);
-    const [draftTotalPages, setDraftTotalPages] = useState(1);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+    const [selectedPost, setSelectedPost] = useState(null);
 
     const fetchPosts = async () => {
         try {
             setLoading(true);
-            const [draftResponse, publishedResponse] = await Promise.all([
-                Axios.get(`/api/post?PageNumber=${draftPage}&PageSize=10&IsDeleted=false&Status=false`),
-                Axios.get(`/api/post?PageNumber=${publishedPage}&PageSize=10&IsDeleted=false&Status=true`)
-            ]);
-            
-            setDraftPosts(draftResponse.data || []);
-            setPublishedPosts(publishedResponse.data || []);
-            setDraftTotalPages(Math.max(1, Math.ceil((draftResponse.data?.length || 0) / 10)));
-            setPublishedTotalPages(Math.max(1, Math.ceil((publishedResponse.data?.length || 0) / 10)));
+            const draftResponse = await Axios.get(`/api/post?PageNumber=${draftPage}&PageSize=10&Status=false`);
+            const publishedResponse = await Axios.get(`/api/post?PageNumber=${publishedPage}&PageSize=10&Status=true`);
+
+            setDraftPosts({
+                items: draftResponse.data.items || [],
+                totalPages: draftResponse.data.totalPages || 1
+            });
+            setPublishedPosts({
+                items: publishedResponse.data.items || [],
+                totalPages: publishedResponse.data.totalPages || 1
+            });
             setError(null);
         } catch (error) {
             console.error("Error fetching posts:", error);
@@ -56,13 +59,35 @@ const StaffBlogManagement = () => {
 
     const handlePublish = async (postId) => {
         try {
-            await Axios.put(`/api/post/${postId}/publish`);
+            await Axios.put(`/api/post/publication/${postId}`);
             toast.success('Post published successfully');
             fetchPosts(); // Refresh both lists
         } catch (error) {
             console.error("Error publishing post:", error);
             toast.error("Failed to publish post");
         }
+    };
+
+    const handleRemove = async (postId) => {
+        try {
+            await Axios.delete(`/api/post/soft-delete/${postId}`);
+            toast.success('Post removed successfully');
+            fetchPosts(); // Refresh both lists
+        } catch (error) {
+            console.error("Error removing post:", error);
+            toast.error("Failed to remove post");
+        }
+    };
+
+    const handleEdit = (post) => {
+        setSelectedPost(post);
+        setIsUpdateModalOpen(true);
+    };
+
+    const handleUpdateSuccess = () => {
+        fetchPosts();
+        setIsUpdateModalOpen(false);
+        setSelectedPost(null);
     };
 
     const formatDate = (dateString) => {
@@ -75,22 +100,22 @@ const StaffBlogManagement = () => {
 
     const PostTable = ({ posts, isDraft }) => (
         <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-300">
+            <table className="min-w-full bg-white border border-gray-300 table-fixed">
                 <thead>
                     <tr>
-                        <th className="py-2 px-4 border-b text-left">Title</th>
-                        <th className="py-2 px-4 border-b text-left">Author</th>
-                        <th className="py-2 px-4 border-b text-left">Created Date</th>
-                        <th className="py-2 px-4 border-b text-left">Published Date</th>
-                        <th className="py-2 px-4 border-b text-left">Tags</th>
-                        <th className="py-2 px-4 border-b text-left">Actions</th>
+                        <th className="py-2 px-4 border-b text-left w-64">Title</th>
+                        <th className="py-2 px-4 border-b text-left w-32">Author</th>
+                        <th className="py-2 px-4 border-b text-left w-40">Created Date</th>
+                        <th className="py-2 px-4 border-b text-left w-40">Published Date</th>
+                        <th className="py-2 px-4 border-b text-left w-48">Tags</th>
+                        <th className="py-2 px-4 border-b text-left w-40">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {posts.length > 0 ? (
-                        posts.map((post) => (
+                    {posts.items.length > 0 ? (
+                        posts.items.map((post) => (
                             <tr key={post.id}>
-                                <td className="py-2 px-4 border-b">
+                                <td className="py-2 px-4 border-b truncate w-64">
                                     <Link
                                         to={`/posts/${post.id}`}
                                         className="text-blue-600 hover:text-blue-800 hover:underline"
@@ -98,12 +123,12 @@ const StaffBlogManagement = () => {
                                         {post.title}
                                     </Link>
                                 </td>
-                                <td className="py-2 px-4 border-b">{post.author}</td>
-                                <td className="py-2 px-4 border-b">{formatDate(post.createdDate)}</td>
-                                <td className="py-2 px-4 border-b">
+                                <td className="py-2 px-4 border-b truncate w-32">{post.author}</td>
+                                <td className="py-2 px-4 border-b w-40">{formatDate(post.createdDate)}</td>
+                                <td className="py-2 px-4 border-b w-40">
                                     {post.publishedDate ? formatDate(post.publishedDate) : '-'}
                                 </td>
-                                <td className="py-2 px-4 border-b">
+                                <td className="py-2 px-4 border-b w-48">
                                     <div className="flex flex-wrap gap-1">
                                         {post.tags.map((tag, index) => (
                                             <span
@@ -115,7 +140,7 @@ const StaffBlogManagement = () => {
                                         ))}
                                     </div>
                                 </td>
-                                <td className="py-2 px-4 border-b">
+                                <td className="py-2 px-4 border-b w-40">
                                     <div className="flex gap-2">
                                         {isDraft && (
                                             <button
@@ -127,15 +152,15 @@ const StaffBlogManagement = () => {
                                         )}
                                         <button
                                             className="text-blue-500 hover:text-blue-700"
-                                            onClick={() => {/* TODO: Implement edit */}}
+                                            onClick={() => handleEdit(post)}
                                         >
                                             Edit
                                         </button>
                                         <button
                                             className="text-red-500 hover:text-red-700"
-                                            onClick={() => {/* TODO: Implement delete */}}
+                                            onClick={() => handleRemove(post.id)}
                                         >
-                                            Delete
+                                            {post.isDeleted ? 'Delete' : 'Remove'}
                                         </button>
                                     </div>
                                 </td>
@@ -178,6 +203,17 @@ const StaffBlogManagement = () => {
             <StaffCreateBlog 
                 open={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
+                onSave={fetchPosts}
+            />
+
+            <StaffUpdateBlog
+                open={isUpdateModalOpen}
+                onClose={() => {
+                    setIsUpdateModalOpen(false);
+                    setSelectedPost(null);
+                }}
+                onSave={handleUpdateSuccess}
+                post={selectedPost}
             />
 
             {loading ? (
@@ -190,10 +226,10 @@ const StaffBlogManagement = () => {
                     <div className="mb-8">
                         <h3 className="text-lg font-semibold mb-4">Draft Posts</h3>
                         <PostTable posts={draftPosts} isDraft={true} />
-                        {draftPosts.length > 0 && (
+                        {draftPosts.items.length > 0 && (
                             <div className="flex justify-center mt-4">
                                 <Pagination
-                                    count={draftTotalPages}
+                                    count={draftPosts.totalPages}
                                     page={draftPage}
                                     onChange={handleDraftPageChange}
                                     variant="outlined"
@@ -207,10 +243,10 @@ const StaffBlogManagement = () => {
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Published Posts</h3>
                         <PostTable posts={publishedPosts} isDraft={false} />
-                        {publishedPosts.length > 0 && (
+                        {publishedPosts.items.length > 0 && (
                             <div className="flex justify-center mt-4">
                                 <Pagination
-                                    count={publishedTotalPages}
+                                    count={publishedPosts.totalPages}
                                     page={publishedPage}
                                     onChange={handlePublishedPageChange}
                                     variant="outlined"
