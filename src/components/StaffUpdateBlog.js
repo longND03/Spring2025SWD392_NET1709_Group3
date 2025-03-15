@@ -15,7 +15,7 @@ import {
     UnderlineIcon,
 } from 'lucide-react';
 
-const StaffCreateBlog = ({ open, onClose, onSave }) => {
+const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [availableTags, setAvailableTags] = useState([]);
@@ -45,6 +45,22 @@ const StaffCreateBlog = ({ open, onClose, onSave }) => {
         },
     });
 
+    // Load post data when component mounts or post changes
+    useEffect(() => {
+        if (post) {
+            setTitle(post.title);
+            setContent(post.content);
+            editor?.commands.setContent(post.content);
+            
+            // Convert tag strings to objects if needed
+            const tagObjects = post.tags.map(tagName => ({
+                id: tagName, // You might need to adjust this based on your data structure
+                name: tagName
+            }));
+            setSelectedTags(tagObjects);
+        }
+    }, [post, editor]);
+
     useEffect(() => {
         const fetchTags = async () => {
             try {
@@ -61,19 +77,18 @@ const StaffCreateBlog = ({ open, onClose, onSave }) => {
 
     const handleSave = async () => {
         try {
-            await axios.post('/api/post', {
+            await axios.put(`/api/post/${post.id}`, {
                 title: title,
                 content: content,
                 tagIds: selectedTags.map(tag => tag.id)
             });
 
-            toast.success('Post saved successfully');
-            clearForm();
+            toast.success('Post updated successfully');
             onClose();
             onSave();
         } catch (error) {
-            console.error('Error saving post:', error);
-            toast.error('Failed to save post');
+            console.error('Error updating post:', error);
+            toast.error('Failed to update post');
         }
     };
 
@@ -122,20 +137,10 @@ const StaffCreateBlog = ({ open, onClose, onSave }) => {
         });
     };
 
-    const clearForm = () => {
-        setTitle('');
-        setContent('');
-        editor?.commands.setContent('');
-        setSelectedTags([]);
-        setSelectedImage(null);
-        setImagePreview('');
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
     const handleClose = () => {
-        if (title || content || selectedTags.length > 0 || selectedImage) {
+        if (title !== post.title || content !== post.content || 
+            JSON.stringify(selectedTags) !== JSON.stringify(post.tags.map(tag => ({ id: tag, name: tag }))) || 
+            selectedImage) {
             setShowConfirmDialog(true);
         } else {
             onClose();
@@ -143,7 +148,6 @@ const StaffCreateBlog = ({ open, onClose, onSave }) => {
     };
 
     const handleConfirmClose = () => {
-        clearForm();
         setShowConfirmDialog(false);
         onClose();
     };
@@ -166,7 +170,7 @@ const StaffCreateBlog = ({ open, onClose, onSave }) => {
                     </button>
 
                     <div className="p-6">
-                        <h2 className="text-2xl font-bold mb-4">Create New Blog Post</h2>
+                        <h2 className="text-2xl font-bold mb-4">Update Blog Post</h2>
 
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
@@ -309,7 +313,7 @@ const StaffCreateBlog = ({ open, onClose, onSave }) => {
                                 onClick={handleSave}
                                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                             >
-                                Save
+                                Update
                             </button>
                         </div>
                     </div>
@@ -342,4 +346,4 @@ const StaffCreateBlog = ({ open, onClose, onSave }) => {
     );
 };
 
-export default StaffCreateBlog;
+export default StaffUpdateBlog; 

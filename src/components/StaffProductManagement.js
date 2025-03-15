@@ -4,6 +4,7 @@ import Axios from '../api/axios';
 import { Pagination, CircularProgress, Button } from '@mui/material';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
+import StaffCreateProduct from './StaffCreateProduct';
 
 const StaffProductManagement = () => {
   const { user } = useAuth();
@@ -11,23 +12,24 @@ const StaffProductManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await Axios.get(`/api/product?PageNumber=${page}&PageSize=10`);
+      setProducts(response.data);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("Failed to load products. Please try again later.");
+      toast.error("Failed to load products");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await Axios.get(`/api/product?PageNumber=${page}&PageSize=10`);
-        setProducts(response.data);
-        setError(null);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        setError("Failed to load products. Please try again later.");
-        toast.error("Failed to load products");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
   }, [page]);
 
@@ -52,6 +54,7 @@ const StaffProductManagement = () => {
               bgcolor: '#388E3C'
             }
           }}
+          onClick={() => setIsCreateModalOpen(true)}
         >
           Add
         </Button>
@@ -133,6 +136,12 @@ const StaffProductManagement = () => {
           )}
         </>
       )}
+
+      <StaffCreateProduct
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={fetchProducts}
+      />
     </div>
   );
 };

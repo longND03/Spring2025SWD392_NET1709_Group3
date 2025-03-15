@@ -15,7 +15,6 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Products from "./pages/Products";
 import Cart from "./components/Cart";
-import StaffProductManagement from "./pages/StaffProductManagement";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Checkout from "./pages/Checkout";
@@ -51,14 +50,6 @@ function App() {
                   element={
                     <PrivateRoute requiredRole="Manager">
                       <AdminDashboard />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/staff/products"
-                  element={
-                    <PrivateRoute requiredRole="Staff">
-                      <StaffProductManagement />
                     </PrivateRoute>
                   }
                 />
