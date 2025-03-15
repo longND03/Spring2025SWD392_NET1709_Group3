@@ -10,12 +10,7 @@ const PrivateRoute = ({ children, requiredRole }) => {
     return <Navigate to="/login" />;
   }
 
-  // Kiểm tra nếu requiredRole là một mảng và nếu vai trò của người dùng có trong đó
-  const hasAccess = Array.isArray(requiredRole)
-    ? requiredRole.some(role => user.role?.some(userRole => userRole.roleName === role))
-    : user.role?.some(userRole => userRole.roleName === requiredRole);
-
-  if (!hasAccess) {
+  if (requiredRole && user.role?.[0]?.roleName !== requiredRole) {
     return <Navigate to="/" />;
   }
 

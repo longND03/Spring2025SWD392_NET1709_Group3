@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { toast } from 'react-toastify';
-import CircularProgress from '@mui/material/CircularProgress';
-import axios from '../api/axios';
 import PersonalInfoBox from '../components/PersonalInfoBox';
 import SecurityBox from '../components/SecurityBox';
 import OrdersHistoryBox from '../components/OrdersHistoryBox';
