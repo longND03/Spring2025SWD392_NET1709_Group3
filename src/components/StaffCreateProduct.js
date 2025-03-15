@@ -170,15 +170,14 @@ const StaffCreateProduct = ({ open, onClose, onSave }) => {
             if (!validateForm()) return;
             setIsSaving(true);
 
-            const productData = {
+            await axios.post('/api/product', {
                 name: formData.name,
                 description: formData.description,
                 brandId: formData.brandId,
                 categoryId: formData.categoryId,
+                packagingId: formData.packagingId,
                 price: parseFloat(formData.price),
-                // Optional fields
-                packagingId: formData.packagingId || null,
-                formulationTypeId: formData.formulationTypeId || null,
+                formulationTypeId: formData.formulationTypeId,
                 direction: formData.direction || '',
                 pao: formData.pao || '',
                 precaution: formData.precaution || '',
@@ -186,18 +185,14 @@ const StaffCreateProduct = ({ open, onClose, onSave }) => {
                 additionalInformation: formData.additionalInformation || '',
                 productTags: formData.productTags,
                 productIngredients: formData.productIngredients,
-                productSkinTypes: formData.productSkinTypes
-            };
-
-            // Log the data in a formatted way
-            console.log('Product Data for API:');
-            console.log(JSON.stringify(productData, null, 2));
-
-            await axios.post('/api/product', productData);
+                productSkinTypes: formData.productSkinTypes,
+                // stockQuantity: 0, // Default value, will be updated through inventory management
+                // status: true // Default to active
+            });
             
-            toast.success('Product created successfully');
-            onSave();
-            handleConfirmClose();
+                toast.success('Product created successfully');
+                onSave();
+                handleConfirmClose();
         } catch (error) {
             console.error('Error creating product:', error);
             if (error.response?.data?.message) {
