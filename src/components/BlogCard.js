@@ -1,59 +1,97 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Button,
+  Box,
+  Chip,
+} from "@mui/material";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 const BlogCard = ({ post }) => {
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:transform hover:scale-102">
-      <div className="relative">
-        <img
-          src={post.image}
-          alt={post.title}
-          className="w-full h-56 object-cover"
-        />
-        <div className="absolute top-4 right-4">
-          <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-purple-600 text-sm font-medium rounded-full">
-            {post.category}
-          </span>
-        </div>
-      </div>
-      <div className="p-6">
-        <div className="flex items-center mb-3">
-          <span className="text-sm text-gray-500">{post.readTime}</span>
-          <span className="mx-2 text-gray-300">•</span>
-          <span className="text-sm text-gray-500">
-            {new Date(post.date).toLocaleDateString()}
-          </span>
-        </div>
-        <h2 className="text-xl font-bold mb-3 text-gray-800 hover:text-purple-600 transition-colors duration-200">
-          <Link to={`/blog/${post.id}`}>{post.title}</Link>
-        </h2>
-        <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt}</p>
+    <Card
+      className="h-full flex flex-col transition-transform duration-300 hover:shadow-lg hover:-translate-y-1"
+      sx={{
+        overflow: "hidden",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: "12px",
+      }}
+    >
+<CardMedia
+  component="img"
+  height="200"
+  image={post.image || "/default-image.jpg"} 
+  alt={post.title}
+/>
+      <CardContent
+        sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+      >
+        <Box mb={1}>
+          <Chip
+            label={post.category}
+            size="small"
+            sx={{
+              bgcolor: "#9C27B0",
+              color: "white",
+              fontSize: "0.7rem",
+              height: "24px",
+            }}
+          />
+        </Box>
 
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-medium">
-              {post.author
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{post.author}</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {post.tags.slice(0, 2).map((tag, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 text-xs bg-purple-50 text-purple-600 rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+        <Typography
+          gutterBottom
+          variant="h6"
+          component="h2"
+          sx={{
+            fontWeight: "bold",
+            mb: 1,
+            lineHeight: 1.3,
+          }}
+        >
+          {post.title}
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+  {post.excerpt || (post.description.length > 120 
+    ? post.description.substring(0, 120) + "..." 
+    : post.description)}
+</Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mt: "auto",
+          }}
+        >
+          <Typography variant="caption" color="text.secondary">
+            {post.date}
+          </Typography>
+
+          <Link to={`/blog/${post.id}`} style={{ textDecoration: "none" }}>
+            <Button
+              endIcon={<ArrowForwardIcon />}
+              sx={{
+                color: "#9C27B0",
+                "&:hover": {
+                  bgcolor: "rgba(156, 39, 176, 0.08)",
+                },
+              }}
+            >
+              Read More
+            </Button>
+          </Link>
+        </Box>
+      </CardContent>
+    </Card>
   );
 };
 

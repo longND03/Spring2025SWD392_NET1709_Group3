@@ -13,6 +13,24 @@ export const blogPosts = [
       "Your skin type is determined by genetics, but can be influenced by various factors including environment, diet, and lifestyle choices. The main skin types are normal, dry, oily, combination, and sensitive...",
     readTime: "5 min read",
     tags: ["Skin Types", "Skincare Basics", "Beauty Tips"],
+    comments: [
+      {
+        id: 1,
+        text: "This was exactly what I needed to know about my skin type!",
+        author: "Sarah Johnson",
+        avatar: "https://via.placeholder.com/40",
+        date: "2024-03-15",
+        postId: 1,
+      },
+      {
+        id: 2,
+        text: "Great explanation of the different skin types. Very helpful!",
+        author: "Mike Brown",
+        avatar: "https://via.placeholder.com/40",
+        date: "2024-03-14",
+        postId: 1,
+      },
+    ],
   },
   {
     id: 2,
