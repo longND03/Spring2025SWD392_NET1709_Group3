@@ -7,7 +7,7 @@ const ForgotPassword = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const { resetPassword } = useAuth();
+  const { resetPassword, confirmPasswordReset } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,7 +15,20 @@ const ForgotPassword = () => {
       setMessage('');
       setError('');
       setLoading(true);
-      await resetPassword(email);
+      
+      // Gọi API để gửi email đặt lại mật khẩu
+      const response = await fetch('http://localhost:5296/api/auth/forgot-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reset password');
+      }
+
       setMessage('Check your inbox for further instructions');
     } catch (err) {
       setError('Failed to reset password');
