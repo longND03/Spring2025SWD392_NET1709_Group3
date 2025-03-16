@@ -4,6 +4,8 @@ import StaffProductManagement from './StaffProductManagement';
 import { Divider } from '@mui/material';
 import StaffBlogManagement from './StaffBlogManagement';
 import StaffSkintypeTagManagement from './StaffSkintype&TagManagement';
+import BrandCategoryManagement from './Brand&CategoryManagement';
+import PackagingFormulationIngredientManagement from './PackagingFormulationIngredientManagement';
 
 const StaffManager = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,10 +34,22 @@ const StaffManager = () => {
             Products & Batchs
           </button>
           <button
+            className={`py-2 px-4 rounded-lg ${activeTab === 'brands & categories' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
+            onClick={() => handleTabClick('brands & categories')}
+          >
+            Brands & Categories
+          </button>
+          <button
             className={`py-2 px-4 rounded-lg ${activeTab === 'skintypes & tags' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
             onClick={() => handleTabClick('skintypes & tags')}
           >
             Skintypes & Tags
+          </button>
+          <button
+            className={`py-2 px-4 rounded-lg ${activeTab === 'packaging & formulation & ingredient' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
+            onClick={() => handleTabClick('packaging & formulation & ingredient')}
+          >
+            Packagings, Formulations & Ingredients
           </button>
           <button
             className={`py-2 px-4 rounded-lg ${activeTab === 'vouchers' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
@@ -60,7 +74,9 @@ const StaffManager = () => {
 
       <div className="flex-grow p-6">
         {activeTab === 'products' && <StaffProductManagement/>}
+        {activeTab === 'brands & categories' && <BrandCategoryManagement/>}
         {activeTab === 'skintypes & tags' && <StaffSkintypeTagManagement/>}
+        {activeTab === 'packaging & formulation & ingredient' && <PackagingFormulationIngredientManagement/>}
         {activeTab === 'vouchers' && <div/>}
         {activeTab === 'orders' && <div>Order Management Content</div>}
         {activeTab === 'blogs' && <StaffBlogManagement/>}
