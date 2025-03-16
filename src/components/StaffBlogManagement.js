@@ -11,41 +11,51 @@ const StaffBlogManagement = () => {
     const { user } = useAuth();
     const [draftPosts, setDraftPosts] = useState({ items: [], totalPages: 1 });
     const [publishedPosts, setPublishedPosts] = useState({ items: [], totalPages: 1 });
-    const [loading, setLoading] = useState(true);
+    const [draftLoading, setDraftLoading] = useState(true);
+    const [publishedLoading, setPublishedLoading] = useState(true);
     const [error, setError] = useState(null);
     const [publishedPage, setPublishedPage] = useState(1);
     const [draftPage, setDraftPage] = useState(1);
+    const [draftSearch, setDraftSearch] = useState('');
+    const [publishedSearch, setPublishedSearch] = useState('');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
 
     const fetchPosts = async () => {
         try {
-            setLoading(true);
-            const draftResponse = await Axios.get(`/api/post?PageNumber=${draftPage}&PageSize=10&Status=false`);
-            const publishedResponse = await Axios.get(`/api/post?PageNumber=${publishedPage}&PageSize=10&Status=true`);
+            setDraftLoading(true);
+            setPublishedLoading(true);
 
+            // Fetch draft posts
+            const draftResponse = await Axios.get(`/api/post?PageNumber=${draftPage}&PageSize=10&Status=false${draftSearch ? `&Title=${draftSearch}` : ''}`);
             setDraftPosts({
                 items: draftResponse.data.items || [],
                 totalPages: draftResponse.data.totalPages || 1
             });
+            setDraftLoading(false);
+
+            // Fetch published posts
+            const publishedResponse = await Axios.get(`/api/post?PageNumber=${publishedPage}&PageSize=10&Status=true${publishedSearch ? `&Title=${publishedSearch}` : ''}`);
             setPublishedPosts({
                 items: publishedResponse.data.items || [],
                 totalPages: publishedResponse.data.totalPages || 1
             });
+            setPublishedLoading(false);
+
             setError(null);
         } catch (error) {
             console.error("Error fetching posts:", error);
             setError("Failed to load blog posts. Please try again later.");
             toast.error("Failed to load blog posts");
-        } finally {
-            setLoading(false);
+            setDraftLoading(false);
+            setPublishedLoading(false);
         }
     };
 
     useEffect(() => {
         fetchPosts();
-    }, [draftPage, publishedPage]);
+    }, [draftPage, publishedPage, draftSearch, publishedSearch]);
 
     const handlePublishedPageChange = (event, value) => {
         setPublishedPage(value);
@@ -55,6 +65,16 @@ const StaffBlogManagement = () => {
     const handleDraftPageChange = (event, value) => {
         setDraftPage(value);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleDraftSearch = (e) => {
+        setDraftSearch(e.target.value);
+        setDraftPage(1); // Reset to first page when searching
+    };
+
+    const handlePublishedSearch = (e) => {
+        setPublishedSearch(e.target.value);
+        setPublishedPage(1); // Reset to first page when searching
     };
 
     const handlePublish = async (postId) => {
@@ -98,7 +118,7 @@ const StaffBlogManagement = () => {
         });
     };
 
-    const PostTable = ({ posts, isDraft }) => (
+    const PostTable = ({ posts, isDraft, isLoading }) => (
         <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-300 table-fixed">
                 <thead>
@@ -113,7 +133,15 @@ const StaffBlogManagement = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {posts.items.length > 0 ? (
+                    {isLoading ? (
+                        <tr>
+                            <td colSpan="7" className="py-20">
+                                <div className="flex justify-center items-center">
+                                    <CircularProgress />
+                                </div>
+                            </td>
+                        </tr>
+                    ) : posts.items.length > 0 ? (
                         posts.items.map((post) => (
                             <tr key={post.id}>
                                 <td className="py-2 px-4 border-b truncate w-24">
@@ -220,47 +248,63 @@ const StaffBlogManagement = () => {
                 post={selectedPost}
             />
 
-            {loading ? (
-                <div className="flex justify-center items-center h-64">
-                    <CircularProgress />
+            <>
+                {/* Draft Posts Section */}
+                <div className="mb-8">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold">Draft Posts</h3>
+                    </div>
+                    <div className="mb-4">
+                        <input
+                            type="text"
+                            placeholder="Search drafts..."
+                            value={draftSearch}
+                            onChange={handleDraftSearch}
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+                    <PostTable posts={draftPosts} isDraft={true} isLoading={draftLoading} />
+                    {!draftLoading && draftPosts.items.length > 0 && (
+                        <div className="flex justify-center mt-4">
+                            <Pagination
+                                count={draftPosts.totalPages}
+                                page={draftPage}
+                                onChange={handleDraftPageChange}
+                                variant="outlined"
+                                shape="rounded"
+                            />
+                        </div>
+                    )}
                 </div>
-            ) : (
-                <>
-                    {/* Draft Posts Section */}
-                    <div className="mb-8">
-                        <h3 className="text-lg font-semibold mb-4">Draft Posts</h3>
-                        <PostTable posts={draftPosts} isDraft={true} />
-                        {draftPosts.items.length > 0 && (
-                            <div className="flex justify-center mt-4">
-                                <Pagination
-                                    count={draftPosts.totalPages}
-                                    page={draftPage}
-                                    onChange={handleDraftPageChange}
-                                    variant="outlined"
-                                    shape="rounded"
-                                />
-                            </div>
-                        )}
-                    </div>
 
-                    {/* Published Posts Section */}
-                    <div>
-                        <h3 className="text-lg font-semibold mb-4">Published Posts</h3>
-                        <PostTable posts={publishedPosts} isDraft={false} />
-                        {publishedPosts.items.length > 0 && (
-                            <div className="flex justify-center mt-4">
-                                <Pagination
-                                    count={publishedPosts.totalPages}
-                                    page={publishedPage}
-                                    onChange={handlePublishedPageChange}
-                                    variant="outlined"
-                                    shape="rounded"
-                                />
-                            </div>
-                        )}
+                {/* Published Posts Section */}
+                <div>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold">Published Posts</h3>
                     </div>
-                </>
-            )}
+                    <div className="mb-4">
+                        <input
+                            type="text"
+                            placeholder="Search published..."
+                            value={publishedSearch}
+                            onChange={handlePublishedSearch}
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+                    <PostTable posts={publishedPosts} isDraft={false} isLoading={publishedLoading} />
+                    {!publishedLoading && publishedPosts.items.length > 0 && (
+                        <div className="flex justify-center mt-4">
+                            <Pagination
+                                count={publishedPosts.totalPages}
+                                page={publishedPage}
+                                onChange={handlePublishedPageChange}
+                                variant="outlined"
+                                shape="rounded"
+                            />
+                        </div>
+                    )}
+                </div>
+            </>
         </div>
     );
 };
