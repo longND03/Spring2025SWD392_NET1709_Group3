@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import StaffProductManagement from './StaffProductManagement';
 import { Divider } from '@mui/material';
 import StaffBlogManagement from './StaffBlogManagement';
+import StaffSkintypeTagManagement from './StaffSkintype&TagManagement';
 
 const StaffManager = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,6 +32,12 @@ const StaffManager = () => {
             Products & Batchs
           </button>
           <button
+            className={`py-2 px-4 rounded-lg ${activeTab === 'skintypes & tags' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
+            onClick={() => handleTabClick('skintypes & tags')}
+          >
+            Skintypes & Tags
+          </button>
+          <button
             className={`py-2 px-4 rounded-lg ${activeTab === 'vouchers' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
             onClick={() => handleTabClick('vouchers')}
           >
@@ -53,6 +60,7 @@ const StaffManager = () => {
 
       <div className="flex-grow p-6">
         {activeTab === 'products' && <StaffProductManagement/>}
+        {activeTab === 'skintypes & tags' && <StaffSkintypeTagManagement/>}
         {activeTab === 'vouchers' && <div/>}
         {activeTab === 'orders' && <div>Order Management Content</div>}
         {activeTab === 'blogs' && <StaffBlogManagement/>}
