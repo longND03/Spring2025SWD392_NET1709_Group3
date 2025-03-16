@@ -6,6 +6,7 @@ import StaffBlogManagement from './StaffBlogManagement';
 import StaffSkintypeTagManagement from './StaffSkintype&TagManagement';
 import BrandCategoryManagement from './Brand&CategoryManagement';
 import PackagingFormulationIngredientManagement from './PackagingFormulationIngredientManagement';
+import StaffAnalytics from './StaffAnalytics';
 
 const StaffManager = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -25,8 +26,17 @@ const StaffManager = () => {
     <div className="min-h-screen flex bg-gray-50">
       <div className="w-1/5 bg-white shadow-md p-4">
         <h1 className="text-2xl font-bold text-center text-[#E91E63] mb-4">Staff Management</h1>
-        <Divider/>
-        <div className="flex flex-col mt-4">
+        <Divider sx={{ mb: 6 }}/>
+        <div className="flex flex-col">
+          <button
+            className={`py-2 px-4 rounded-lg ${activeTab === 'analytics' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
+            onClick={() => handleTabClick('analytics')}
+          >
+            Analytics
+          </button>
+
+          <Divider variant="middle" sx={{ my: 2 }}/>
+
           <button
             className={`py-2 px-4 rounded-lg ${activeTab === 'products' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
             onClick={() => handleTabClick('products')}
@@ -73,13 +83,14 @@ const StaffManager = () => {
       </div>
 
       <div className="flex-grow p-6">
-        {activeTab === 'products' && <StaffProductManagement/>}
-        {activeTab === 'brands & categories' && <BrandCategoryManagement/>}
-        {activeTab === 'skintypes & tags' && <StaffSkintypeTagManagement/>}
-        {activeTab === 'packaging & formulation & ingredient' && <PackagingFormulationIngredientManagement/>}
-        {activeTab === 'vouchers' && <div/>}
+        {activeTab === 'analytics' && <StaffAnalytics />}
+        {activeTab === 'products' && <StaffProductManagement />}
+        {activeTab === 'brands & categories' && <BrandCategoryManagement />}
+        {activeTab === 'skintypes & tags' && <StaffSkintypeTagManagement />}
+        {activeTab === 'packaging & formulation & ingredient' && <PackagingFormulationIngredientManagement />}
+        {activeTab === 'vouchers' && <div />}
         {activeTab === 'orders' && <div>Order Management Content</div>}
-        {activeTab === 'blogs' && <StaffBlogManagement/>}
+        {activeTab === 'blogs' && <StaffBlogManagement />}
       </div>
     </div>
   );
