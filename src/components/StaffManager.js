@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+
+import StaffVoucher from './StaffVoucher';
+import StaffOrder from './StaffOrder';
 import StaffProductManagement from './StaffProductManagement';
 import { Divider } from '@mui/material';
 import StaffBlogManagement from './StaffBlogManagement';
@@ -7,12 +10,12 @@ import StaffSkintypeTagManagement from './StaffSkintype&TagManagement';
 import BrandCategoryManagement from './Brand&CategoryManagement';
 import PackagingFormulationIngredientManagement from './PackagingFormulationIngredientManagement';
 import StaffAnalytics from './StaffAnalytics';
+import StaffSkinTest from './StaffSkinTest';
 
 const StaffManager = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'products');
 
-  // Update active tab when URL parameters change
   useEffect(() => {
     setActiveTab(searchParams.get('tab') || 'products');
   }, [searchParams]);
@@ -29,20 +32,18 @@ const StaffManager = () => {
         <Divider sx={{ mb: 6 }}/>
         <div className="flex flex-col">
           <button
-            className={`py-2 px-4 rounded-lg ${activeTab === 'analytics' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
-            onClick={() => handleTabClick('analytics')}
-          >
-            Analytics
-          </button>
-
-          <Divider variant="middle" sx={{ my: 2 }}/>
-
-          <button
             className={`py-2 px-4 rounded-lg ${activeTab === 'products' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
             onClick={() => handleTabClick('products')}
           >
             Products & Batchs
           </button>
+          <button
+            className={`py-2 px-4 rounded-lg ${activeTab === 'analytics' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
+            onClick={() => handleTabClick('analytics')}
+          >
+            Analytics
+          </button>
+          <Divider variant="middle" sx={{ my: 2 }}/>
           <button
             className={`py-2 px-4 rounded-lg ${activeTab === 'brands & categories' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
             onClick={() => handleTabClick('brands & categories')}
@@ -73,24 +74,32 @@ const StaffManager = () => {
           >
             Orders
           </button>
+
           <button
             className={`py-2 px-4 rounded-lg ${activeTab === 'blogs' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
             onClick={() => handleTabClick('blogs')}
           >
             Blogs
           </button>
+          <button
+            className={`py-2 px-4 rounded-lg ${activeTab === 'skintest' ? 'bg-[#E91E63] text-white' : 'text-[#E91E63]'} mb-2`}
+            onClick={() => handleTabClick('skintest')}
+          >
+            Skin Test
+          </button>
         </div>
       </div>
 
       <div className="flex-grow p-6">
+        {activeTab === 'vouchers' && <StaffVoucher />}
+        {activeTab === 'orders' && <StaffOrder />}
         {activeTab === 'analytics' && <StaffAnalytics />}
         {activeTab === 'products' && <StaffProductManagement />}
         {activeTab === 'brands & categories' && <BrandCategoryManagement />}
         {activeTab === 'skintypes & tags' && <StaffSkintypeTagManagement />}
         {activeTab === 'packaging & formulation & ingredient' && <PackagingFormulationIngredientManagement />}
-        {activeTab === 'vouchers' && <div />}
-        {activeTab === 'orders' && <div>Order Management Content</div>}
         {activeTab === 'blogs' && <StaffBlogManagement />}
+        {activeTab === 'skintest' && <StaffSkinTest />}
       </div>
     </div>
   );

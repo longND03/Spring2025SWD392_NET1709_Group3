@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
@@ -18,6 +19,7 @@ import Cart from "./components/Cart";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Checkout from "./pages/Checkout";
+
 
 import StaffManager from "./components/StaffManager";
 
@@ -53,6 +55,7 @@ function App() {
                     </PrivateRoute>
                   }
                 />
+
                 <Route
                   path="/profile"
                   element={

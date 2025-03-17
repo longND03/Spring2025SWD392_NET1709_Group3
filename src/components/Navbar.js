@@ -43,6 +43,15 @@ const Navbar = () => {
               >
                 {user.role[0].roleName} Dashboard
               </Link>
+              {/* Thêm Staff Manager link cho admin */}
+              {user && user.role && user.role[0].roleName === 'Staff' && (
+                <Link 
+                  to="/staff-manager" 
+                  className="text-gray-600 hover:text-[#E91E63] transition-colors duration-200 font-semibold"
+                >
+                  {/* Staff Manager */}
+                </Link>
+              )}
             </div>
           ) : (
             // Regular User View
