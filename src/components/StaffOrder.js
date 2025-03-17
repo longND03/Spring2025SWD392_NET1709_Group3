@@ -55,42 +55,57 @@ const StaffOrder = () => {
       <ul className="space-y-4">
         {orders.map(order => (
           <li key={order.id} className="p-4 border rounded-lg shadow hover:shadow-lg transition-shadow duration-200">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="font-semibold">Order ID:</span>
-              <span>{order.id}</span>
+              <span className="text-gray-700">{order.id}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="font-semibold">User ID:</span>
-              <span>{order.userID}</span>
+              <span className="text-gray-700">{order.userID}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="font-semibold">Username:</span>
-              <span>{userDetails[order.userID]?.username || 'N/A'}</span>
+              <span className="text-gray-700">{userDetails[order.userID]?.username || 'N/A'}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="font-semibold">Phone:</span>
-              <span>{userDetails[order.userID]?.phone || 'N/A'}</span>
+              <span className="text-gray-700">{userDetails[order.userID]?.phone || 'N/A'}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="font-semibold">Quantity:</span>
-              <span>{order.quantity}</span>
+              <span className="text-gray-700">{order.quantity}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="font-semibold">Address:</span>
-              <span>{order.address}</span>
+              <span className="text-gray-700">{order.address}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="font-semibold">Total Amount:</span>
-              <span>{order.totalAmount}</span>
+              <span className="text-gray-700">{order.totalAmount} đ</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="font-semibold">Order Date:</span>
-              <span>{new Date(order.orderDate).toLocaleString()}</span>
+              <span className="text-gray-700">{new Date(order.orderDate).toLocaleString()}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="font-semibold">Status:</span>
-              <span>{order.status || 'N/A'}</span>
+              <span className={`text-gray-700 ${order.status === 'Completed' ? 'text-green-500' : 'text-red-500'}`}>
+                {order.status || 'N/A'}
+              </span>
             </div>
+            {/* Hiển thị chi tiết sản phẩm */}
+            {order.details.length > 0 && (
+              <div className="mt-4">
+                <h3 className="font-semibold">Product Details:</h3>
+                <ul className="list-disc pl-5">
+                  {order.details.map((detail, index) => (
+                    <li key={index} className="text-gray-700">
+                      {detail.productName} - {detail.quantity} x {detail.price} đ
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </li>
         ))}
       </ul>

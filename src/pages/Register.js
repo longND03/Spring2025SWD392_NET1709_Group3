@@ -34,11 +34,25 @@ const Register = () => {
         }));
         return;
       }
+      
+      // Check length of phone number
+      if (value.length > 10) {
+        setErrors(prev => ({
+          ...prev,
+          phoneLength: 'Phone number must be exactly 10 digits long'
+        }));
+        return;
+      } else {
+        setErrors(prev => ({
+          ...prev,
+          phoneLength: ''
+        }));
+      }
+
       // Clear phone-related errors when typing valid numbers
       setErrors(prev => ({
         ...prev,
-        phoneFormat: '',
-        phoneLength: ''
+        phoneFormat: ''
       }));
     }
 
@@ -77,10 +91,10 @@ const Register = () => {
       return;
     }
 
-    if (formData.phone.length < 10) {
+    if (formData.phone.length !== 10) {
       setErrors(prev => ({
         ...prev,
-        phoneLength: 'Phone number must be at least 10 digits long'
+        phoneLength: 'Phone number must be exactly 10 digits long'
       }));
       return;
     }

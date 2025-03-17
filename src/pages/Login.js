@@ -17,6 +17,8 @@ const Login = () => {
     try {
       const result = await login(email, password);
       if (result.success) {
+        // Lưu token vào cookie với thời gian hết hạn 24 giờ
+        document.cookie = `token=${result.token}; path=/; max-age=86400`; // 86400 giây = 24 giờ
         // Kiểm tra vai trò người dùng
         const userRole = result.user.role[0].roleName; // Lấy vai trò đầu tiên
         if (userRole === "Staff") {
