@@ -97,19 +97,23 @@ const StaffSkinTest = () => {
   // Function to update an answer
   const handleUpdateAnswer = async (questionId, answerId) => {
     try {
-      const response = await axios.put(`http://localhost:5296/api/skintypetest/answers/${answerId}`, { content: editAnswerValue }); // API endpoint to update answer
+      const response = await axios.put(`http://localhost:5296/api/skintypetest/answers/${answerId}`, {
+        Content: editAnswerValue,
+        QuestionId: questionId,
+        SkinTypeId: 1
+      });
       const updatedQuestions = questions.map(question => {
         if (question.id === questionId) {
           return {
             ...question,
-            answers: question.answers.map(answer => (answer.id === answerId ? response.data : answer)) // Update answer in the specific question
+            answers: question.answers.map(answer => (answer.id === answerId ? response.data : answer))
           };
         }
         return question;
       });
-      setQuestions(updatedQuestions); // Update question list
-      setEditAnswerId(null); // Reset edit state
-      setEditAnswerValue(''); // Reset input
+      setQuestions(updatedQuestions);
+      setEditAnswerId(null);
+      setEditAnswerValue('');
     } catch (error) {
       console.error('Error updating answer:', error);
       setError('Failed to update answer');
