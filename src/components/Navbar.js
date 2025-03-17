@@ -22,6 +22,8 @@ const Navbar = () => {
   const isStaffOrManager = user && user.role && (user.role[0].roleName === 'Staff' || user.role[0].roleName === 'Manager');
   const dashboardPath = user?.role[0].roleName === 'Manager' ? '/admindashboard' : '/staff-manager';
 
+  const userRole = user && user.role && user.role[0] ? user.role[0].roleName : null;
+
   return (
     <nav className="sticky top-0 z-50 bg-gray-100 shadow-md transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -320,6 +322,8 @@ const Navbar = () => {
           </div>
         </div>
       )}
+
+      {userRole && <span>Welcome, {userRole}</span>}
     </nav>
   );
 };

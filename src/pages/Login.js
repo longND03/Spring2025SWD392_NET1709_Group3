@@ -17,8 +17,8 @@ const Login = () => {
     try {
       const result = await login(email, password);
       if (result.success) {
-        // Lưu token vào cookie với thời gian hết hạn 24 giờ
-        document.cookie = `token=${result.token}; path=/; max-age=86400`; // 86400 giây = 24 giờ
+        // Lưu token vào sessionStorage
+        sessionStorage.setItem('token', result.token); // Lưu token vào sessionStorage
         // Kiểm tra vai trò người dùng
         const userRole = result.user.role[0].roleName; // Lấy vai trò đầu tiên
         if (userRole === "Staff") {
@@ -42,7 +42,7 @@ const Login = () => {
         <div>
           <Link to="/" className="flex justify-center">
             <span className="text-3xl font-bold text-[#E91E63] hover:text-pink-400 transition-colors duration-200">
-            Diana Shop
+              Diana Shop
             </span>
           </Link>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
