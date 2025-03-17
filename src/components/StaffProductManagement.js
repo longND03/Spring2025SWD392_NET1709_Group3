@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 import StaffCreateProduct from './StaffCreateProduct';
 import StaffCreateBatch from './StaffCreateBatch';
 import StaffEditProduct from './StaffEditProduct';
-import StaffEditBatch from './StaffEditBatch';
 
 const StaffProductManagement = () => {
   const { user } = useAuth();
@@ -22,9 +21,7 @@ const StaffProductManagement = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreateBatchModalOpen, setIsCreateBatchModalOpen] = useState(false);
   const [isEditProductModalOpen, setIsEditProductModalOpen] = useState(false);
-  const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [editingBatch, setEditingBatch] = useState(null);
   const [activeTab, setActiveTab] = useState(0); // 0 for active products, 1 for removed products
   const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, id: null, type: null });
 
@@ -60,6 +57,11 @@ const StaffProductManagement = () => {
     }
   };
 
+  const refreshAllData = async () => {
+    await fetchProducts(searchTerm);
+    await fetchBatches();
+  };
+
   useEffect(() => {
     fetchProducts(searchTerm);
     fetchBatches();
@@ -86,11 +88,11 @@ const StaffProductManagement = () => {
       if (deleteConfirmation.type === 'product') {
         await Axios.delete(`/api/product/${deleteConfirmation.id}`);
         toast.success('Product deleted successfully');
-        fetchProducts(searchTerm);
+        await refreshAllData();
       } else if (deleteConfirmation.type === 'batch') {
         await Axios.delete(`/api/batch/${deleteConfirmation.id}`);
         toast.success('Batch deleted successfully');
-        fetchBatches();
+        await refreshAllData();
       }
     } catch (error) {
       console.error("Error deleting:", error);
@@ -285,15 +287,6 @@ const StaffProductManagement = () => {
                       <td className="py-2 px-4 border-b">{formatDate(batch.expiryDate)}</td>
                       <td className="py-2 px-4 border-b">
                         <button 
-                          className="text-blue-500 hover:text-blue-700 mr-2"
-                          onClick={() => {
-                            setEditingBatch(batch);
-                            setIsEditBatchModalOpen(true);
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <button 
                           className="text-red-500 hover:text-red-700"
                           onClick={() => setDeleteConfirmation({ open: true, id: batch.id, type: 'batch' })}
                         >
@@ -318,7 +311,7 @@ const StaffProductManagement = () => {
       <StaffCreateProduct
         open={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSave={fetchProducts}
+        onSave={refreshAllData}
       />
 
       <StaffEditProduct
@@ -327,24 +320,14 @@ const StaffProductManagement = () => {
           setIsEditProductModalOpen(false);
           setEditingProduct(null);
         }}
-        onSave={fetchProducts}
+        onSave={refreshAllData}
         product={editingProduct}
       />
 
       <StaffCreateBatch
         open={isCreateBatchModalOpen}
         onClose={() => setIsCreateBatchModalOpen(false)}
-        onSave={fetchBatches}
-      />
-
-      <StaffEditBatch
-        open={isEditBatchModalOpen}
-        onClose={() => {
-          setIsEditBatchModalOpen(false);
-          setEditingBatch(null);
-        }}
-        onSave={fetchBatches}
-        batch={editingBatch}
+        onSave={refreshAllData}
       />
 
       {/* Delete Confirmation Dialog */}

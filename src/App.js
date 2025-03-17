@@ -19,6 +19,8 @@ import Cart from "./components/Cart";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Checkout from "./pages/Checkout";
+import FinishOrderCash from "./pages/FinishOrderCash";
+import FinishOrderQR from "./pages/FinishOrderQR";
 
 
 import StaffManager from "./components/StaffManager";
@@ -71,6 +73,8 @@ function App() {
                 />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/finish-order-cash" element={<FinishOrderCash />} />
+                <Route path="/finish-order-qr" element={<FinishOrderQR />} />
                 <Route
                   path="/staff-manager"
                   element={

@@ -4,39 +4,105 @@ import { toast } from 'react-toastify';
 import Axios from '../api/axios';
 
 const StaffEditBatch = ({ open, onClose, onSave, batch }) => {
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    return localDateTime;
+  };
+
+  const formatDateForInput = (dateString) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const formatDateForApi = (dateString) => {
+    return new Date(dateString).toISOString();
+  };
+
+  const validateDates = (dates) => {
+    const now = new Date();
+    const manufacture = new Date(dates.manufactureDate);
+    const importDate = new Date(dates.importDate);
+    const expiry = new Date(dates.expiryDate);
+    
+    // Import date must be less than current date
+    if (importDate >= now) {
+      toast.error('Import date must be before current date');
+      return false;
+    }
+
+    // Common validations
+    if (manufacture >= importDate) {
+      toast.error('Manufacture date must be before import date');
+      return false;
+    }
+
+    if (expiry <= importDate) {
+      toast.error('Expiry date must be after import date');
+      return false;
+    }
+
+    return true;
+  };
+
   const [formData, setFormData] = useState({
-    productId: '',
+    productID: '',
     quantity: '',
     manufactureDate: '',
     importDate: '',
-    expiryDate: ''
+    expiryDate: '',
+    status: true
   });
   const [loading, setLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [product, setProduct] = useState(null);
 
-  useEffect(() => {
-    if (batch) {
-      setFormData({
-        productId: batch.productId,
-        quantity: batch.quantity,
-        manufactureDate: new Date(batch.manufactureDate).toISOString().split('T')[0],
-        importDate: new Date(batch.importDate).toISOString().split('T')[0],
-        expiryDate: new Date(batch.expiryDate).toISOString().split('T')[0]
-      });
-      fetchProduct(batch.productId);
-    }
-  }, [batch]);
-
-  const fetchProduct = async (productId) => {
+  const fetchProductByName = async (name) => {
     try {
-      const response = await Axios.get(`/api/product/${productId}`);
-      setProduct(response.data);
+      const response = await Axios.get(`/api/product?Name=${encodeURIComponent(name)}&IsDeleted=false`);
+      const products = response.data.items || [];
+      if (products.length > 0) {
+        setProduct(products[0]);
+        setFormData(prev => ({ ...prev, productID: products[0].id.toString() }));
+      }
     } catch (error) {
       console.error('Error fetching product:', error);
       toast.error('Failed to load product details');
     }
   };
+
+  useEffect(() => {
+    const loadBatchData = async () => {
+      if (batch) {
+        setFormData({
+          productID: '', // Will be set after fetching product
+          quantity: batch.quantity,
+          manufactureDate: formatDateForInput(batch.manufactureDate),
+          importDate: formatDateForInput(batch.importDate),
+          expiryDate: formatDateForInput(batch.expiryDate)
+        });
+        
+        // Fetch product by name
+        if (batch.productName) {
+          await fetchProductByName(batch.productName);
+        }
+      }
+    };
+
+    if (open) {
+      loadBatchData();
+    }
+  }, [batch, open]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,15 +114,23 @@ const StaffEditBatch = ({ open, onClose, onSave, batch }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate dates before submitting
+    if (!validateDates(formData)) {
+      return;
+    }
+
     setLoading(true);
 
     try {
       const batchData = {
         ...formData,
-        quantity: parseInt(formData.quantity, 10)
+        productID: parseInt(formData.productID, 10),
+        quantity: parseInt(formData.quantity, 10),
+        manufactureDate: formatDateForApi(formData.manufactureDate),
+        importDate: formatDateForApi(formData.importDate),
+        expiryDate: formatDateForApi(formData.expiryDate)
       };
-
-      console.log('Submitting batch data:', JSON.stringify(batchData, null, 2));
 
       await Axios.put(`/api/batch/${batch.id}`, batchData);
       toast.success('Batch updated successfully');
@@ -72,11 +146,11 @@ const StaffEditBatch = ({ open, onClose, onSave, batch }) => {
 
   const handleClose = () => {
     if (JSON.stringify(formData) !== JSON.stringify({
-      productId: batch.productId,
+      productID: product?.id.toString() || '',
       quantity: batch.quantity,
-      manufactureDate: new Date(batch.manufactureDate).toISOString().split('T')[0],
-      importDate: new Date(batch.importDate).toISOString().split('T')[0],
-      expiryDate: new Date(batch.expiryDate).toISOString().split('T')[0]
+      manufactureDate: formatDateForInput(batch.manufactureDate),
+      importDate: formatDateForInput(batch.importDate),
+      expiryDate: formatDateForInput(batch.expiryDate)
     })) {
       setShowConfirmDialog(true);
     } else {
@@ -136,10 +210,11 @@ const StaffEditBatch = ({ open, onClose, onSave, batch }) => {
                     Manufacture Date
                   </label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     name="manufactureDate"
                     value={formData.manufactureDate}
                     onChange={handleChange}
+                    max={getCurrentDateTime()}
                     className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     required
                   />
@@ -150,10 +225,11 @@ const StaffEditBatch = ({ open, onClose, onSave, batch }) => {
                     Import Date
                   </label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     name="importDate"
                     value={formData.importDate}
                     onChange={handleChange}
+                    max={getCurrentDateTime()}
                     className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     required
                   />
@@ -164,10 +240,11 @@ const StaffEditBatch = ({ open, onClose, onSave, batch }) => {
                     Expiry Date
                   </label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     name="expiryDate"
                     value={formData.expiryDate}
                     onChange={handleChange}
+                    min={getCurrentDateTime()}
                     className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     required
                   />

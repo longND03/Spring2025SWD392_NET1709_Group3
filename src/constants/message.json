@@ -8,7 +8,8 @@
     "removeProduct": "Product removed",
     "updateProfile": "Profile updated successfully",
     "updateShipping": "Shipping information updated successfully",
-    "profilePicture": "Profile picture updated successfully"
+    "profilePicture": "Profile picture updated successfully",
+    "order": "Order placed successfully!"
   },
   "error": {
     "login": "Failed to login",
@@ -49,6 +50,9 @@
     },
     "payment": {
       "invalid": "Invalid payment method"
+    },
+    "order": {
+      "create": "Failed to create order. Please try again."
     }
   },
   "info": {

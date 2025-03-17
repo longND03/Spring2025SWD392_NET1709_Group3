@@ -142,11 +142,15 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
                     toast.error('Image size should be less than 10MB');
                     return;
                 }
-                if (!file.type.startsWith('image/')) {
-                    toast.error('Please select an image file');
+                if (file.type !== 'image/jpeg') {
+                    toast.error('Please select a JPEG image file');
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                    }
                     return;
                 }
                 setSelectedImage(file);
+                setFormData(prev => ({ ...prev, productImageFiles: file }));
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     setImagePreview(reader.result);
@@ -175,12 +179,7 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
         setIsSaving(true);
 
         try {
-            const updatedFormData = {
-                ...formData,
-                productImageFiles: selectedImage
-            };
-
-            await axios.put(`/api/product/${product.id}`, updatedFormData, {
+            await axios.put(`/api/product/${product.id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -290,7 +289,7 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
                                     <input
                                         type="file"
                                         ref={fileInputRef}
-                                        accept="image/*"
+                                        accept="image/jpeg"
                                         onChange={handleChange}
                                         className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                                     />

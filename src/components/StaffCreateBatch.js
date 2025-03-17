@@ -3,18 +3,73 @@ import { Modal, Button, CircularProgress } from '@mui/material';
 import { toast } from 'react-toastify';
 import Axios from '../api/axios';
 
-const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
+const StaffCreateBatch = ({ open, onClose, onSave }) => {
   const getCurrentDateTime = () => {
     const now = new Date();
-    return now.toISOString().slice(0, 16); // Format: "YYYY-MM-DDThh:mm"
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    return localDateTime;
+  };
+
+  const formatDateForInput = (dateString) => {
+    // No need to slice since getCurrentDateTime now returns the correct format
+    return dateString;
+  };
+
+  const formatDateForApi = (dateString) => {
+    // Convert local datetime to ISO string for API
+    return new Date(dateString).toISOString();
+  };
+
+  const validateDates = (dates) => {
+    const now = new Date();
+    const manufacture = new Date(dates.manufactureDate);
+    const importDate = new Date(dates.importDate);
+    const expiry = new Date(dates.expiryDate);
+    
+    // For create: manufacture must be less than current date
+    if (manufacture >= now) {
+      toast.error('Manufacture date must be before current date');
+      return false;
+    }
+
+    // For create: import must be less than current date
+    if (importDate >= now) {
+      toast.error('Import date must be before current date');
+      return false;
+    }
+
+    // For create: expiry must be greater than current date
+    if (expiry <= now) {
+      toast.error('Expiry date must be after current date');
+      return false;
+    }
+
+    // Common validations
+    if (manufacture >= importDate) {
+      toast.error('Manufacture date must be before import date');
+      return false;
+    }
+
+    if (expiry <= importDate) {
+      toast.error('Expiry date must be after import date');
+      return false;
+    }
+
+    return true;
   };
 
   const [formData, setFormData] = useState({
-    productId: '',
+    productID: '',
     quantity: '',
-    manufactureDate: new Date().toISOString().split('T')[0],
-    importDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date().toISOString().split('T')[0]
+    manufactureDate: formatDateForInput(getCurrentDateTime()),
+    importDate: formatDateForInput(getCurrentDateTime()),
+    expiryDate: formatDateForInput(getCurrentDateTime()),
+    status: true
   });
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -24,23 +79,35 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const dropdownRef = useRef(null);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await Axios.get('/api/product');
-        const productList = response.data.items || [];
-        setProducts(productList);
-        setFilteredProducts(productList);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        toast.error('Failed to load products');
-      }
-    };
+  const fetchProducts = async () => {
+    try {
+      const response = await Axios.get('/api/product?IsDeleted=false');
+      const productList = response.data.items || [];
+      setProducts(productList);
+      setFilteredProducts(productList);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    }
+  };
 
+  const fetchProductsByName = async (name) => {
+    try {
+      const response = await Axios.get(`/api/product?Name=${encodeURIComponent(name)}&IsDeleted=false`);
+      const productList = response.data.items || [];
+      setProducts(productList);
+      setFilteredProducts(productList);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    }
+  };
+
+  useEffect(() => {
     if (open) {
       fetchProducts();
       // Set current date/time for all date fields when modal opens
-      const currentDateTime = getCurrentDateTime();
+      const currentDateTime = formatDateForInput(getCurrentDateTime());
       setFormData(prev => ({
         ...prev,
         manufactureDate: currentDateTime,
@@ -48,17 +115,7 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
         expiryDate: currentDateTime
       }));
     }
-
-    if (editData) {
-      setFormData({
-        productId: editData.productId,
-        quantity: editData.quantity,
-        manufactureDate: new Date(editData.manufactureDate).toISOString().split('T')[0],
-        importDate: new Date(editData.importDate).toISOString().split('T')[0],
-        expiryDate: new Date(editData.expiryDate).toISOString().split('T')[0]
-      });
-    }
-  }, [open, editData]);
+  }, [open]);
 
   useEffect(() => {
     // Add click event listener to handle clicking outside dropdown
@@ -78,19 +135,18 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
     
     // Reset product ID if search field is cleared
     if (!searchValue) {
-      setFormData(prev => ({ ...prev, productId: '' }));
+      setFormData(prev => ({ ...prev, productID: '' }));
+      setFilteredProducts([]);
+      return;
     }
 
-    const filtered = products.filter(product => 
-      product.name.toLowerCase().includes(searchValue.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-    setShowDropdown(true);
+    // Fetch products by name
+    fetchProductsByName(searchValue);
   };
 
   const handleProductSelect = (product) => {
     setSearchTerm(product.name);
-    setFormData(prev => ({ ...prev, productId: product.id.toString() }));
+    setFormData(prev => ({ ...prev, productID: product.id.toString() })); // Changed to match API expectation
     setShowDropdown(false);
   };
 
@@ -102,45 +158,47 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
     }));
   };
 
-  const validateExpiryDate = (expiryDate) => {
-    const today = new Date();
-    const expiry = new Date(expiryDate);
-    return expiry > today;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate other dates
+    if (!validateDates(formData)) {
+      return;
+    }
+    
+    setLoading(true);
     
     try {
       const batchData = {
         ...formData,
-        quantity: parseInt(formData.quantity, 10)
+        productID: parseInt(formData.productID, 10),
+        quantity: parseInt(formData.quantity, 10),
+        manufactureDate: formatDateForApi(formData.manufactureDate),
+        importDate: formatDateForApi(formData.importDate),
+        expiryDate: formatDateForApi(formData.expiryDate)
       };
 
       console.log('Submitting batch data:', JSON.stringify(batchData, null, 2));
-
-      if (editData) {
-        await Axios.put(`/api/batch/${editData.id}`, batchData);
-        toast.success('Batch updated successfully');
-      } else {
-        await Axios.post('/api/batch', batchData);
-        toast.success('Batch created successfully');
-      }
-
+      await Axios.post('/api/batch', batchData);
+      toast.success('Batch created successfully');
+      await fetchProducts(); // Refresh product list
+      clearForm(); // Clear the form after successful creation
       onClose();
       onSave();
     } catch (error) {
-      console.error('Error saving batch:', error);
-      toast.error(error.response?.data?.message || 'Failed to save batch');
+      console.error('Error creating batch:', error);
+      toast.error(error.response?.data?.message || 'Failed to create batch');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleClose = () => {
     // Check if form has been modified from its initial state
-    if (formData.productId || formData.quantity || 
-        (formData.expiryDate && formData.expiryDate !== getCurrentDateTime()) || 
-        (formData.importDate && formData.importDate !== getCurrentDateTime()) || 
-        (formData.manufactureDate && formData.manufactureDate !== getCurrentDateTime())) {
+    if (formData.productID || formData.quantity || 
+        (formData.expiryDate && formData.expiryDate !== formatDateForInput(getCurrentDateTime())) || 
+        (formData.importDate && formData.importDate !== formatDateForInput(getCurrentDateTime())) || 
+        (formData.manufactureDate && formData.manufactureDate !== formatDateForInput(getCurrentDateTime()))) {
       setShowConfirmDialog(true);
     } else {
       clearForm();
@@ -149,13 +207,15 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
   };
 
   const clearForm = () => {
+    const currentDateTime = formatDateForInput(getCurrentDateTime());
     setFormData({
-      productId: '',
+      productID: '',
       quantity: '',
-      expiryDate: '',
-      importDate: '',
-      manufactureDate: ''
+      expiryDate: currentDateTime,
+      importDate: currentDateTime,
+      manufactureDate: currentDateTime
     });
+    setSearchTerm('');
   };
 
   const handleConfirmClose = () => {
@@ -175,9 +235,7 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-2xl bg-white rounded-lg shadow-2xl">
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
-                {editData ? 'Edit Batch' : 'Create New Batch'}
-              </h2>
+              <h2 className="text-2xl font-bold">Create New Batch</h2>
               <button
                 onClick={handleClose}
                 className="text-gray-500 hover:text-gray-700"
@@ -218,9 +276,9 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
                       )}
                     </div>
                   )}
-                  {formData.productId && !showDropdown && (
+                  {formData.productID && !showDropdown && (
                     <p className="mt-1 text-sm text-gray-500">
-                      Product ID: {formData.productId}
+                      Product ID: {formData.productID}
                     </p>
                   )}
                 </div>
@@ -248,6 +306,7 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
                     name="manufactureDate"
                     value={formData.manufactureDate}
                     onChange={handleChange}
+                    max={getCurrentDateTime()}
                     className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -261,6 +320,7 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
                     name="importDate"
                     value={formData.importDate}
                     onChange={handleChange}
+                    max={getCurrentDateTime()}
                     className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -274,7 +334,7 @@ const StaffCreateBatch = ({ open, onClose, onSave, editData }) => {
                     name="expiryDate"
                     value={formData.expiryDate}
                     onChange={handleChange}
-                    min={getCurrentDateTime()}
+                    min={formatDateForInput(getCurrentDateTime())}
                     className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                   />
                 </div>

@@ -121,11 +121,14 @@ const StaffCreateProduct = ({ open, onClose, onSave }) => {
                     toast.error('Image size should be less than 5MB');
                     return;
                 }
-                if (!file.type.startsWith('image/')) {
-                    toast.error('Please select an image file');
+                if (file.type !== 'image/jpeg') {
+                    toast.error('Please select a JPEG image file');
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                    }
                     return;
                 }
-                setFormData(prev => ({ ...prev, productImageFiles: [file] }));
+                setFormData(prev => ({ ...prev, productImageFiles: file }));
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     setImagePreview(reader.result);
@@ -316,7 +319,7 @@ const StaffCreateProduct = ({ open, onClose, onSave }) => {
                                 <input
                                     type="file"
                                     ref={fileInputRef}
-                                    accept="image/*"
+                                    accept="image/jpeg"
                                     onChange={handleChange}
                                     className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                                     required
