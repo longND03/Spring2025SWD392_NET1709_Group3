@@ -235,6 +235,14 @@ const PersonalInfoBox = ({ userInfo }) => {
         return;
       }
 
+      if (file.type !== 'image/jpeg') {
+        toast.error('Please select a JPEG image file');
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+
       // Preview the image
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -485,7 +493,7 @@ const PersonalInfoBox = ({ userInfo }) => {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleImageChange}
-                  accept="image/*"
+                  accept="image/jpeg"
                   className="hidden"
                 />
                 <div 

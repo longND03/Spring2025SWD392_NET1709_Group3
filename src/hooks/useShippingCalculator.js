@@ -24,9 +24,15 @@ const useShippingCalculator = () => {
   const [distance, setDistance] = useState(null);
   const [shippingFee, setShippingFee] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const getCoordinates = async (provinceName) => {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(provinceName + ", Vietnam")}`;
+    // Get API key from environment variables
+    const apiKey = process.env.REACT_APP_GEOCODE_API;
+    const url = `https://geocode.maps.co/search?q=${encodeURIComponent(provinceName + ", Vietnam")}&api_key=${apiKey}`;
+    
+    // Old API endpoint (commented out)
+    // const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(provinceName + ", Vietnam")}`;
 
     try {
       const response = await fetch(url);
@@ -44,28 +50,38 @@ const useShippingCalculator = () => {
   };
 
   const calculateShipping = async (provinceName) => {
+    setLoading(true);
     setError(null);
-    const destinationCoords = await getCoordinates(provinceName);
+    
+    try {
+      const destinationCoords = await getCoordinates(provinceName);
 
-    if (!destinationCoords) {
-      setError("Could not find coordinates for this province.");
-      return;
+      if (!destinationCoords) {
+        setError("Could not find coordinates for this province.");
+        setLoading(false);
+        return;
+      }
+
+      const distInKm = haversineDistance(
+        HCM_COORDS.lat,
+        HCM_COORDS.lon,
+        destinationCoords.lat,
+        destinationCoords.lon
+      );
+
+      const fee = distInKm * 0.1;
+
+      setDistance(distInKm);
+      setShippingFee(fee);
+    } catch (err) {
+      console.error("Error calculating shipping:", err);
+      setError("Failed to calculate shipping fee.");
+    } finally {
+      setLoading(false);
     }
-
-    const distInKm = haversineDistance(
-      HCM_COORDS.lat,
-      HCM_COORDS.lon,
-      destinationCoords.lat,
-      destinationCoords.lon
-    );
-
-    const fee = distInKm * 0.1;
-
-    setDistance(distInKm);
-    setShippingFee(fee);
   };
 
-  return { distance, shippingFee, error, calculateShipping };
+  return { distance, shippingFee, error, loading, calculateShipping };
 };
 
 export default useShippingCalculator;

@@ -30,14 +30,15 @@ const Checkout = () => {
     province: '',
     district: '',
     ward: '',
-    specificAddress: ''
+    specificAddress: '',
+    provinceName: ''
   });
 
   const paymentMethods = [
-    { id: 1, methodName: 'Cash', isInternalPayment: true },
+    { id: 1, methodName: 'Cash (COD)', isInternalPayment: true },
     { id: 2, methodName: 'VNPay', isInternalPayment: false },
     { id: 3, methodName: 'Momo', isInternalPayment: false },
-    { id: 4, methodName: 'QR Code', isInternalPayment: true }
+    { id: 4, methodName: 'QR Code (Bank Transfer)', isInternalPayment: true }
   ];
 
 
@@ -99,7 +100,6 @@ const Checkout = () => {
         });
 
           const voucherDetails = await Promise.all(voucherPromises);
-          // Sort vouchers: available first (by percentage), then unavailable
           const sortedVouchers = voucherDetails.sort((a, b) => {
             if (a.isAvailable && !b.isAvailable) return -1;
             if (!a.isAvailable && b.isAvailable) return 1;
@@ -117,12 +117,16 @@ const Checkout = () => {
       try {
         if (provinceCode) {
           await fetchDistricts(provinceCode);
-          // Get province name and calculate shipping
+          // Get province name but don't calculate shipping here
           const response = await fetch('https://provinces.open-api.vn/api/p/');
           const provincesData = await response.json();
           const provinceName = provincesData.find(p => p.code.toString() === provinceCode)?.name;
           if (provinceName) {
-            calculateShipping(provinceName);
+            // We'll handle shipping calculation in a separate useEffect
+            setFormData(prev => ({
+              ...prev,
+              provinceName: provinceName
+            }));
           }
         }
         if (districtCode) {
@@ -160,7 +164,14 @@ const Checkout = () => {
     fetchProvinces();
     fetchVoucherDetails();
 
-  }, [user, navigate, getCartTotal, calculateShipping]);
+  }, [user, navigate, getCartTotal]);
+
+  // Separate useEffect for handling shipping calculations
+  useEffect(() => {
+    if (formData.provinceName) {
+      calculateShipping(formData.provinceName);
+    }
+  }, [formData.provinceName]); // Only recalculate when province name changes
 
   useEffect(() => {
     const fetchAddressData = async () => {
@@ -186,18 +197,14 @@ const Checkout = () => {
       ...prev,
       province: selectedProvince,
       district: '',  // Reset district when province changes
-      ward: ''      // Reset ward when province changes
+      ward: '',      // Reset ward when province changes
+      provinceName: provinces.find(p => p.code.toString() === selectedProvince)?.name || ''
     }));
     setDistricts([]); // Clear districts
     setWards([]); // Clear wards
 
     if (selectedProvince) {
       await fetchDistricts(selectedProvince);
-      // Get province name from the provinces array and calculate shipping
-      const provinceName = provinces.find(p => p.code.toString() === selectedProvince)?.name;
-      if (provinceName) {
-        calculateShipping(provinceName);
-      }
     }
   };
 
@@ -230,7 +237,7 @@ const Checkout = () => {
     }));
   };
 
-  const handleProceedToPayment = () => {
+  const handleProceedToPayment = async () => {
     // Validate required fields
     if (!formData.phone || !formData.province || !formData.district || !formData.ward || !formData.specificAddress) {
       toast.error(messages.error.checkout.addressRequired);
@@ -245,35 +252,69 @@ const Checkout = () => {
 
     // Prepare order data
     const orderData = {
-      items: cart,
-      shippingInfo: formData,
-      totalAmount: getCartTotal(),
-      discountAmount: getDiscountAmount(),
-      finalAmount: getCartTotal() - getDiscountAmount(),
-      voucherId: selectedVoucher?.id,
-      paymentMethod: selectedPaymentMethod.methodName
+      userID: user.id,
+      address: `${formData.specificAddress}|${formData.ward}|${formData.district}|${formData.province}`,
+      paymentMethodID: selectedPaymentMethod.id,
+      voucherID: selectedVoucher?.id || 0,
+      shipprice: shippingFee || 0,
+      details: cart.map(item => ({
+        productId: item.id,
+        quantity: item.quantity
+      }))
     };
 
     // Handle different payment methods
     switch (selectedPaymentMethod.id) {
       case 1: // Cash
-        // TODO: Handle cash payment
-        console.log('Processing cash payment:', orderData);
+        try {
+          const response = await axios.post('/api/order/checkout', orderData);
+          console.log('Order response:', response.data);
+          clearCart();
+          toast.success(messages.success.order);
+          navigate('/finish-order-cash', { state: { orderData: response.data } });
+        } catch (error) {
+          console.error('Error creating order:', error);
+          toast.error(messages.error.order.create);
+        }
         break;
 
       case 2: // VNPay
-        // TODO: Handle VNPay payment
-        console.log('Processing VNPay payment:', orderData);
+        try {
+          const response = await axios.post('/api/order/checkout', orderData);
+          console.log('Order response:', response.data);
+          clearCart();
+          toast.success(messages.success.order);
+          // TODO: Handle VNPay redirect
+        } catch (error) {
+          console.error('Error creating order:', error);
+          toast.error(messages.error.order.create);
+        }
         break;
 
       case 3: // Momo
-        // TODO: Handle Momo payment
-        console.log('Processing Momo payment:', orderData);
+        try {
+          const response = await axios.post('/api/order/checkout', orderData);
+          console.log('Order response:', response.data);
+          clearCart();
+          toast.success(messages.success.order);
+          // TODO: Handle Momo redirect
+        } catch (error) {
+          console.error('Error creating order:', error);
+          toast.error(messages.error.order.create);
+        }
         break;
 
       case 4: // QR Code
-        // TODO: Handle QR Code payment
-        console.log('Processing QR Code payment:', orderData);
+        try {
+          const response = await axios.post('/api/order/checkout', orderData);
+          console.log('Order response:', response.data);
+          clearCart();
+          toast.success(messages.success.order);
+          navigate('/finish-order-qr', { state: { orderData: response.data } });
+        } catch (error) {
+          console.error('Error creating order:', error);
+          toast.error(messages.error.order.create);
+        }
         break;
 
       default:
@@ -286,7 +327,8 @@ const Checkout = () => {
   const getDiscountAmount = () => {
     if (!selectedVoucher) return 0;
     const subtotal = getCartTotal();
-    const discountAmount = (subtotal * selectedVoucher.discountPercentage) / 100;
+    const totalWithShipping = subtotal + (shippingFee || 0);
+    const discountAmount = (totalWithShipping * selectedVoucher.discountPercentage) / 100;
     return discountAmount;
   };
 
@@ -301,7 +343,7 @@ const Checkout = () => {
           {cart.map((item) => (
             <div key={item.id} className="flex items-center border-b pb-4">
               <img
-                src={item.productImage}
+                src={`data:image/jpeg;base64,${item.productImage}`}
                 alt={item.name}
                 className="w-20 h-20 object-cover rounded"
               />
@@ -512,7 +554,7 @@ const Checkout = () => {
             )}
             <div className="flex justify-between font-bold text-lg mt-4">
               <span>Total</span>
-              <span>${(getCartTotal() - getDiscountAmount() + (shippingFee || 0)).toFixed(2)}</span>
+              <span>${(getCartTotal() + (shippingFee || 0) - getDiscountAmount()).toFixed(2)}</span>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -19,14 +19,11 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
     <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow">
       <div className="flex items-center space-x-4">
         <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden">
+          {console.log(item)}
           <img 
-            src={item.productImage || item.imageURL}
+            src={`data:image/jpeg;base64,${item.productImage}`}
             alt={item.name}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.src = '/images/placeholder.jpg';
-              e.target.onerror = null;
-            }}
           />
         </div>
         <div>
@@ -80,6 +77,11 @@ const Cart = () => {
   const { cart, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleUpdateQuantity = async (productId, newQuantity, stockQuantity) => {
     if (newQuantity > stockQuantity) {
