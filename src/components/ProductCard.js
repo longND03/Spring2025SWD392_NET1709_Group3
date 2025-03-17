@@ -43,10 +43,14 @@ const ProductCard = ({ product }) => {
     >
       <CardMedia
         component="img"
-        height="250"
-        image={product.productImages[0]}
+        image={`data:image/jpeg;base64,${product.productImages[0]}`}
         alt={product.name}
-        sx={{ objectFit: 'cover' }}
+        sx={{ 
+          height: 250,
+          width: '100%',
+          objectFit: 'cover',
+          objectPosition: 'center'
+        }}
       />
       <CardContent sx={{ 
         flexGrow: 1, 
