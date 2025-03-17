@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
 import { toast } from 'react-hot-toast';
 import messages from '../constants/message.json';
 

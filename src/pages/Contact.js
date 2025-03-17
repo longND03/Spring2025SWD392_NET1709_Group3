@@ -81,9 +81,9 @@ const Contact = () => {
                             width="100%"
                             height="100%"
                             style={{ border: 0 }}
-                            allowfullscreen=""
+                            allowFullScreen=""
                             loading="lazy"
-                            referrerpolicy="no-referrer-when-downgrade">
+                            referrerPolicy="no-referrer-when-downgrade">
 
                         </iframe>
                     </div>

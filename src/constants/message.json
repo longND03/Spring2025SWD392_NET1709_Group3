@@ -7,7 +7,8 @@
     "updateQuantity": "Quantity updated",
     "removeProduct": "Product removed",
     "updateProfile": "Profile updated successfully",
-    "updateShipping": "Shipping information updated successfully"
+    "updateShipping": "Shipping information updated successfully",
+    "profilePicture": "Profile picture updated successfully"
   },
   "error": {
     "login": "Failed to login",
@@ -35,7 +36,11 @@
     },
     "profile": {
       "update": "Failed to update profile",
-      "shipping": "Failed to update shipping information"
+      "shipping": "Failed to update shipping information",
+      "image": {
+        "size": "Image size must be less than 10MB",
+        "upload": "Failed to upload image"
+      }
     },
     "server": "Server error",
     "network": "Network error",

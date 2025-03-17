@@ -231,7 +231,7 @@ const PersonalInfoBox = ({ userInfo }) => {
     if (file) {
       // Check file size (10MB = 10 * 1024 * 1024 bytes)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('Image size must be less than 10MB');
+        toast.error(messages.error.profile.image.size);
         return;
       }
 
@@ -266,11 +266,11 @@ const PersonalInfoBox = ({ userInfo }) => {
         setUser(updatedUser);
         setSelectedImage(null);
         setPreviewImage(null);
-        toast.success('Profile picture updated successfully');
+        toast.success(messages.success.profilePicture);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      toast.error(messages.error.profile.image.upload);
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import BlogCard from "../components/BlogCard";
 import { blogPosts } from "../data/blogData";
 
@@ -13,6 +13,10 @@ const Blog = () => {
     selectedCategory === "All"
       ? blogPosts
       : blogPosts.filter((post) => post.category === selectedCategory);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">

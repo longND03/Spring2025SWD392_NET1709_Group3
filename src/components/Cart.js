@@ -9,14 +9,6 @@ import messages from '../constants/message.json';
 const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
   const handleQuantityChange = async (newQuantity) => {
     try {
-      if (newQuantity > item.stockQuantity) {
-        toast.error(messages.error.cart.exceedStock);
-        return;
-      }
-      if (newQuantity < 1) {
-        toast.error(messages.error.cart.minQuantity);
-        return;
-      }
       await onUpdateQuantity(item.id, newQuantity, item.stockQuantity);
     } catch (error) {
       console.error('Error updating quantity:', error);
@@ -85,20 +77,20 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
 });
 
 const Cart = () => {
-  const { cart, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount, addToCart } = useCart();
+  const { cart, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleUpdateQuantity = async (productId, newQuantity, stockQuantity) => {
+    if (newQuantity > stockQuantity) {
+      toast.error(messages.error.cart.exceedStock);
+      return;
+    }
+    if (newQuantity < 1) {
+      toast.error(messages.error.cart.minQuantity);
+      return;
+    }
     try {
-      if (newQuantity > stockQuantity) {
-        toast.error(messages.error.cart.exceedStock);
-        return;
-      }
-      if (newQuantity < 1) {
-        toast.error(messages.error.cart.minQuantity);
-        return;
-      }
       await updateQuantity(productId, newQuantity);
       toast.success(messages.success.updateQuantity);
     } catch (error) {
