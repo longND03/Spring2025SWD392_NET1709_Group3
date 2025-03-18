@@ -1,10 +1,44 @@
 import React, { useEffect, useState } from 'react';
+import { 
+  Box, 
+  Card, 
+  CardContent, 
+  Typography, 
+  Chip, 
+  Grid, 
+  Paper, 
+  Divider, 
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Avatar,
+  IconButton,
+  Collapse,
+  Badge,
+  Autocomplete
+} from '@mui/material';
+import { 
+  ExpandMore, 
+  ExpandLess, 
+  Inventory, 
+  Person, 
+  Phone, 
+  Home, 
+  CalendarToday, 
+  ShoppingCart 
+} from '@mui/icons-material';
+import { motion } from 'framer-motion';
 
 const StaffOrder = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userDetails, setUserDetails] = useState({});
+  const [expandedOrder, setExpandedOrder] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -46,72 +80,303 @@ const StaffOrder = () => {
     });
   }, [orders]);
 
-  if (loading) return <div className="text-center">Loading...</div>;
-  if (error) return <div className="text-red-500 text-center">Error: {error}</div>;
+  const handleExpandOrder = (orderId) => {
+    setExpandedOrder(expandedOrder === orderId ? null : orderId);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Completed':
+        return { bg: '#e6f4ea', text: '#34a853', icon: 'check-circle' };
+      case 'Canceled':
+        return { bg: '#fce8e6', text: '#ea4335', icon: 'cancel' };
+      case 'Waiting':
+      default:
+        return { bg: '#fff8e1', text: '#ffa000', icon: 'schedule' };
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
+
+  if (loading) return (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+      <CircularProgress color="secondary" />
+    </Box>
+  );
+  
+  if (error) return (
+    <Paper elevation={3} sx={{ p: 3, bgcolor: '#ffdede', color: '#d32f2f', textAlign: 'center', borderRadius: 2 }}>
+      <Typography variant="h6">Error: {error}</Typography>
+    </Paper>
+  );
 
   return (
-    <div className="p-6 bg-gray-100 rounded-lg shadow-md">
-      <h2 className="text-3xl font-bold mb-6 text-center text-[#E91E63]">Order Management</h2>
-      <ul className="space-y-6">
+    <Box sx={{ p: 3 }}>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 4 
+        }}
+      >
+        <Typography variant="h4" component="h1" fontWeight="bold" color="#303030">
+          Order Management
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Total Orders: {orders.length}
+        </Typography>
+      </Box>
+
+      <Box sx={{ mb: 4 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 3, 
+                borderRadius: 3, 
+                bgcolor: '#e3f2fd', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.05)' 
+              }}
+            >
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Pending Orders
+              </Typography>
+              <Typography variant="h3" fontWeight="bold" color="#1976d2">
+                {orders.filter(order => order.statusName === 'Waiting').length}
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 3, 
+                borderRadius: 3, 
+                bgcolor: '#e8f5e9', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.05)' 
+              }}
+            >
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Completed Orders
+              </Typography>
+              <Typography variant="h3" fontWeight="bold" color="#2e7d32">
+                {orders.filter(order => order.statusName === 'Completed').length}
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 3, 
+                borderRadius: 3, 
+                bgcolor: '#ffebee', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.05)' 
+              }}
+            >
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Canceled Orders
+              </Typography>
+              <Typography variant="h3" fontWeight="bold" color="#c62828">
+                {orders.filter(order => order.statusName === 'Canceled').length}
+              </Typography>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+
+      <Box sx={{ mb: 4 }}>
         {orders.map(order => (
-          <li key={order.id} className="p-5 bg-white border border-gray-300 rounded-lg shadow hover:shadow-lg transition-shadow duration-200">
-            <div className="flex flex-col space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Order ID:</span>
-                <span className="text-gray-700">{order.id}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">User ID:</span>
-                <span className="text-gray-700">{order.userID}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Username:</span>
-                <span className="text-gray-700">{userDetails[order.userID]?.username || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Phone:</span>
-                <span className="text-gray-700">{userDetails[order.userID]?.phone || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Quantity:</span>
-                <span className="text-gray-700">{order.quantity}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Address:</span>
-                <span className="text-gray-700">{order.address}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Total Amount:</span>
-                <span className="text-gray-700">{order.totalAmount} đ</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Order Date:</span>
-                <span className="text-gray-700">{new Date(order.orderDate).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Status:</span>
-                <span className={`font-bold ${order.statusName === 'Completed' ? 'text-green-500' : order.statusName === 'Waiting' ? 'text-yellow-500' : 'text-red-500'}`}>
-                  {order.statusName || 'N/A'}
-                </span>
-              </div>
-            </div>
-            {/* Hiển thị chi tiết sản phẩm */}
-            {order.details.length > 0 && (
-              <div className="mt-4 border-t pt-4">
-                <h3 className="font-semibold text-lg">Product Details:</h3>
-                <ul className="list-disc pl-5">
-                  {order.details.map((detail, index) => (
-                    <li key={index} className="text-gray-700">
-                      {detail.productName} - {detail.quantity} x {detail.price} đ
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </li>
+          <motion.div
+            key={order.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card 
+              sx={{ 
+                mb: 2, 
+                overflow: 'visible',
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 25px rgba(0,0,0,0.1)'
+                }
+              }}
+            >
+              <CardContent sx={{ p: 0 }}>
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={1}>
+                      <Avatar 
+                        sx={{ 
+                          width: 56, 
+                          height: 56, 
+                          bgcolor: '#E91E63',
+                          boxShadow: '0 2px 10px rgba(233, 30, 99, 0.2)'
+                        }}
+                      >
+                        <ShoppingCart />
+                      </Avatar>
+                    </Grid>
+                    <Grid item xs={12} md={5}>
+                      <Box>
+                        <Typography variant="h6" fontWeight="medium" gutterBottom>
+                          Order #{order.id}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Person sx={{ fontSize: 18, mr: 1, color: '#757575' }} />
+                          <Typography variant="body2" color="text.secondary">
+                            {userDetails[order.userID]?.username || 'User'} | 
+                          </Typography>
+                          <Phone sx={{ fontSize: 18, mx: 1, color: '#757575' }} />
+                          <Typography variant="body2" color="text.secondary">
+                            {userDetails[order.userID]?.phone || 'N/A'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Order Date
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <CalendarToday sx={{ fontSize: 16, mr: 1, color: '#757575' }} />
+                          <Typography variant="body2">
+                            {new Date(order.orderDate).toLocaleDateString()}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Total Amount
+                        </Typography>
+                        <Typography variant="h6" fontWeight="bold" color="#E91E63">
+                          {formatCurrency(order.totalAmount)}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={1}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Chip 
+                          label={order.statusName || 'N/A'}
+                          sx={{ 
+                            bgcolor: getStatusColor(order.statusName).bg,
+                            color: getStatusColor(order.statusName).text,
+                            fontWeight: 'bold',
+                            borderRadius: '8px',
+                            px: 1
+                          }}
+                        />
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={1}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <IconButton 
+                          onClick={() => handleExpandOrder(order.id)}
+                          sx={{ 
+                            bgcolor: '#f5f5f5', 
+                            '&:hover': { bgcolor: '#e0e0e0' } 
+                          }}
+                        >
+                          {expandedOrder === order.id ? <ExpandLess /> : <ExpandMore />}
+                        </IconButton>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Box>
+                
+                <Collapse in={expandedOrder === order.id}>
+                  <Divider />
+                  <Box sx={{ p: 3, bgcolor: '#fafafa' }}>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={6}>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+                          <Home sx={{ fontSize: 20, mr: 1, color: '#757575', mt: 0.5 }} />
+                          <Box>
+                            <Typography variant="subtitle2" color="text.secondary">
+                              Shipping Address
+                            </Typography>
+                            <Typography variant="body2">
+                              {order.address || 'No address provided'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Inventory sx={{ fontSize: 20, mr: 1, color: '#757575' }} />
+                          <Box>
+                            <Typography variant="subtitle2" color="text.secondary">
+                              Total Items
+                            </Typography>
+                            <Typography variant="body2">
+                              {order.quantity} items
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                    </Grid>
+
+                    <Box sx={{ mt: 3 }}>
+                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                        Order Items
+                      </Typography>
+                      <TableContainer component={Paper} sx={{ boxShadow: 'none', bgcolor: 'transparent' }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Product</TableCell>
+                              <TableCell align="right">Quantity</TableCell>
+                              <TableCell align="right">Price</TableCell>
+                              <TableCell align="right">Subtotal</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {order.details.map((detail, index) => (
+                              <TableRow key={index}>
+                                <TableCell component="th" scope="row">
+                                  {detail.productName}
+                                </TableCell>
+                                <TableCell align="right">{detail.quantity}</TableCell>
+                                <TableCell align="right">{formatCurrency(detail.price)}</TableCell>
+                                <TableCell align="right">{formatCurrency(detail.quantity * detail.price)}</TableCell>
+                              </TableRow>
+                            ))}
+                            <TableRow>
+                              <TableCell colSpan={2} />
+                              <TableCell align="right">
+                                <Typography variant="subtitle2" fontWeight="bold">
+                                  Total
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="subtitle2" fontWeight="bold" color="#E91E63">
+                                  {formatCurrency(order.totalAmount)}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  </Box>
+                </Collapse>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </ul>
-    </div>
+      </Box>
+    </Box>
   );
 };
 
