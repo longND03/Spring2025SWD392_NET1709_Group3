@@ -51,6 +51,7 @@ export const AuthProvider = ({ children }) => {
         email: data.data.user.email,
         image: data.data.user.image,
         location: data.data.user.location,
+        voucherStorageId: data.data.user.voucherStorage?.[0]?.id,
         voucherStorage: data.data.user.voucherStorage?.[0]?.storages || [],
         role: data.data.user.userRoles,
         token: data.data.token,
@@ -167,7 +168,7 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:5296/api/auth/me', {
+      const response = await fetch(`http://localhost:5296/api/user/${user.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -179,18 +180,15 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       const userData = {
-        id: data.data.id,
-        username: data.data.username,
-        phone: data.data.phone,
-        email: data.data.email,
-        image: data.data.image,
-        location: data.data.location,
-        voucherStorage: data.data.voucherStorage?.[0]?.storages || [],
-        role: data.data.userRoles,
-        token: token
+        username: data.username,
+        phone: data.phone,
+        email: data.email,
+        image: data.image,
+        location: data.location,
+        voucherStorage: data.voucherStorage?.[0]?.storages || []
       };
 
-      setUser(userData);
+      setUser((prevUser) => ({ ...prevUser, userData }));
       localStorage.setItem('user', JSON.stringify(userData));
     } catch (error) {
       console.error('Refetch user data error:', error);

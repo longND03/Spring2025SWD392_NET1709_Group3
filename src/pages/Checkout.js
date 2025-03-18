@@ -86,7 +86,7 @@ const Checkout = () => {
     }
 
     const fetchVoucherDetails = async () => {
-      if (!user.voucherStorage) return;
+      if (!user?.voucherStorage) return;
 
       try {
         const voucherPromises = user.voucherStorage.map(async (storage) => {
@@ -161,6 +161,7 @@ const Checkout = () => {
 
     // Fetch initial data
     fetchProvinces();
+    refetchUserData();
     fetchVoucherDetails();
 
   }, [user, navigate, getCartTotal]);
@@ -470,7 +471,7 @@ const Checkout = () => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Select Voucher</h2>
             <span className="text-sm text-gray-600">
-              Remaining: {user.voucherStorage?.length || 0} vouchers
+              Remaining: {user?.voucherStorage?.length || 0} vouchers
             </span>
           </div>
           <div className="h-[calc(100%-8rem)] overflow-y-auto mb-4">
@@ -488,7 +489,12 @@ const Checkout = () => {
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="font-semibold text-lg">{voucher.discountPercentage}% OFF</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-lg">{voucher.discountPercentage}% OFF</span>
+                      <span className="text-sm text-gray-500">
+                        ({voucher.quantity} remaining)
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-600">
                       Min. spend ${voucher.minimumPurchase}
                     </p>
