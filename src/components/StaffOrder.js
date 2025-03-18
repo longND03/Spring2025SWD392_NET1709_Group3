@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext'; // Sử dụng useAuth thay vì AuthContext
 import { 
   Box, 
   Card, 
@@ -34,6 +35,7 @@ import {
 import { motion } from 'framer-motion';
 
 const StaffOrder = () => {
+  const { user } = useAuth(); // Lấy thông tin người dùng từ useAuth
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -43,7 +45,11 @@ const StaffOrder = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('http://localhost:5296/api/order/all');
+        const response = await fetch('http://localhost:5296/api/order/all', {
+          headers: {
+            'Authorization': `Bearer ${user.token}`, // Gửi token trong header
+          },
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch orders');
         }
@@ -57,11 +63,15 @@ const StaffOrder = () => {
     };
 
     fetchOrders();
-  }, []);
+  }, [user.token]); // Thêm user.token vào dependency array
 
   const fetchUserDetails = async (userID) => {
     try {
-      const response = await fetch(`http://localhost:5296/api/user/${userID}`);
+      const response = await fetch(`http://localhost:5296/api/user/${userID}`, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`, // Gửi token trong header
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch user details');
       }
