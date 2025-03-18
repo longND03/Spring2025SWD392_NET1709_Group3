@@ -161,6 +161,45 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refetchUserData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('http://localhost:5296/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const data = await response.json();
+      const userData = {
+        id: data.data.id,
+        username: data.data.username,
+        phone: data.data.phone,
+        email: data.data.email,
+        image: data.data.image,
+        location: data.data.location,
+        voucherStorage: data.data.voucherStorage?.[0]?.storages || [],
+        role: data.data.userRoles,
+        token: token
+      };
+
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Refetch user data error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     user,
     setUser,
@@ -170,7 +209,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: !!user,
     resetPassword,
-    confirmPasswordReset
+    confirmPasswordReset,
+    refetchUserData
   };
 
   return (

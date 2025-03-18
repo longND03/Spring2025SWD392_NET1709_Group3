@@ -53,10 +53,13 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
             // Find IDs by matching names
             const brandId = brands.find(b => b.name === product.brand)?.id?.toString() || '';
             const categoryId = categories.find(c => c.name === product.category)?.id?.toString() || '';
+            const packagingData = product.packaging.split(" ");
+            packagingData[0] = !packagingData[0].toLowerCase().includes("non");
             const packagingId = packagings.find(p => 
-                p.type === product.packaging?.type && 
-                p.material === product.packaging?.material && 
-                p.size === product.packaging?.size
+                product.packaging.includes(p.type) &&
+                product.packaging.includes(p.material) &&
+                product.packaging.includes(p.size) &&
+                p.isRefillable === !(product.packaging.split(" ")[0].toLowerCase().includes("non"))
             )?.id?.toString() || '';
             const formulationTypeId = formulationTypes.find(f => f.texture === product.formulationType)?.id?.toString() || '';
 
@@ -178,6 +181,7 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
         e.preventDefault();
         setIsSaving(true);
 
+        console.log(formData);
         try {
             await axios.put(`/api/product/${product.id}`, formData, {
                 headers: {
@@ -203,11 +207,11 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
             price: product.price || '',
             brandId: brands.find(b => b.name === product.brand)?.id?.toString() || '',
             categoryId: categories.find(c => c.name === product.category)?.id?.toString() || '',
-            packagingId: packagings.find(p => 
-                p.type === product.packaging?.type && 
-                p.material === product.packaging?.material && 
-                p.size === product.packaging?.size
-            )?.id?.toString() || '',
+            // packagingId: packagings.find(p => 
+            //     p.type === product.packaging?.type && 
+            //     p.material === product.packaging?.material && 
+            //     p.size === product.packaging?.size
+            // )?.id?.toString() || '',
             formulationTypeId: formulationTypes.find(f => f.texture === product.formulationType)?.id?.toString() || '',
             direction: product.direction || '',
             pao: product.pao || '',
@@ -242,7 +246,7 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
 
     return (
         <>
-            <Modal
+        <Modal
                 open={open}
                 onClose={handleClose}
                 disableAutoFocus
