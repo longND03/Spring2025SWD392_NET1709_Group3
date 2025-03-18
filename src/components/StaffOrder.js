@@ -358,8 +358,8 @@ const StaffOrder = () => {
                                   {detail.productName}
                                 </TableCell>
                                 <TableCell align="right">{detail.quantity}</TableCell>
-                                <TableCell align="right">{formatCurrency(detail.price)}</TableCell>
-                                <TableCell align="right">{formatCurrency(detail.quantity * detail.price)}</TableCell>
+                                <TableCell align="right">{formatCurrency(detail.unitPrice)}</TableCell>
+                                <TableCell align="right">{formatCurrency(detail.quantity * detail.unitPrice)}</TableCell>
                               </TableRow>
                             ))}
                             <TableRow>
