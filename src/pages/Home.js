@@ -15,15 +15,17 @@ const Home = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get('http://localhost:5296/api/product?PageSize=4');
-        setBestSellers(response.data.items);
+        const items = response.data?.items || []; // Đảm bảo items luôn là mảng
+        setBestSellers(items);
       } catch (error) {
         console.error("Error fetching products:", error);
-      } finally {
+        setBestSellers([]); // Nếu lỗi, đặt bestSellers thành mảng rỗng để tránh lỗi render
       }
     };
-
+  
     fetchProducts();
   }, []);
+  
 
   return (
     <div className="min-h-screen">
@@ -118,11 +120,11 @@ const Home = () => {
                 className="group relative bg-white dark:bg-[#2A303C] rounded-xl shadow-lg overflow-hidden flex flex-col h-full"
               >
                 <div className="aspect-w-1 aspect-h-1 w-full h-48 overflow-hidden">
-                  <img
-                    src={p.productImages[0]}
-                    alt={p.name}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-                  />
+                <img
+  src={p.productImages?.[0] || "https://via.placeholder.com/150"}
+  alt={p.name}
+  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+/>
                 </div>
                 <div className="p-4 flex flex-col flex-grow">
                   <h3 className="text-lg font-semibold mb-2 dark:text-white line-clamp-1">{p.name}</h3>

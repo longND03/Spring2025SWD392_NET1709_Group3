@@ -52,7 +52,7 @@ const AdminDashboard = () => {
 
   // Delete a user
   const handleDelete = async (userId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
+    if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         const token = localStorage.getItem('token');
         if (!token) throw new Error('Token không tìm thấy. Vui lòng đăng nhập lại.');
@@ -71,7 +71,7 @@ const AdminDashboard = () => {
         await fetchUsers();
         setError(null);
       } catch (error) {
-        setError(`Lỗi khi xóa người dùng: ${error.message}`);
+        setError(`Error deleting user: ${error.message}`);
         console.error('Chi tiết lỗi:', error);
       }
     }
@@ -152,18 +152,18 @@ const AdminDashboard = () => {
         {/* Create User Form */}
         <div className="bg-white shadow-md rounded-lg mb-8 overflow-hidden">
           <div className="bg-gray-800 text-white px-6 py-4">
-            <h2 className="text-xl font-semibold">Tạo tài khoản nhân viên mới</h2>
+            <h2 className="text-xl font-semibold">Create New Employee Account</h2>
           </div>
           <div className="p-6">
             <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên người dùng
+                  User Name
                 </label>
                 <input
                   id="username"
                   type="text"
-                  placeholder="Nhập tên người dùng"
+                  placeholder="Enter username"
                   value={newUser.username}
                   onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
                   required
@@ -177,7 +177,7 @@ const AdminDashboard = () => {
                 <input
                   id="email"
                   type="email"
-                  placeholder="Nhập email"
+                  placeholder="Enter email"
                   value={newUser.email}
                   onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                   required
@@ -186,12 +186,12 @@ const AdminDashboard = () => {
               </div>
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Mật khẩu
+                  Password
                 </label>
                 <input
                   id="password"
                   type="password"
-                  placeholder="Nhập mật khẩu"
+                  placeholder="Enter password"
                   value={newUser.password}
                   onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                   required
@@ -200,12 +200,12 @@ const AdminDashboard = () => {
               </div>
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Số điện thoại
+                  Phone number
                 </label>
                 <input
                   id="phone"
                   type="text"
-                  placeholder="Nhập số điện thoại"
+                  placeholder="Enter phone number"
                   value={newUser.phone}
                   onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -213,12 +213,12 @@ const AdminDashboard = () => {
               </div>
               <div>
                 <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                  Địa chỉ
+                location
                 </label>
                 <input
                   id="location"
                   type="text"
-                  placeholder="Nhập địa chỉ"
+                  placeholder="Enter address"
                   value={newUser.location}
                   onChange={(e) => setNewUser({ ...newUser, location: e.target.value })}
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -236,10 +236,10 @@ const AdminDashboard = () => {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Đang tạo...
+                      Creating...
                     </span>
                   ) : (
-                    'Tạo tài khoản'
+                    'Create Account'
                   )}
                 </button>
               </div>
@@ -250,9 +250,9 @@ const AdminDashboard = () => {
         {/* User Management Table */}
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           <div className="bg-gray-800 text-white px-6 py-4 flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Quản lý người dùng</h2>
+            <h2 className="text-xl font-semibold">User Management</h2>
             <span className="bg-blue-500 text-white text-sm font-medium px-3 py-1 rounded-full">
-              {users.length} người dùng
+              {users.length} user
             </span>
           </div>
           <div className="overflow-x-auto">
@@ -263,7 +263,7 @@ const AdminDashboard = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <p className="text-gray-500">Đang tải danh sách người dùng...</p>
+                  <p className="text-gray-500">loading user</p>
                 </div>
               </div>
             ) : (
@@ -271,13 +271,13 @@ const AdminDashboard = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tên người dùng
+                      Username
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Email
                     </th>
                     <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Hành động
+                      Status
                     </th>
                   </tr>
                 </thead>
@@ -306,7 +306,7 @@ const AdminDashboard = () => {
                             className="text-red-600 hover:text-red-800 transition duration-300 ease-in-out"
                             disabled={loading}
                           >
-                            Ngừng hoạt động
+                            Deactive
                           </button>
                         </td>
                       </tr>
@@ -314,7 +314,7 @@ const AdminDashboard = () => {
                   ) : (
                     <tr>
                       <td colSpan="3" className="px-6 py-12 text-center">
-                        <p className="text-gray-500">Không có người dùng nào.</p>
+                        <p className="text-gray-500">No users found.</p>
                       </td>
                     </tr>
                   )}

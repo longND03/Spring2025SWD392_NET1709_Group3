@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext'; // Sử dụng useAuth thay vì AuthContext
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Box, 
   Card, 
@@ -20,7 +20,9 @@ import {
   IconButton,
   Collapse,
   Badge,
-  Autocomplete
+  Autocomplete,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { 
   ExpandMore, 
@@ -30,24 +32,28 @@ import {
   Phone, 
   Home, 
   CalendarToday, 
-  ShoppingCart 
+  ShoppingCart,
+  CheckCircle
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
 const StaffOrder = () => {
-  const { user } = useAuth(); // Lấy thông tin người dùng từ useAuth
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userDetails, setUserDetails] = useState({});
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState('');
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const response = await fetch('http://localhost:5296/api/order/all', {
           headers: {
-            'Authorization': `Bearer ${user.token}`, // Gửi token trong header
+            'Authorization': `Bearer ${user.token}`,
           },
         });
         if (!response.ok) {
@@ -63,13 +69,13 @@ const StaffOrder = () => {
     };
 
     fetchOrders();
-  }, [user.token]); // Thêm user.token vào dependency array
+  }, [user.token]);
 
   const fetchUserDetails = async (userID) => {
     try {
       const response = await fetch(`http://localhost:5296/api/user/${userID}`, {
         headers: {
-          'Authorization': `Bearer ${user.token}`, // Gửi token trong header
+          'Authorization': `Bearer ${user.token}`,
         },
       });
       if (!response.ok) {
@@ -78,7 +84,7 @@ const StaffOrder = () => {
       const data = await response.json();
       setUserDetails(prev => ({ ...prev, [userID]: data }));
     } catch (err) {
-      console.error(err.message);
+      console.error('Error fetching user details:', err.message);
     }
   };
 
@@ -110,6 +116,88 @@ const StaffOrder = () => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      setUpdatingOrderId(orderId);
+      
+      // Fix: Updated to use URL parameters instead of request body
+      const statusId = status === 'Completed' ? 5 : status === 'Canceled' ? 6 : 4; // Add mapping for status names to IDs
+      const response = await fetch(`http://localhost:5296/api/order/status/${orderId}/${statusId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        }
+      });
+      
+      // Improved error handling
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
+        } catch (e) {
+          errorMessage = `Error ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+  
+      // Update orders state after successful status update
+      const updatedOrders = orders.map(order => 
+        order.id === orderId ? { ...order, statusName: status } : order
+      );
+      setOrders(updatedOrders);
+      setUpdateMessage(`Order #${orderId} has been marked as ${status}`);
+      setUpdateSuccess(true);
+      
+      // Refresh the order list after updating status
+      setTimeout(() => {
+        fetchOrders();
+      }, 1000);
+    } catch (err) {
+      console.error('Update order status error:', err);
+      setUpdateMessage(`Failed to update order: ${err.message}`);
+      setUpdateSuccess(false);
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setUpdateMessage('');
+  };
+
+  // Added helper function to get status ID
+  const getStatusId = (statusName) => {
+    switch (statusName) {
+      case 'Completed': return 5;
+      case 'Canceled': return 6;
+      case 'Waiting': return 4;
+      default: return 4;
+    }
+  };
+
+  // Added function to refresh orders
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5296/api/order/all', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+      const data = await response.json();
+      setOrders(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
       <CircularProgress color="secondary" />
@@ -124,6 +212,21 @@ const StaffOrder = () => {
 
   return (
     <Box sx={{ p: 3 }}>
+      <Snackbar 
+        open={!!updateMessage} 
+        autoHideDuration={3000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={updateSuccess ? "success" : "error"} 
+          sx={{ width: '100%' }}
+        >
+          {updateMessage}
+        </Alert>
+      </Snackbar>
+
       <Box 
         sx={{ 
           display: 'flex', 
@@ -302,6 +405,29 @@ const StaffOrder = () => {
                         </IconButton>
                       </Box>
                     </Grid>
+                    <Grid item xs={12} md={1}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        {order.statusName === 'Waiting' && (
+                          <IconButton 
+                            onClick={() => updateOrderStatus(order.id, 'Completed')}
+                            disabled={updatingOrderId === order.id}
+                            sx={{ 
+                              bgcolor: updatingOrderId === order.id ? '#e0e0e0' : '#f5f5f5', 
+                              '&:hover': { bgcolor: '#e0e0e0' },
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {updatingOrderId === order.id ? 
+                              <CircularProgress size={20} color="primary" /> : 
+                              <Typography variant="body2">Complete</Typography>
+                            }
+                          </IconButton>
+                        )}
+                        {order.statusName === 'Completed' && (
+                          <CheckCircle sx={{ color: '#34a853' }} />
+                        )}
+                      </Box>
+                    </Grid>
                   </Grid>
                 </Box>
                 
@@ -352,7 +478,7 @@ const StaffOrder = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {order.details.map((detail, index) => (
+                            {order.details && order.details.map((detail, index) => (
                               <TableRow key={index}>
                                 <TableCell component="th" scope="row">
                                   {detail.productName}
