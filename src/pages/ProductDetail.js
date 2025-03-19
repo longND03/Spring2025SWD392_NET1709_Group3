@@ -30,7 +30,7 @@ const ProductDetail = () => {
         ]);
 
         // Create maps for quick lookup
-        const skinTypeMap = new Map(skinTypesResponse.data.map(type => [type.name, type.id]));
+        const skinTypeMap = new Map(skinTypesResponse.data.items.map(type => [type.name, type.id]));
         const tagMap = new Map(tagsResponse.data.map(tag => [tag.name, tag.id]));
 
         // Build query parameters

@@ -96,8 +96,8 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
                 productSkinTypeIds: skinTypeIds
             });
 
-            if (product.productImages && product.productImages[0]) {
-                setImagePreview(`data:image/jpeg;base64,${product.productImages[0]}`);
+            if (product.productImage) {
+                setImagePreview(`data:image/jpeg;base64,${product.productImage}`);
             }
             setLoading(false);
         }
