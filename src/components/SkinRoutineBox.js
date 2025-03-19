@@ -104,7 +104,7 @@ const SkinRoutineBox = ({ userInfo }) => {
 
   return (
     <div className="p-8 bg-white rounded-xl shadow-lg">
-      <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent mb-6">Quy trình chăm sóc da của bạn</h2>
+      <h2 className="text-6xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent text-center mb-7">Quy trình chăm sóc da của bạn</h2>
       
       {!selectedSkinType ? (
         <div className="mb-6">
