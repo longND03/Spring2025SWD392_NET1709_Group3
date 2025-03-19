@@ -36,7 +36,7 @@ const Checkout = () => {
 
   const paymentMethods = [
     { id: 1, methodName: 'Cash (COD)', isInternalPayment: true },
-    { id: 2, methodName: 'VNPay', isInternalPayment: false },
+    // { id: 2, methodName: 'VNPay', isInternalPayment: false },
     { id: 3, methodName: 'QR Code (Bank Transfer)', isInternalPayment: true }
   ];
 

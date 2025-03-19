@@ -28,7 +28,7 @@ const StaffBlogManagement = () => {
             setPublishedLoading(true);
 
             // Fetch draft posts
-            const draftResponse = await Axios.get(`/api/post?PageNumber=${draftPage}&PageSize=10&Status=false${draftSearch ? `&Title=${draftSearch}` : ''}`);
+            const draftResponse = await Axios.get(`/api/post?IsDeleted=false&PageNumber=${draftPage}&PageSize=10&Status=false${draftSearch ? `&Title=${draftSearch}` : ''}`);
             setDraftPosts({
                 items: draftResponse.data.items || [],
                 totalPages: draftResponse.data.totalPages || 1
@@ -36,7 +36,7 @@ const StaffBlogManagement = () => {
             setDraftLoading(false);
 
             // Fetch published posts
-            const publishedResponse = await Axios.get(`/api/post?PageNumber=${publishedPage}&PageSize=10&Status=true${publishedSearch ? `&Title=${publishedSearch}` : ''}`);
+            const publishedResponse = await Axios.get(`/api/post?IsDeleted=false&PageNumber=${publishedPage}&PageSize=10&Status=true${publishedSearch ? `&Title=${publishedSearch}` : ''}`);
             setPublishedPosts({
                 items: publishedResponse.data.items || [],
                 totalPages: publishedResponse.data.totalPages || 1

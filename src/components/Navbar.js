@@ -143,7 +143,7 @@ const Navbar = () => {
                 <button className="flex items-center space-x-2 focus:outline-none">
                   {user.image ? (
                     <img
-                      src={user.image}
+                      src={`data:image/jpeg;base64,${user?.image}`}
                       alt="User Avatar"
                       className="w-8 h-8 rounded-full"
                     />
