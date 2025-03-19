@@ -7,6 +7,11 @@ import { toast } from 'react-toastify';
 import axios from '../api/axios';
 import messages from '../constants/message.json';
 import ProductCard from '../components/ProductCard';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import ScienceIcon from '@mui/icons-material/Science';
+import InfoIcon from '@mui/icons-material/Info';
+import DescriptionIcon from '@mui/icons-material/Description';
+import SpaIcon from '@mui/icons-material/Spa';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -55,15 +60,17 @@ const ProductDetail = () => {
         queryParams.push('IsDeleted=false');
         
         const relatedResponse = await axios.get(`/api/product?${queryParams.join('&')}`);
-        const allProducts = relatedResponse.data.items.filter(p => p.id !== id);
+        // Filter out the current product
+        const filteredProducts = relatedResponse.data.items.filter(p => p.id !== parseInt(id));
         
-        // Randomly select 5 products
+        // Randomly select 5 products from filtered list
         const selectedProducts = [];
-        const totalProducts = Math.min(5, allProducts.length);
+        const totalProducts = Math.min(5, filteredProducts.length);
         while (selectedProducts.length < totalProducts) {
-          const randomIndex = Math.floor(Math.random() * allProducts.length);
-          if (!selectedProducts.includes(allProducts[randomIndex])) {
-            selectedProducts.push(allProducts[randomIndex]);
+          const randomIndex = Math.floor(Math.random() * filteredProducts.length);
+          const randomProduct = filteredProducts[randomIndex];
+          if (!selectedProducts.some(p => p.id === randomProduct.id)) {
+            selectedProducts.push(randomProduct);
           }
         }
         setRelatedProducts(selectedProducts);
@@ -110,7 +117,17 @@ const ProductDetail = () => {
       <Grid container spacing={4}>
         {/* Product Image and Info */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 2, borderRadius: 2 }}>
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              p: 2, 
+              borderRadius: 2,
+              height: '100%',
+              background: 'linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%)',
+              boxShadow: '0 4px 20px rgba(233, 30, 99, 0.1)',
+              border: '1px solid rgba(233, 30, 99, 0.1)'
+            }}
+          >
             {product.productImage ? (
               <img
                 src={`data:image/jpeg;base64,${product.productImage}`}
@@ -127,8 +144,20 @@ const ProductDetail = () => {
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-            <div className="space-y-4">
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              p: 4, 
+              borderRadius: 2,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              background: 'linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%)',
+              boxShadow: '0 4px 20px rgba(233, 30, 99, 0.1)',
+              border: '1px solid rgba(233, 30, 99, 0.1)'
+            }}
+          >
+            <div className="flex-grow space-y-4">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 {product.name}
               </h1>
@@ -160,30 +189,43 @@ const ProductDetail = () => {
                   ))}
                 </div>
               </div>
-
-              <Button
-                variant="contained"
-                fullWidth
-                sx={{
-                  mt: 2,
-                  bgcolor: '#E91E63',
-                  '&:hover': {
-                    bgcolor: '#C2185B'
-                  }
-                }}
-                onClick={handleAddToCart}
-                disabled={product.stockQuantity < 1 || !isCustomer}
-              >
-                {product.stockQuantity < 1 ? 'Out of Stock' : 'Add to Cart'}
-              </Button>
             </div>
+
+            <Button
+              variant="contained"
+              fullWidth
+              sx={{
+                mt: 'auto',
+                bgcolor: '#E91E63',
+                '&:hover': {
+                  bgcolor: '#C2185B'
+                }
+              }}
+              onClick={handleAddToCart}
+              disabled={product.stockQuantity < 1 || !isCustomer}
+            >
+              {product.stockQuantity < 1 ? 'Out of Stock' : 'Add to Cart'}
+            </Button>
           </Paper>
         </Grid>
 
         {/* Description Section - Full Width */}
         <Grid item xs={12}>
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 2, mt: 4 }}>
-            <h2 className="text-2xl font-bold mb-4">Description</h2>
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              p: 4, 
+              borderRadius: 2, 
+              mt: 4,
+              background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #E0E0E0'
+            }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <DescriptionIcon sx={{ color: '#E91E63' }} />
+              <h2 className="text-2xl font-bold">Description</h2>
+            </div>
             <p className="text-gray-600 dark:text-gray-300 whitespace-pre-line">
               {product.description}
             </p>
@@ -194,15 +236,30 @@ const ProductDetail = () => {
         <Grid item xs={12} md={8}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  p: 4, 
+                  borderRadius: 2,
+                  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+                  border: '1px solid #E0E0E0'
+                }}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-xl font-semibold mb-3">How to Use</h3>
+                    <div className="flex items-center gap-2 mb-3">
+                      <LocalShippingIcon sx={{ color: '#E91E63' }} />
+                      <h3 className="text-xl font-semibold">How to Use</h3>
+                    </div>
                     <p className="text-gray-600 dark:text-gray-300">{product.direction}</p>
                   </div>
                   
                   <div>
-                    <h3 className="text-xl font-semibold mb-3">Storage Instructions</h3>
+                    <div className="flex items-center gap-2 mb-3">
+                      <InfoIcon sx={{ color: '#E91E63' }} />
+                      <h3 className="text-xl font-semibold">Storage Instructions</h3>
+                    </div>
                     <p className="text-gray-600 dark:text-gray-300">{product.storage}</p>
                   </div>
                 </div>
@@ -210,8 +267,20 @@ const ProductDetail = () => {
             </Grid>
 
             <Grid item xs={12}>
-              <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-                <h3 className="text-xl font-semibold mb-3">Ingredients</h3>
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  p: 4, 
+                  borderRadius: 2,
+                  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+                  border: '1px solid #E0E0E0'
+                }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <ScienceIcon sx={{ color: '#E91E63' }} />
+                  <h3 className="text-xl font-semibold">Ingredients</h3>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {product.productIngredients.map((ingredient, index) => (
                     <Chip key={index} label={ingredient} variant="outlined" />
@@ -221,10 +290,22 @@ const ProductDetail = () => {
             </Grid>
 
             <Grid item xs={12}>
-              <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  p: 4, 
+                  borderRadius: 2,
+                  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+                  border: '1px solid #E0E0E0'
+                }}
+              >
                 <div className="grid grid-cols-1 gap-6">
                   <div>
-                    <h3 className="text-xl font-semibold mb-3">Additional Information</h3>
+                    <div className="flex items-center gap-2 mb-3">
+                      <InfoIcon sx={{ color: '#E91E63' }} />
+                      <h3 className="text-xl font-semibold">Additional Information</h3>
+                    </div>
                     <ul className="space-y-2 text-gray-600 dark:text-gray-300">
                       <li><strong>Formula Type:</strong> {product.formulationType}</li>
                       <li><strong>Packaging:</strong> {product.packaging}</li>
@@ -233,7 +314,10 @@ const ProductDetail = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-semibold mb-3">Precautions</h3>
+                    <div className="flex items-center gap-2 mb-3">
+                      <SpaIcon sx={{ color: '#E91E63' }} />
+                      <h3 className="text-xl font-semibold">Precautions</h3>
+                    </div>
                     <p className="text-gray-600 dark:text-gray-300">{product.precaution}</p>
                   </div>
                 </div>
@@ -244,12 +328,23 @@ const ProductDetail = () => {
 
         {/* Related Products Section */}
         <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-            <h2 className="text-2xl font-bold mb-4">Related Products</h2>
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              p: 4, 
+              borderRadius: 2,
+              background: 'linear-gradient(145deg, #FFF5F7 0%, #FFE4E8 100%)',
+              boxShadow: '0 4px 20px rgba(233, 30, 99, 0.1)',
+              border: '1px solid rgba(233, 30, 99, 0.2)'
+            }}
+          >
+            <h2 className="text-2xl font-bold mb-4 text-[#E91E63]">Related Products</h2>
             <div className="space-y-4">
               {relatedProducts.map((relatedProduct) => (
                 <div key={relatedProduct.id} className="mb-4">
-                  <ProductCard product={relatedProduct} />
+                  <div className="transform scale-90 origin-top">
+                    <ProductCard product={relatedProduct} />
+                  </div>
                 </div>
               ))}
             </div>
