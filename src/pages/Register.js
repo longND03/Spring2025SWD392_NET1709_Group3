@@ -27,18 +27,34 @@ const Register = () => {
     // Handle phone input validation
     if (name === 'phone') {
       // Only allow numbers
-      if (!/^\d*$/.test(value)) {
+      const numericValue = value.replace(/\D/g, ''); // Remove non-digit characters
+      setFormData(prev => ({
+        ...prev,
+        phone: numericValue
+      }));
+
+      // Check length of phone number
+      if (numericValue.length < 10) {
         setErrors(prev => ({
           ...prev,
-          phoneFormat: 'Phone number must contain only digits'
+          phoneLength: 'Phone number must be exactly 10 digits long'
         }));
-        return;
+      } else if (numericValue.length > 10) {
+        setErrors(prev => ({
+          ...prev,
+          phoneLength: 'Phone number must be exactly 10 digits long'
+        }));
+      } else {
+        setErrors(prev => ({
+          ...prev,
+          phoneLength: ''
+        }));
       }
+
       // Clear phone-related errors when typing valid numbers
       setErrors(prev => ({
         ...prev,
-        phoneFormat: '',
-        phoneLength: ''
+        phoneFormat: ''
       }));
     }
 
@@ -69,18 +85,10 @@ const Register = () => {
     });
 
     // Validate phone number
-    if (!/^\d+$/.test(formData.phone)) {
+    if (formData.phone.length !== 10) {
       setErrors(prev => ({
         ...prev,
-        phoneFormat: 'Phone number must contain only digits'
-      }));
-      return;
-    }
-
-    if (formData.phone.length < 10) {
-      setErrors(prev => ({
-        ...prev,
-        phoneLength: 'Phone number must be at least 10 digits long'
+        phoneLength: 'Phone number must be exactly 10 digits long'
       }));
       return;
     }
@@ -121,7 +129,7 @@ const Register = () => {
         <div>
           <Link to="/" className="flex justify-center">
             <span className="text-3xl font-bold text-[#E91E63] hover:text-pink-400 transition-colors duration-200">
-              BeautyCare
+            Diana Shop
             </span>
           </Link>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
@@ -197,7 +205,7 @@ const Register = () => {
                 } placeholder-gray-500 text-gray-900 dark:text-white rounded-lg 
                          bg-white dark:bg-[#1B2028]
                          focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm`}
-                placeholder="Enter your phone number (minimum 10 digits)"
+                placeholder="Enter your phone number (10 digits)"
               />
               {(errors.phoneLength || errors.phoneFormat) && (
                 <p className="mt-1 text-sm text-red-600">{errors.phoneLength || errors.phoneFormat}</p>

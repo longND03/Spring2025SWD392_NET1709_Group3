@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import PersonalInfoBox from '../components/PersonalInfoBox';
 import SecurityBox from '../components/SecurityBox';
 import OrdersHistoryBox from '../components/OrdersHistoryBox';
+import SkinRoutineBox from '../components/SkinRoutineBox';
 import { useSearchParams } from 'react-router-dom';
 import PointVoucherBox from '../components/PointVoucherBox';
 
@@ -10,7 +11,7 @@ const UserProfile = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   // const [loading, setLoading] = useState(true);
-  const [selectedMenu, setSelectedMenu] = useState(searchParams.get('tab') || 'profile');
+  const [selectedMenu, setSelectedMenu] = useState(searchParams.get('tab') || 'info');
 
   // Update selected menu when URL parameters change
   useEffect(() => {
@@ -25,6 +26,7 @@ const UserProfile = () => {
   const menuOptions = [
     { text: 'Profile', value: 'info' },
     { text: 'Security', value: 'security' },
+    { text: 'Skin Routine', value: 'skinroutine' },
     { text: 'Points & Vouchers Store', value: 'points' },
     { text: 'Orders History', value: 'orders' },
   ];
@@ -71,6 +73,8 @@ const UserProfile = () => {
         <PersonalInfoBox userInfo={user} />
       ) : selectedMenu === "security" ? (
         <SecurityBox user={user} />
+      ) : selectedMenu === "skinroutine" ? (
+        <SkinRoutineBox userInfo={user} />
       ) : selectedMenu === "points" ? (
         <PointVoucherBox userInfo={user} />
       ) : selectedMenu === "orders" ? (
@@ -82,4 +86,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile; 
+export default UserProfile;

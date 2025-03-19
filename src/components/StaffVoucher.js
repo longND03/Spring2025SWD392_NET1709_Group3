@@ -141,6 +141,20 @@ const StaffVoucher = () => {
                   className="border rounded p-2 mr-2"
                   required
                 />
+                <input
+                  type="number"
+                  value={editVoucherValue.minimumPurchase}
+                  onChange={(e) => setEditVoucherValue({ ...editVoucherValue, minimumPurchase: e.target.value })}
+                  className="border rounded p-2 mr-2"
+                  required
+                />
+                <input
+                  type="number"
+                  value={editVoucherValue.value}
+                  onChange={(e) => setEditVoucherValue({ ...editVoucherValue, value: e.target.value })}
+                  className="border rounded p-2 mr-2"
+                  required
+                />
                 <button type="submit" className="bg-green-500 text-white p-2 rounded">Update</button>
               </form>
             )}

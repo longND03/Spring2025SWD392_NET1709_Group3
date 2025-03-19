@@ -17,6 +17,8 @@ const Login = () => {
     try {
       const result = await login(email, password);
       if (result.success) {
+        // Lưu token vào sessionStorage
+        sessionStorage.setItem('token', result.token); // Lưu token vào sessionStorage
         // Kiểm tra vai trò người dùng
         const userRole = result.user.role[0].roleName; // Lấy vai trò đầu tiên
         if (userRole === "Staff") {
@@ -40,7 +42,7 @@ const Login = () => {
         <div>
           <Link to="/" className="flex justify-center">
             <span className="text-3xl font-bold text-[#E91E63] hover:text-pink-400 transition-colors duration-200">
-              BeautyCare
+              Diana Shop
             </span>
           </Link>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
