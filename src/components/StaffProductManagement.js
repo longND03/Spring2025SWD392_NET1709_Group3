@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import StaffCreateProduct from './StaffCreateProduct';
 import StaffCreateBatch from './StaffCreateBatch';
 import StaffEditProduct from './StaffEditProduct';
+import messages from '../constants/message.json';
 
 const StaffProductManagement = () => {
   const { user } = useAuth();
@@ -87,16 +88,16 @@ const StaffProductManagement = () => {
     try {
       if (deleteConfirmation.type === 'product') {
         await Axios.delete(`/api/product/${deleteConfirmation.id}`);
-        toast.success('Product deleted successfully');
+        toast.success(messages.success.product.delete);
         await refreshAllData();
       } else if (deleteConfirmation.type === 'batch') {
         await Axios.delete(`/api/batch/${deleteConfirmation.id}`);
-        toast.success('Batch deleted successfully');
+        toast.success(messages.success.batch.delete);
         await refreshAllData();
       }
     } catch (error) {
       console.error("Error deleting:", error);
-      toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+      toast.error(deleteConfirmation.type === 'product' ? messages.error.product.delete : messages.error.batch.delete);
     } finally {
       setDeleteConfirmation({ open: false, id: null, type: null });
     }

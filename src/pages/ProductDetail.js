@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Grid, Button, CircularProgress, Box, Chip, Paper } from '@mui/material';
+import { Container, Grid, Button, CircularProgress, Box, Chip, Paper, Rating, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
@@ -12,12 +12,19 @@ import ScienceIcon from '@mui/icons-material/Science';
 import InfoIcon from '@mui/icons-material/Info';
 import DescriptionIcon from '@mui/icons-material/Description';
 import SpaIcon from '@mui/icons-material/Spa';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CommentIcon from '@mui/icons-material/Comment';
+import StarIcon from '@mui/icons-material/Star';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [feedbackToDelete, setFeedbackToDelete] = useState(null);
   const { addToCart } = useCart();
   const { user } = useAuth();
 
@@ -91,10 +98,62 @@ const ProductDetail = () => {
       return;
     }
     addToCart(product);
-    toast.success(messages.success.addToCart.replace('{productName}', product.name));
   };
 
   const isCustomer = user?.role?.[0]?.roleName === 'Customer';
+  const isStaffOrManager = user && user.role && (user.role[0].roleName === 'Staff' || user.role[0].roleName === 'Manager');
+
+  const handleSubmitReview = async () => {
+    try {
+      if (!rating) {
+        toast.error(messages.error.feedback.required.rating);
+        return;
+      }
+
+      const reviewData = {
+        userId: user.id,
+        productId: parseInt(id),
+        rating: rating,
+        comment: comment
+      };
+
+      await axios.post('/api/feedback', reviewData);
+      toast.success(messages.success.feedback.create);
+      
+      // Reset form
+      setRating(0);
+      setComment('');
+      
+      // Refresh page to show new review
+      window.location.reload();
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast.error(messages.error.feedback.create);
+    }
+  };
+
+  const handleDeleteClick = (feedbackId) => {
+    setFeedbackToDelete(feedbackId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await axios.delete(`/api/feedback/${feedbackToDelete}`);
+      toast.success(messages.success.feedback.delete);
+      setDeleteDialogOpen(false);
+      // Refresh page to update reviews
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      toast.error(messages.error.feedback.delete);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setFeedbackToDelete(null);
+  };
 
   if (loading) {
     return (
@@ -323,6 +382,160 @@ const ProductDetail = () => {
                 </div>
               </Paper>
             </Grid>
+
+            {/* Customer Reviews Section - Moved to bottom */}
+            <Grid item xs={12}>
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  p: 4, 
+                  borderRadius: 2,
+                  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+                  border: '1px solid #E0E0E0'
+                }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <CommentIcon sx={{ color: '#E91E63' }} />
+                  <h3 className="text-xl font-semibold">Customer Reviews</h3>
+                </div>
+
+                {/* Rating Statistics */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <StarIcon sx={{ color: '#E91E63', fontSize: '2rem' }} />
+                    <span className="text-3xl font-bold text-gray-800">
+                      {product.feedbacks && product.feedbacks.length > 0 
+                        ? (product.feedbacks.reduce((acc, curr) => acc + curr.rating, 0) / product.feedbacks.length).toFixed(1)
+                        : '0.0'
+                      }
+                    </span>
+                  </div>
+                  <div className="text-gray-500">
+                    ({product.feedbacks?.length || 0} reviews)
+                  </div>
+                </div>
+
+                {/* Add Review Section (only for logged-in customers) */}
+                {user && user.role?.[0]?.roleName === 'Customer' && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="text-lg font-semibold mb-3">Write a Review</h4>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <Rating
+                          name="rating"
+                          value={rating}
+                          precision={1}
+                          onChange={(event, newValue) => {
+                            setRating(newValue);
+                          }}
+                          sx={{
+                            '& .MuiRating-iconFilled': {
+                              color: '#E91E63',
+                            },
+                          }}
+                        />
+                      </div>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        placeholder="Share your thoughts about this product..."
+                        variant="outlined"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                      />
+                      <Button
+                        variant="contained"
+                        onClick={handleSubmitReview}
+                        sx={{
+                          bgcolor: '#E91E63',
+                          '&:hover': {
+                            bgcolor: '#C2185B'
+                          },
+                          alignSelf: 'flex-end'
+                        }}
+                      >
+                        Submit Review
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reviews List */}
+                <div className="space-y-4">
+                  {product.feedbacks?.map((feedback) => (
+                    <Paper
+                      key={feedback.id}
+                      elevation={feedback.userID === user?.id ? 3 : 1}
+                      sx={{
+                        p: 3,
+                        position: 'relative',
+                        border: feedback.userID === user?.id ? '1px solid rgba(233, 30, 99, 0.2)' : 'none',
+                        bgcolor: feedback.userID === user?.id ? 'rgba(233, 30, 99, 0.02)' : 'white'
+                      }}
+                    >
+                      {/* Delete Button for User's Own Comments */}
+                      {(feedback.userID === user?.id || isStaffOrManager) && (
+                        <Button
+                          onClick={() => handleDeleteClick(feedback.id)}
+                          sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            minWidth: 'auto',
+                            p: 1,
+                            color: '#E91E63'
+                          }}
+                        >
+                          <DeleteIcon />
+                        </Button>
+                      )}
+
+                      <div className="flex items-start gap-4">
+                        {/* User Avatar */}
+                        {feedback.userID === user?.id ? (
+                          user.image ? (
+                            <img
+                              src={`data:image/jpeg;base64,${user.image}`}
+                              alt="User Avatar"
+                              className="w-10 h-10 rounded-full"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-[#E91E63] flex items-center justify-center text-white">
+                              {user.username.charAt(0).toUpperCase()}
+                            </div>
+                          )
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                            U
+                          </div>
+                        )}
+
+                        <div className="flex-grow">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Rating
+                              value={feedback.rating}
+                              readOnly
+                              size="small"
+                              sx={{
+                                '& .MuiRating-iconFilled': {
+                                  color: '#E91E63',
+                                },
+                              }}
+                            />
+                            <span className="text-sm text-gray-500">
+                              {new Date(feedback.createdDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-gray-700">{feedback.comment}</p>
+                        </div>
+                      </div>
+                    </Paper>
+                  ))}
+                </div>
+              </Paper>
+            </Grid>
           </Grid>
         </Grid>
 
@@ -351,6 +564,43 @@ const ProductDetail = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Add Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Delete Review"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {messages.confirm.delete.feedback}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleDeleteCancel}
+            sx={{ color: 'gray' }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm}
+            sx={{ 
+              color: '#E91E63',
+              '&:hover': {
+                bgcolor: 'rgba(233, 30, 99, 0.08)'
+              }
+            }}
+            autoFocus
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

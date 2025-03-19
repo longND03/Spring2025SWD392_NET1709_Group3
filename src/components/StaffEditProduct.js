@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button, CircularProgress } from '@mui/material';
 import axios from '../api/axios';
 import { toast } from 'react-toastify';
+import messages from '../constants/message.json';
 
 const StaffEditProduct = ({ open, onClose, onSave, product }) => {
     const [formData, setFormData] = useState({
@@ -181,20 +182,41 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
         e.preventDefault();
         setIsSaving(true);
 
-        console.log(formData);
         try {
+            // Find tags that were removed
+            const oldTagIds = product.productTags?.map(tagName => {
+                const matchingTag = tags.find(tag => tag.name === tagName);
+                return matchingTag ? matchingTag.id.toString() : null;
+            }).filter(id => id !== null) || [];
+
+            const newTagIds = formData.productTagIds;
+            const removedTagIds = oldTagIds.filter(id => !newTagIds.includes(id));
+
+            // Remove tags that were unselected
+            for (const tagId of removedTagIds) {
+                try {
+                    await axios.delete(`/api/tag/product/${product.id}?tagId=${tagId}`);
+                } catch (error) {
+                    console.error('Error removing tag:', error);
+                    toast.error(messages.error.tag.remove.product);
+                    setIsSaving(false);
+                    return;
+                }
+            }
+
+            // Proceed with the regular update
             await axios.put(`/api/product/${product.id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            toast.success('Product updated successfully');
+            toast.success(messages.success.product.update);
             onClose();
             onSave();
         } catch (error) {
             console.error('Error updating product:', error);
-            toast.error(error.response?.data?.message || 'Failed to update product');
+            toast.error(error.response?.data?.message || messages.error.product.save);
         } finally {
             setIsSaving(false);
         }

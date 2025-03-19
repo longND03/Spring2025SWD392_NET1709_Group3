@@ -5,6 +5,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import axios from '../api/axios';
 import { toast } from 'react-toastify';
+import messages from '../constants/message.json';
 import {
     BoldIcon,
     ItalicIcon,
@@ -109,14 +110,27 @@ const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
 
     const handleSave = async () => {
         try {
+            // Find tags that were removed
+            const oldTagIds = post.tags.map(tagName => {
+                const matchingTag = availableTags.find(tag => tag.name === tagName);
+                return matchingTag ? matchingTag.id : null;
+            }).filter(id => id !== null);
 
-            console.log({
-                title: title,
-                content: content,
-                tagIds: selectedTags.map(tag => tag.id),
-                imageFiles: selectedImage
-            });
-            
+            const newTagIds = selectedTags.map(tag => tag.id);
+            const removedTagIds = oldTagIds.filter(id => !newTagIds.includes(id));
+
+            // Remove tags that were unselected
+            for (const tagId of removedTagIds) {
+                try {
+                    await axios.delete(`/api/tag/post/${post.id}?tagId=${tagId}`);
+                } catch (error) {
+                    console.error('Error removing tag:', error);
+                    toast.error(messages.error.tag.remove.blog);
+                    return;
+                }
+            }
+
+            // Proceed with the regular update
             await axios.put(`/api/post/${post.id}`, {
                 title: title,
                 content: content,
@@ -128,12 +142,12 @@ const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
                 }
             });
 
-            toast.success('Post updated successfully');
+            toast.success(messages.success.product.update);
             onClose();
             onSave();
         } catch (error) {
             console.error('Error updating post:', error);
-            toast.error('Failed to update post');
+            toast.error(messages.error.product.save);
         }
     };
 

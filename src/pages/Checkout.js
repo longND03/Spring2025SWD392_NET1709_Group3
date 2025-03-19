@@ -35,9 +35,9 @@ const Checkout = () => {
   });
 
   const paymentMethods = [
-    { id: 1, methodName: 'Cash (COD)', isInternalPayment: true },
+    { id: 1, methodName: 'Cash (COD)', isInternalPayment: true, imageUrl: "https://cdn-icons-png.freepik.com/512/10074/10074041.png" },
     // { id: 2, methodName: 'VNPay', isInternalPayment: false },
-    { id: 3, methodName: 'QR Code (Bank Transfer)', isInternalPayment: true }
+    { id: 3, methodName: 'QR Code (Bank Transfer)', isInternalPayment: true, imageUrl: "https://pngimg.com/d/qr_code_PNG28.png" }
   ];
 
 
@@ -579,6 +579,13 @@ const Checkout = () => {
                     ? 'border-4 border-[#E91E63]'
                     : 'border-gray-300'
                   }`} />
+                {method.imageUrl && (
+                  <img 
+                    src={method.imageUrl} 
+                    alt={method.methodName}
+                    className="w-8 h-8 object-contain"
+                  />
+                )}
                 <span className="font-medium">{method.methodName}</span>
               </div>
             </div>

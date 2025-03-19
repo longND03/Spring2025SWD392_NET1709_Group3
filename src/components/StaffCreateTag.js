@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Button, CircularProgress } from '@mui/material';
 import { toast } from 'react-toastify';
 import axios from '../api/axios';
+import messages from '../constants/message.json';
 
 const StaffCreateTag = ({ open, onClose, onSave }) => {
     const [formData, setFormData] = useState({
@@ -20,7 +21,7 @@ const StaffCreateTag = ({ open, onClose, onSave }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.name.trim()) {
-            toast.error('Tag name is required');
+            toast.error(messages.error.tag.required.name);
             return;
         }
 
@@ -31,12 +32,12 @@ const StaffCreateTag = ({ open, onClose, onSave }) => {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            toast.success('Tag created successfully');
+            toast.success(messages.success.tag.create);
             onSave();
             handleClose();
         } catch (error) {
             console.error('Error creating tag:', error);
-            toast.error(error.response?.data?.message || 'Failed to create tag');
+            toast.error(messages.error.tag.save);
         } finally {
             setIsSaving(false);
         }

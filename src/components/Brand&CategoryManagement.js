@@ -5,6 +5,7 @@ import { Pagination, CircularProgress, Button } from '@mui/material';
 import { toast } from 'react-toastify';
 import BrandModal from './BrandModal';
 import CategoryModal from './CategoryModal';
+import messages from '../constants/message.json';
 
 const BrandCategoryManagement = () => {
     const { user } = useAuth();
@@ -98,16 +99,16 @@ const BrandCategoryManagement = () => {
         try {
             if (deleteConfirmation.type === 'brand') {
                 await Axios.delete(`/api/brand/soft-deletion/${deleteConfirmation.id}`);
-                toast.success('Brand deleted successfully');
+                toast.success(messages.success.brand.delete);
                 fetchBrands();
             } else if (deleteConfirmation.type === 'category') {
                 await Axios.delete(`/api/category/soft-deletion/${deleteConfirmation.id}`);
-                toast.success('Category deleted successfully');
+                toast.success(messages.success.category.delete);
                 fetchCategories();
             }
         } catch (error) {
             console.error("Error deleting:", error);
-            toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+            toast.error(deleteConfirmation.type === 'brand' ? messages.error.brand.delete : messages.error.category.delete);
         } finally {
             setDeleteConfirmation({ open: false, id: null, type: null, name: '' });
         }

@@ -17,9 +17,9 @@ const ProductCard = ({ product }) => {
       return;
     }
     addToCart(product);
-    toast.success(messages.success.addToCart.replace('{productName}', product.name), {
-      position: 'top-left',
-    });
+    // toast.success(messages.success.addToCart.replace('{productName}', product.name), {
+    //   position: 'top-left',
+    // });
   };
 
   const handleCardClick = () => {

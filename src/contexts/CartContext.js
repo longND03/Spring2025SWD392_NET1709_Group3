@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import messages from '../constants/message.json';
 
 const CartContext = createContext();
@@ -29,7 +29,7 @@ export const CartProvider = ({ children }) => {
         price: product.price,
         quantity: quantity,
         product: product,
-        productImage: product.productImages?.[0],
+        productImage: product.productImage,
         brand: product.brand,
         stockQuantity: product.stockQuantity
       };
@@ -48,7 +48,8 @@ export const CartProvider = ({ children }) => {
         return updatedCart;
       });
 
-      toast.success(messages.success.addToCart.replace('{productName}', product.name));
+      toast.success(messages.success.addToCart.replace('{productName}', product.name), {
+        position: 'top-left'});
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error(messages.error.addToCart.requireLogin);
