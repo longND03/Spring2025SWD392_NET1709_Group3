@@ -9,7 +9,7 @@ import messages from '../constants/message.json';
 
 const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, refetchUserData } = useAuth();
   const { shippingFee, loading: calculatingShipping, error: shippingError, calculateShipping } = useShippingCalculator();
 
   const [provinces, setProvinces] = useState([]);
@@ -35,10 +35,9 @@ const Checkout = () => {
   });
 
   const paymentMethods = [
-    { id: 1, methodName: 'Cash (COD)', isInternalPayment: true },
-    { id: 2, methodName: 'VNPay', isInternalPayment: false },
-    { id: 3, methodName: 'Momo', isInternalPayment: false },
-    { id: 4, methodName: 'QR Code (Bank Transfer)', isInternalPayment: true }
+    { id: 1, methodName: 'Cash (COD)', isInternalPayment: true, imageUrl: "https://cdn-icons-png.freepik.com/512/10074/10074041.png" },
+    // { id: 2, methodName: 'VNPay', isInternalPayment: false },
+    { id: 3, methodName: 'QR Code (Bank Transfer)', isInternalPayment: true, imageUrl: "https://pngimg.com/d/qr_code_PNG28.png" }
   ];
 
 
@@ -87,7 +86,7 @@ const Checkout = () => {
     }
 
     const fetchVoucherDetails = async () => {
-      if (!user.voucherStorage) return;
+      if (!user?.voucherStorage) return;
 
       try {
         const voucherPromises = user.voucherStorage.map(async (storage) => {
@@ -162,6 +161,7 @@ const Checkout = () => {
 
     // Fetch initial data
     fetchProvinces();
+    refetchUserData();
     fetchVoucherDetails();
 
   }, [user, navigate, getCartTotal]);
@@ -270,6 +270,7 @@ const Checkout = () => {
           const response = await axios.post('/api/order/checkout', orderData);
           console.log('Order response:', response.data);
           clearCart();
+          await refetchUserData(); // Refresh user data after successful order
           toast.success(messages.success.order);
           navigate('/finish-order-cash', { state: { orderData: response.data } });
         } catch (error) {
@@ -283,6 +284,7 @@ const Checkout = () => {
           const response = await axios.post('/api/order/checkout', orderData);
           console.log('Order response:', response.data);
           clearCart();
+          await refetchUserData(); // Refresh user data after successful order
           toast.success(messages.success.order);
           // TODO: Handle VNPay redirect
         } catch (error) {
@@ -291,24 +293,12 @@ const Checkout = () => {
         }
         break;
 
-      case 3: // Momo
+      case 3: // QR Code
         try {
           const response = await axios.post('/api/order/checkout', orderData);
           console.log('Order response:', response.data);
           clearCart();
-          toast.success(messages.success.order);
-          // TODO: Handle Momo redirect
-        } catch (error) {
-          console.error('Error creating order:', error);
-          toast.error(messages.error.order.create);
-        }
-        break;
-
-      case 4: // QR Code
-        try {
-          const response = await axios.post('/api/order/checkout', orderData);
-          console.log('Order response:', response.data);
-          clearCart();
+          await refetchUserData(); // Refresh user data after successful order
           toast.success(messages.success.order);
           navigate('/finish-order-qr', { state: { orderData: response.data } });
         } catch (error) {
@@ -327,8 +317,8 @@ const Checkout = () => {
   const getDiscountAmount = () => {
     if (!selectedVoucher) return 0;
     const subtotal = getCartTotal();
-    const totalWithShipping = subtotal + (shippingFee || 0);
-    const discountAmount = (totalWithShipping * selectedVoucher.discountPercentage) / 100;
+    // Apply discount only to product price, not shipping
+    const discountAmount = (subtotal * selectedVoucher.discountPercentage) / 100;
     return discountAmount;
   };
 
@@ -478,7 +468,12 @@ const Checkout = () => {
 
         {/* Right Column - Voucher Selection */}
         <div className="bg-white p-6 rounded-lg shadow h-[600px] overflow-y-auto">
-          <h2 className="text-xl font-semibold mb-4">Select Voucher</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Select Voucher</h2>
+            <span className="text-sm text-gray-600">
+              Remaining: {user?.voucherStorage?.length || 0} vouchers
+            </span>
+          </div>
           <div className="h-[calc(100%-8rem)] overflow-y-auto mb-4">
             {vouchers.map((voucher) => (
               <div
@@ -494,7 +489,12 @@ const Checkout = () => {
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="font-semibold text-lg">{voucher.discountPercentage}% OFF</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-lg">{voucher.discountPercentage}% OFF</span>
+                      <span className="text-sm text-gray-500">
+                        ({voucher.quantity} remaining)
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-600">
                       Min. spend ${voucher.minimumPurchase}
                     </p>
@@ -579,6 +579,13 @@ const Checkout = () => {
                     ? 'border-4 border-[#E91E63]'
                     : 'border-gray-300'
                   }`} />
+                {method.imageUrl && (
+                  <img 
+                    src={method.imageUrl} 
+                    alt={method.methodName}
+                    className="w-8 h-8 object-contain"
+                  />
+                )}
                 <span className="font-medium">{method.methodName}</span>
               </div>
             </div>

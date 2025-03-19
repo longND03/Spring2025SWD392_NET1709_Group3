@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '@mui/material';
 import axios from '../api/axios';
 import { toast } from 'react-toastify';
+import messages from '../constants/message.json';
 
 const StaffCreateSkintype = ({ open, onClose, onSave }) => {
     const [formData, setFormData] = useState({
@@ -21,11 +22,11 @@ const StaffCreateSkintype = ({ open, onClose, onSave }) => {
 
     const validateForm = () => {
         if (!formData.name.trim()) {
-            toast.error('Skintype name is required');
+            toast.error(messages.error.skintype.required.name);
             return false;
         }
         if (!formData.description.trim()) {
-            toast.error('Description is required');
+            toast.error(messages.error.skintype.required.description);
             return false;
         }
         return true;
@@ -41,16 +42,12 @@ const StaffCreateSkintype = ({ open, onClose, onSave }) => {
                 description: formData.description.trim()
             });
             
-            toast.success('Skintype created successfully');
+            toast.success(messages.success.skintype.create);
             onSave();
             handleConfirmClose();
         } catch (error) {
             console.error('Error creating skintype:', error);
-            if (error.response?.data?.message) {
-                toast.error(error.response.data.message);
-            } else {
-                toast.error('Failed to create skintype. Please try again.');
-            }
+            toast.error(messages.error.skintype.save);
         } finally {
             setIsSaving(false);
         }

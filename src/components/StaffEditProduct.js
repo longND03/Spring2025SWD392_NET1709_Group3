@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button, CircularProgress } from '@mui/material';
 import axios from '../api/axios';
 import { toast } from 'react-toastify';
+import messages from '../constants/message.json';
 
 const StaffEditProduct = ({ open, onClose, onSave, product }) => {
     const [formData, setFormData] = useState({
@@ -53,10 +54,13 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
             // Find IDs by matching names
             const brandId = brands.find(b => b.name === product.brand)?.id?.toString() || '';
             const categoryId = categories.find(c => c.name === product.category)?.id?.toString() || '';
+            const packagingData = product.packaging.split(" ");
+            packagingData[0] = !packagingData[0].toLowerCase().includes("non");
             const packagingId = packagings.find(p => 
-                p.type === product.packaging?.type && 
-                p.material === product.packaging?.material && 
-                p.size === product.packaging?.size
+                product.packaging.includes(p.type) &&
+                product.packaging.includes(p.material) &&
+                product.packaging.includes(p.size) &&
+                p.isRefillable === !(product.packaging.split(" ")[0].toLowerCase().includes("non"))
             )?.id?.toString() || '';
             const formulationTypeId = formulationTypes.find(f => f.texture === product.formulationType)?.id?.toString() || '';
 
@@ -93,8 +97,8 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
                 productSkinTypeIds: skinTypeIds
             });
 
-            if (product.productImages && product.productImages[0]) {
-                setImagePreview(`data:image/jpeg;base64,${product.productImages[0]}`);
+            if (product.productImage) {
+                setImagePreview(`data:image/jpeg;base64,${product.productImage}`);
             }
             setLoading(false);
         }
@@ -179,18 +183,40 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
         setIsSaving(true);
 
         try {
+            // Find tags that were removed
+            const oldTagIds = product.productTags?.map(tagName => {
+                const matchingTag = tags.find(tag => tag.name === tagName);
+                return matchingTag ? matchingTag.id.toString() : null;
+            }).filter(id => id !== null) || [];
+
+            const newTagIds = formData.productTagIds;
+            const removedTagIds = oldTagIds.filter(id => !newTagIds.includes(id));
+
+            // Remove tags that were unselected
+            for (const tagId of removedTagIds) {
+                try {
+                    await axios.delete(`/api/tag/product/${product.id}?tagId=${tagId}`);
+                } catch (error) {
+                    console.error('Error removing tag:', error);
+                    toast.error(messages.error.tag.remove.product);
+                    setIsSaving(false);
+                    return;
+                }
+            }
+
+            // Proceed with the regular update
             await axios.put(`/api/product/${product.id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            toast.success('Product updated successfully');
+            toast.success(messages.success.product.update);
             onClose();
             onSave();
         } catch (error) {
             console.error('Error updating product:', error);
-            toast.error(error.response?.data?.message || 'Failed to update product');
+            toast.error(error.response?.data?.message || messages.error.product.save);
         } finally {
             setIsSaving(false);
         }
@@ -203,11 +229,11 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
             price: product.price || '',
             brandId: brands.find(b => b.name === product.brand)?.id?.toString() || '',
             categoryId: categories.find(c => c.name === product.category)?.id?.toString() || '',
-            packagingId: packagings.find(p => 
-                p.type === product.packaging?.type && 
-                p.material === product.packaging?.material && 
-                p.size === product.packaging?.size
-            )?.id?.toString() || '',
+            // packagingId: packagings.find(p => 
+            //     p.type === product.packaging?.type && 
+            //     p.material === product.packaging?.material && 
+            //     p.size === product.packaging?.size
+            // )?.id?.toString() || '',
             formulationTypeId: formulationTypes.find(f => f.texture === product.formulationType)?.id?.toString() || '',
             direction: product.direction || '',
             pao: product.pao || '',
@@ -242,7 +268,7 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
 
     return (
         <>
-            <Modal
+        <Modal
                 open={open}
                 onClose={handleClose}
                 disableAutoFocus

@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import PersonalInfoBox from '../components/PersonalInfoBox';
 import SecurityBox from '../components/SecurityBox';
 import OrdersHistoryBox from '../components/OrdersHistoryBox';
+import SkinRoutineBox from '../components/SkinRoutineBox';
 import { useSearchParams } from 'react-router-dom';
 import PointVoucherBox from '../components/PointVoucherBox';
 
@@ -10,7 +11,7 @@ const UserProfile = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   // const [loading, setLoading] = useState(true);
-  const [selectedMenu, setSelectedMenu] = useState(searchParams.get('tab') || 'profile');
+  const [selectedMenu, setSelectedMenu] = useState(searchParams.get('tab') || 'info');
 
   // Update selected menu when URL parameters change
   useEffect(() => {
@@ -25,17 +26,10 @@ const UserProfile = () => {
   const menuOptions = [
     { text: 'Profile', value: 'info' },
     { text: 'Security', value: 'security' },
-    { text: 'Reward Points', value: 'points' },
+    { text: 'Skin Routine', value: 'skinroutine' },
+    { text: 'Points & Vouchers Store', value: 'points' },
     { text: 'Orders History', value: 'orders' },
   ];
-
-  // if (loading) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-  //       <CircularProgress />
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="grid grid-cols-[17rem_1fr] min-h-[calc(100vh-4rem)] px-48 py-6">
@@ -46,7 +40,7 @@ const UserProfile = () => {
           <div className="p-3 flex flex-col items-center">
             {user?.image ? (
               <img
-                src={user?.image}
+                src={`data:image/jpeg;base64,${user?.image}`}
                 alt="User Avatar"
                 className="w-20 h-20 rounded-full mb-3"
               />
@@ -79,6 +73,8 @@ const UserProfile = () => {
         <PersonalInfoBox userInfo={user} />
       ) : selectedMenu === "security" ? (
         <SecurityBox user={user} />
+      ) : selectedMenu === "skinroutine" ? (
+        <SkinRoutineBox userInfo={user} />
       ) : selectedMenu === "points" ? (
         <PointVoucherBox userInfo={user} />
       ) : selectedMenu === "orders" ? (
@@ -90,4 +86,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile; 
+export default UserProfile;

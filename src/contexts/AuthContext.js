@@ -51,6 +51,7 @@ export const AuthProvider = ({ children }) => {
         email: data.data.user.email,
         image: data.data.user.image,
         location: data.data.user.location,
+        voucherStorageId: data.data.user.voucherStorage?.[0]?.id,
         voucherStorage: data.data.user.voucherStorage?.[0]?.storages || [],
         role: data.data.user.userRoles,
         token: data.data.token,
@@ -161,6 +162,42 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refetchUserData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`http://localhost:5296/api/user/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const data = await response.json();
+      const userData = {
+        username: data.username,
+        phone: data.phone,
+        email: data.email,
+        image: data.image,
+        location: data.location,
+        voucherStorage: data.voucherStorage?.[0]?.storages || []
+      };
+
+      setUser((prevUser) => ({ ...prevUser, userData }));
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Refetch user data error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     user,
     setUser,
@@ -170,7 +207,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: !!user,
     resetPassword,
-    confirmPasswordReset
+    confirmPasswordReset,
+    refetchUserData
   };
 
   return (

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, CircularProgress } from '@mui/material';
 import { toast } from 'react-toastify';
 import axios from '../api/axios';
+import messages from '../constants/message.json';
 
 const BrandModal = ({ open, onClose, onSave, editData = null }) => {
     const [formData, setFormData] = useState({
@@ -32,15 +33,15 @@ const BrandModal = ({ open, onClose, onSave, editData = null }) => {
 
     const validateForm = () => {
         if (!formData.name.trim()) {
-            toast.error('Brand name is required');
+            toast.error(messages.error.brand.required.name);
             return false;
         }
         if (!formData.description.trim()) {
-            toast.error('Description is required');
+            toast.error(messages.error.brand.required.description);
             return false;
         }
         if (!formData.origin.trim()) {
-            toast.error('Origin is required');
+            toast.error(messages.error.brand.required.origin);
             return false;
         }
         return true;
@@ -63,20 +64,20 @@ const BrandModal = ({ open, onClose, onSave, editData = null }) => {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                toast.success('Brand updated successfully');
+                toast.success(messages.success.brand.update);
             } else {
                 await axios.post('/api/brand', submitData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                toast.success('Brand created successfully');
+                toast.success(messages.success.brand.create);
             }
             onSave();
             handleConfirmClose();
         } catch (error) {
             console.error('Error saving brand:', error);
-            toast.error(error.response?.data?.message || 'Failed to save brand');
+            toast.error(messages.error.brand.save);
         } finally {
             setIsSaving(false);
         }

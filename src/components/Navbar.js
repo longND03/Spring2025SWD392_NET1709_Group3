@@ -18,9 +18,10 @@ const Navbar = () => {
     }
   };
 
-  // Check if user is staff or manager
-  const isStaffOrManager = user && user.role && (user.role[0].roleName === 'Staff' || user.role[0].roleName === 'Manager');
-  const dashboardPath = user?.role[0].roleName === 'Manager' ? '/admindashboard' : '/staff-manager';
+  // Check if user is staff or manager with proper null checks
+  const userRole = user?.role?.[0]?.roleName;
+  const isStaffOrManager = userRole === 'Staff' || userRole === 'Manager';
+  const dashboardPath = userRole === 'Manager' ? '/admindashboard' : '/staff-manager';
 
   return (
     <nav className="sticky top-0 z-50 bg-gray-100 shadow-md transition-colors duration-300">
@@ -41,7 +42,7 @@ const Navbar = () => {
                 to={dashboardPath}
                 className="text-5xl font-bold text-gray-700 hover:text-[#E91E63] transition-colors duration-200"
               >
-                {user.role[0].roleName} Dashboard
+                {userRole} Dashboard
               </Link>
               {/* Thêm Staff Manager link cho admin */}
               {user && user.role && user.role[0].roleName === 'Staff' && (
@@ -141,7 +142,7 @@ const Navbar = () => {
                 <button className="flex items-center space-x-2 focus:outline-none">
                   {user.image ? (
                     <img
-                      src={user.image}
+                      src={`data:image/jpeg;base64,${user?.image}`}
                       alt="User Avatar"
                       className="w-8 h-8 rounded-full"
                     />
@@ -233,7 +234,7 @@ const Navbar = () => {
                          hover:text-[#E91E63] 
                          hover:bg-gray-200 transition-colors duration-200 font-bold text-lg"
               >
-                {user.role[0].roleName} Dashboard
+                {userRole} Dashboard
               </Link>
             ) : (
               // Regular User Mobile View

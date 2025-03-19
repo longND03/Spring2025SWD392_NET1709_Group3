@@ -375,7 +375,7 @@ const PersonalInfoBox = ({ userInfo }) => {
 
   return (
     <main className="p-4 bg-gray-50">
-      <h1 className="text-4xl font-bold mb-4 text-center text-[#E91E63]">Profile</h1>
+      <h1 className="text-6xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent text-center mb-7">Profile</h1>
       <div className="bg-white shadow-lg rounded-lg p-4 min-h-[calc(100vh-6rem)]">
         <div className="space-y-4">
           {/* Personal Information Section */}

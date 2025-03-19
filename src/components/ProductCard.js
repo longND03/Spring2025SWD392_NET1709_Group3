@@ -17,9 +17,9 @@ const ProductCard = ({ product }) => {
       return;
     }
     addToCart(product);
-    toast.success(messages.success.addToCart.replace('{productName}', product.name), {
-      position: 'top-left',
-    });
+    // toast.success(messages.success.addToCart.replace('{productName}', product.name), {
+    //   position: 'top-left',
+    // });
   };
 
   const handleCardClick = () => {
@@ -43,7 +43,7 @@ const ProductCard = ({ product }) => {
     >
       <CardMedia
         component="img"
-        image={`data:image/jpeg;base64,${product.productImages[0]}`}
+        image={`data:image/jpeg;base64,${product.productImage}`}
         alt={product.name}
         sx={{ 
           height: 250,
