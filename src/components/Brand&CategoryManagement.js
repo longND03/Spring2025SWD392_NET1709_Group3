@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import Axios from '../api/axios';
 import { Pagination, CircularProgress, Button } from '@mui/material';
 import { toast } from 'react-toastify';
+import BrandModal from './BrandModal';
+import CategoryModal from './CategoryModal';
 
 const BrandCategoryManagement = () => {
     const { user } = useAuth();
@@ -12,6 +14,16 @@ const BrandCategoryManagement = () => {
     const [error, setError] = useState({ brands: null, categories: null });
     const [page, setPage] = useState({ brands: 1, categories: 1 });
     const [searchTerm, setSearchTerm] = useState({ brands: '', categories: '' });
+    const [modalState, setModalState] = useState({
+        brand: { open: false, editData: null },
+        category: { open: false, editData: null }
+    });
+    const [deleteConfirmation, setDeleteConfirmation] = useState({ 
+        open: false, 
+        id: null, 
+        type: null,
+        name: ''
+    });
 
     // Pagination settings
     const itemsPerPage = 10;
@@ -82,6 +94,25 @@ const BrandCategoryManagement = () => {
         setPage(prev => ({ ...prev, [type]: 1 }));
     };
 
+    const handleDelete = async () => {
+        try {
+            if (deleteConfirmation.type === 'brand') {
+                await Axios.delete(`/api/brand/soft-deletion/${deleteConfirmation.id}`);
+                toast.success('Brand deleted successfully');
+                fetchBrands();
+            } else if (deleteConfirmation.type === 'category') {
+                await Axios.delete(`/api/category/soft-deletion/${deleteConfirmation.id}`);
+                toast.success('Category deleted successfully');
+                fetchCategories();
+            }
+        } catch (error) {
+            console.error("Error deleting:", error);
+            toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+        } finally {
+            setDeleteConfirmation({ open: false, id: null, type: null, name: '' });
+        }
+    };
+
     // Get filtered and paginated data
     const paginatedBrands = filterAndPaginateData(brands, searchTerm.brands, page.brands);
     const paginatedCategories = filterAndPaginateData(categories, searchTerm.categories, page.categories);
@@ -105,6 +136,10 @@ const BrandCategoryManagement = () => {
                                 bgcolor: '#388E3C'
                             }
                         }}
+                        onClick={() => setModalState(prev => ({ 
+                            ...prev, 
+                            brand: { open: true, editData: null }
+                        }))}
                     >
                         Add Brand
                     </Button>
@@ -153,13 +188,21 @@ const BrandCategoryManagement = () => {
                                                 <td className="py-2 px-4 border-b">
                                                     <button
                                                         className="text-blue-500 hover:text-blue-700 mr-2"
-                                                        onClick={() => {/* TODO: Implement edit */}}
+                                                        onClick={() => setModalState(prev => ({
+                                                            ...prev,
+                                                            brand: { open: true, editData: brand }
+                                                        }))}
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         className="text-red-500 hover:text-red-700"
-                                                        onClick={() => {/* TODO: Implement delete */}}
+                                                        onClick={() => setDeleteConfirmation({
+                                                            open: true,
+                                                            id: brand.id,
+                                                            type: 'brand',
+                                                            name: brand.name
+                                                        })}
                                                     >
                                                         Delete
                                                     </button>
@@ -206,6 +249,10 @@ const BrandCategoryManagement = () => {
                                 bgcolor: '#388E3C'
                             }
                         }}
+                        onClick={() => setModalState(prev => ({ 
+                            ...prev, 
+                            category: { open: true, editData: null }
+                        }))}
                     >
                         Add Category
                     </Button>
@@ -252,13 +299,21 @@ const BrandCategoryManagement = () => {
                                                 <td className="py-2 px-4 border-b">
                                                     <button
                                                         className="text-blue-500 hover:text-blue-700 mr-2"
-                                                        onClick={() => {/* TODO: Implement edit */}}
+                                                        onClick={() => setModalState(prev => ({
+                                                            ...prev,
+                                                            category: { open: true, editData: category }
+                                                        }))}
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         className="text-red-500 hover:text-red-700"
-                                                        onClick={() => {/* TODO: Implement delete */}}
+                                                        onClick={() => setDeleteConfirmation({
+                                                            open: true,
+                                                            id: category.id,
+                                                            type: 'category',
+                                                            name: category.name
+                                                        })}
                                                     >
                                                         Delete
                                                     </button>
@@ -290,6 +345,48 @@ const BrandCategoryManagement = () => {
                     </>
                 )}
             </div>
+
+            {/* Modals */}
+            <BrandModal
+                open={modalState.brand.open}
+                onClose={() => setModalState(prev => ({ ...prev, brand: { open: false, editData: null } }))}
+                onSave={fetchBrands}
+                editData={modalState.brand.editData}
+            />
+
+            <CategoryModal
+                open={modalState.category.open}
+                onClose={() => setModalState(prev => ({ ...prev, category: { open: false, editData: null } }))}
+                onSave={fetchCategories}
+                editData={modalState.category.editData}
+            />
+
+            {/* Delete Confirmation Dialog */}
+            {deleteConfirmation.open && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                    <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+                        <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+                        <p className="text-gray-600 mb-6">
+                            Are you sure you want to delete {deleteConfirmation.type} "{deleteConfirmation.name}"? 
+                            This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setDeleteConfirmation({ open: false, id: null, type: null, name: '' })}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

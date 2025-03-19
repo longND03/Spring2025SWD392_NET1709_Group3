@@ -5,6 +5,8 @@ import { Pagination, CircularProgress, Button, Tabs, Tab, Modal } from '@mui/mat
 import { toast } from 'react-toastify';
 import StaffCreateSkintype from './StaffCreateSkintype';
 import StaffEditSkintype from './StaffEditSkintype';
+import StaffCreateTag from './StaffCreateTag';
+import StaffEditTag from './StaffEditTag';
 
 const StaffSkintypeTagManagement = () => {
     const { user } = useAuth();
@@ -19,6 +21,15 @@ const StaffSkintypeTagManagement = () => {
     const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
     const [selectedSkintype, setSelectedSkintype] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
+
+    const [tags, setTags] = useState([]);
+    const [tagLoading, setTagLoading] = useState(true);
+    const [tagError, setTagError] = useState(null);
+    const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
+    const [isEditTagModalOpen, setIsEditTagModalOpen] = useState(false);
+    const [isConfirmTagDeleteOpen, setIsConfirmTagDeleteOpen] = useState(false);
+    const [selectedTag, setSelectedTag] = useState(null);
+    const [isTagProcessing, setIsTagProcessing] = useState(false);
 
     const fetchSkintypes = async (search = '') => {
         try {
@@ -37,8 +48,24 @@ const StaffSkintypeTagManagement = () => {
         }
     };
 
+    const fetchTags = async () => {
+        try {
+            setTagLoading(true);
+            const response = await Axios.get('/api/tag');
+            setTags(response.data);
+            setTagError(null);
+        } catch (error) {
+            console.error("Error fetching tags:", error);
+            setTagError("Failed to load tags. Please try again later.");
+            toast.error("Failed to load tags");
+        } finally {
+            setTagLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchSkintypes(searchTerm);
+        fetchTags();
     }, [page, searchTerm, activeTab]);
 
     const handlePageChange = (event, value) => {
@@ -85,6 +112,38 @@ const StaffSkintypeTagManagement = () => {
             }
         } finally {
             setIsProcessing(false);
+        }
+    };
+
+    const handleEditTag = (tag) => {
+        setSelectedTag(tag);
+        setIsEditTagModalOpen(true);
+    };
+
+    const handleRemoveTagClick = (tag) => {
+        setSelectedTag(tag);
+        setIsConfirmTagDeleteOpen(true);
+    };
+
+    const handleRemoveTag = async () => {
+        if (isTagProcessing || !selectedTag) return;
+
+        try {
+            setIsTagProcessing(true);
+            await Axios.delete(`/api/tag/soft-deletion/${selectedTag.id}`);
+            toast.success('Tag removed');
+            setIsConfirmTagDeleteOpen(false);
+            setSelectedTag(null);
+            fetchTags();
+        } catch (error) {
+            console.error('Error removing tag:', error);
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error('Failed to remove tag');
+            }
+        } finally {
+            setIsTagProcessing(false);
         }
     };
 
@@ -202,6 +261,76 @@ const StaffSkintypeTagManagement = () => {
                 )}
             </div>
 
+            <div className="mb-8">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-semibold">Tag Management</h2>
+                    <Button
+                        variant="contained"
+                        sx={{
+                            bgcolor: '#4CAF50',
+                            '&:hover': {
+                                bgcolor: '#388E3C'
+                            }
+                        }}
+                        onClick={() => setIsCreateTagModalOpen(true)}
+                    >
+                        Add Tag
+                    </Button>
+                </div>
+
+                {tagError && <p className="text-red-500 mb-4">{tagError}</p>}
+
+                {tagLoading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <CircularProgress />
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full bg-white border border-gray-300">
+                            <thead>
+                                <tr>
+                                    <th className="py-2 px-4 border-b text-left">ID</th>
+                                    <th className="py-2 px-4 border-b text-left">Name</th>
+                                    <th className="py-2 px-4 border-b text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tags?.length > 0 ? (
+                                    tags.map((tag) => (
+                                        <tr key={tag.id}>
+                                            <td className="py-2 px-4 border-b">{tag.id}</td>
+                                            <td className="py-2 px-4 border-b">{tag.name}</td>
+                                            <td className="py-2 px-4 border-b">
+                                                <button
+                                                    className="text-blue-500 hover:text-blue-700 mr-2"
+                                                    onClick={() => handleEditTag(tag)}
+                                                    disabled={isTagProcessing}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="text-red-500 hover:text-red-700"
+                                                    onClick={() => handleRemoveTagClick(tag)}
+                                                    disabled={isTagProcessing}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="3" className="py-4 text-center text-gray-500">
+                                            No tags found
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
             <StaffCreateSkintype
                 open={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
@@ -220,6 +349,24 @@ const StaffSkintypeTagManagement = () => {
                 />
             )}
 
+            <StaffCreateTag
+                open={isCreateTagModalOpen}
+                onClose={() => setIsCreateTagModalOpen(false)}
+                onSave={fetchTags}
+            />
+
+            {selectedTag && (
+                <StaffEditTag
+                    open={isEditTagModalOpen}
+                    onClose={() => {
+                        setIsEditTagModalOpen(false);
+                        setSelectedTag(null);
+                    }}
+                    onSave={fetchTags}
+                    tag={selectedTag}
+                />
+            )}
+
             <Modal
                 open={isConfirmDeleteOpen}
                 onClose={() => {
@@ -233,7 +380,7 @@ const StaffSkintypeTagManagement = () => {
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-white rounded-lg shadow-xl p-6">
                     <h2 className="text-xl font-semibold mb-4">Confirm Remove</h2>
                     <p className="text-gray-600 mb-6">
-                        Are you sure you want to remove skintype "{selectedSkintype?.name}"? This action cant be undone later.
+                        Are you sure you want to remove skintype "{selectedSkintype?.name}"? This action can't be undone later.
                     </p>
                     <div className="flex justify-end gap-4">
                         <button
@@ -256,6 +403,57 @@ const StaffSkintypeTagManagement = () => {
                             }`}
                         >
                             {isProcessing ? (
+                                <>
+                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Removing...
+                                </>
+                            ) : (
+                                'Remove'
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal
+                open={isConfirmTagDeleteOpen}
+                onClose={() => {
+                    setIsConfirmTagDeleteOpen(false);
+                    setSelectedTag(null);
+                }}
+                disableAutoFocus
+                disableEnforceFocus
+                style={{ zIndex: 1000 }}
+            >
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-white rounded-lg shadow-xl p-6">
+                    <h2 className="text-xl font-semibold mb-4">Confirm Remove</h2>
+                    <p className="text-gray-600 mb-6">
+                        Are you sure you want to remove tag "{selectedTag?.name}"? This action can't be undone later.
+                    </p>
+                    <div className="flex justify-end gap-4">
+                        <button
+                            onClick={() => {
+                                setIsConfirmTagDeleteOpen(false);
+                                setSelectedTag(null);
+                            }}
+                            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                            disabled={isTagProcessing}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleRemoveTag}
+                            disabled={isTagProcessing}
+                            className={`px-4 py-2 text-white rounded flex items-center gap-2 ${
+                                isTagProcessing 
+                                    ? 'bg-red-400 cursor-not-allowed' 
+                                    : 'bg-red-600 hover:bg-red-700'
+                            }`}
+                        >
+                            {isTagProcessing ? (
                                 <>
                                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

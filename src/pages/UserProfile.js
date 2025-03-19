@@ -27,17 +27,9 @@ const UserProfile = () => {
     { text: 'Profile', value: 'info' },
     { text: 'Security', value: 'security' },
     { text: 'Skin Routine', value: 'skinroutine' },
-    { text: 'Reward Points', value: 'points' },
+    { text: 'Points & Vouchers Store', value: 'points' },
     { text: 'Orders History', value: 'orders' },
   ];
-
-  // if (loading) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-  //       <CircularProgress />
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="grid grid-cols-[17rem_1fr] min-h-[calc(100vh-4rem)] px-48 py-6">

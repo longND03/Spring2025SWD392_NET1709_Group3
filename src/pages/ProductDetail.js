@@ -63,12 +63,18 @@ const ProductDetail = () => {
       <Grid container spacing={4}>
         {/* Product Image */}
         <Grid item xs={12} md={6}>
-          <img
-            src={product.productImages[0]}
-            alt={product.name}
-            className="w-full rounded-lg shadow-lg object-cover"
-            style={{ maxHeight: '500px' }}
-          />
+          {product.productImages && product.productImages.length > 0 ? (
+            <img
+              src={`data:image/jpeg;base64,${product.productImages[0]}`}
+              alt={product.name}
+              className="w-full rounded-lg shadow-lg object-cover"
+              style={{ maxHeight: '500px' }}
+            />
+          ) : (
+            <div className="w-full h-[500px] rounded-lg shadow-lg bg-gray-200 flex items-center justify-center">
+              <p className="text-gray-500">No image available</p>
+            </div>
+          )}
         </Grid>
 
         {/* Product Info */}

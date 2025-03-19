@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Axios from '../api/axios';
-import { Pagination, CircularProgress, Button } from '@mui/material';
+import { Pagination, CircularProgress, Button, Tabs, Tab } from '@mui/material';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import StaffCreateProduct from './StaffCreateProduct';
 import StaffCreateBatch from './StaffCreateBatch';
+import StaffEditProduct from './StaffEditProduct';
 
 const StaffProductManagement = () => {
   const { user } = useAuth();
@@ -19,12 +20,17 @@ const StaffProductManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreateBatchModalOpen, setIsCreateBatchModalOpen] = useState(false);
+  const [isEditProductModalOpen, setIsEditProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [activeTab, setActiveTab] = useState(0); // 0 for active products, 1 for removed products
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, id: null, type: null });
 
   const fetchProducts = async (search = '') => {
     try {
       setLoading(true);
       const searchParam = search ? `&Name=${encodeURIComponent(search)}` : '';
-      const response = await Axios.get(`/api/product?PageNumber=${page}&PageSize=20${searchParam}`);
+      const isDeleted = activeTab === 1;
+      const response = await Axios.get(`/api/product?PageNumber=${page}&PageSize=20${searchParam}&IsDeleted=${isDeleted}`);
       setProducts(response.data);
       setError(null);
     } catch (error) {
@@ -51,10 +57,15 @@ const StaffProductManagement = () => {
     }
   };
 
+  const refreshAllData = async () => {
+    await fetchProducts(searchTerm);
+    await fetchBatches();
+  };
+
   useEffect(() => {
     fetchProducts(searchTerm);
     fetchBatches();
-  }, [page, searchTerm]);
+  }, [page, searchTerm, activeTab]);
 
   const handlePageChange = (event, value) => {
     setPage(value);
@@ -63,7 +74,32 @@ const StaffProductManagement = () => {
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setPage(1); // Reset to first page when searching
+    setPage(1);
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+    setPage(1);
+    setSearchTerm('');
+  };
+
+  const handleDelete = async () => {
+    try {
+      if (deleteConfirmation.type === 'product') {
+        await Axios.delete(`/api/product/${deleteConfirmation.id}`);
+        toast.success('Product deleted successfully');
+        await refreshAllData();
+      } else if (deleteConfirmation.type === 'batch') {
+        await Axios.delete(`/api/batch/${deleteConfirmation.id}`);
+        toast.success('Batch deleted successfully');
+        await refreshAllData();
+      }
+    } catch (error) {
+      console.error("Error deleting:", error);
+      toast.error(error.response?.data?.message || "Failed to delete. Please try again.");
+    } finally {
+      setDeleteConfirmation({ open: false, id: null, type: null });
+    }
   };
 
   const formatDate = (dateString) => {
@@ -99,6 +135,17 @@ const StaffProductManagement = () => {
           </Button>
         </div>
 
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          className="mb-4"
+          textColor="primary"
+          indicatorColor="primary"
+        >
+          <Tab label="Active Products" />
+          <Tab label="Removed Products" />
+        </Tabs>
+
         <div className="mb-4">
           <input
             type="text"
@@ -123,43 +170,44 @@ const StaffProductManagement = () => {
                     <th className="py-2 px-4 border-b text-left">Product Name</th>
                     <th className="py-2 px-4 border-b text-left">Price</th>
                     <th className="py-2 px-4 border-b text-left">Stock</th>
-                    <th className="py-2 px-4 border-b text-left">Status</th>
                     <th className="py-2 px-4 border-b text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {products.items?.length > 0 ? (
                     products.items.map((product) => (
-                      <tr key={product.id}>
-                        <td className="py-2 px-4 border-b">{product.id}</td>
-                        <td className="py-2 px-4 border-b">
+                      <tr key={product.id} className={activeTab === 1 ? 'bg-gray-100' : ''}>
+                        <td className={`py-2 px-4 border-b ${activeTab === 1 ? 'text-gray-500' : ''}`}>{product.id}</td>
+                        <td className={`py-2 px-4 border-b ${activeTab === 1 ? 'text-gray-500' : ''}`}>
                           <Link 
                             to={`/products/${product.id}`}
-                            className="text-blue-600 hover:text-blue-800 hover:underline"
+                            className={`hover:underline ${activeTab === 1 ? 'text-gray-500' : 'text-blue-600 hover:text-blue-800'}`}
                           >
                             {product.name}
                           </Link>
                         </td>
-                        <td className="py-2 px-4 border-b">${product.price.toFixed(2)}</td>
-                        <td className="py-2 px-4 border-b">{product.stockQuantity}</td>
+                        <td className={`py-2 px-4 border-b ${activeTab === 1 ? 'text-gray-500' : ''}`}>${product.price.toFixed(2)}</td>
+                        <td className={`py-2 px-4 border-b ${activeTab === 1 ? 'text-gray-500' : ''}`}>{product.stockQuantity}</td>
                         <td className="py-2 px-4 border-b">
-                          <span className={`px-2 py-1 rounded ${product.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {product.status ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td className="py-2 px-4 border-b">
-                          <button 
-                            className="text-blue-500 hover:text-blue-700 mr-2"
-                            onClick={() => {/* TODO: Implement edit */}}
-                          >
-                            Edit
-                          </button>
-                          <button 
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => {/* TODO: Implement delete */}}
-                          >
-                            Delete
-                          </button>
+                          {activeTab === 0 && (
+                            <>
+                              <button 
+                                className="text-blue-500 hover:text-blue-700 mr-2"
+                                onClick={() => {
+                                  setEditingProduct(product);
+                                  setIsEditProductModalOpen(true);
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button 
+                                className="text-red-500 hover:text-red-700"
+                                onClick={() => setDeleteConfirmation({ open: true, id: product.id, type: 'product' })}
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -239,14 +287,8 @@ const StaffProductManagement = () => {
                       <td className="py-2 px-4 border-b">{formatDate(batch.expiryDate)}</td>
                       <td className="py-2 px-4 border-b">
                         <button 
-                          className="text-blue-500 hover:text-blue-700 mr-2"
-                          onClick={() => {/* TODO: Implement edit */}}
-                        >
-                          Edit
-                        </button>
-                        <button 
                           className="text-red-500 hover:text-red-700"
-                          onClick={() => {/* TODO: Implement delete */}}
+                          onClick={() => setDeleteConfirmation({ open: true, id: batch.id, type: 'batch' })}
                         >
                           Delete
                         </button>
@@ -269,14 +311,51 @@ const StaffProductManagement = () => {
       <StaffCreateProduct
         open={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSave={fetchProducts}
+        onSave={refreshAllData}
+      />
+
+      <StaffEditProduct
+        open={isEditProductModalOpen}
+        onClose={() => {
+          setIsEditProductModalOpen(false);
+          setEditingProduct(null);
+        }}
+        onSave={refreshAllData}
+        product={editingProduct}
       />
 
       <StaffCreateBatch
         open={isCreateBatchModalOpen}
         onClose={() => setIsCreateBatchModalOpen(false)}
-        onSave={fetchBatches}
+        onSave={refreshAllData}
       />
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmation.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this {deleteConfirmation.type}? 
+              {deleteConfirmation.type === 'batch' && " This action cannot be undone."}
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setDeleteConfirmation({ open: false, id: null, type: null })}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
