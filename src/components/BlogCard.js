@@ -38,6 +38,19 @@ const BlogCard = ({ post }) => {
     return "Read more about this article...";
   };
 
+  // Get image URL function
+  const getImageUrl = () => {
+    if (post.imageUrls && post.imageUrls.length > 0) {
+      // Nếu là base64 string
+      if (post.imageUrls[0].startsWith("data:")) {
+        return post.imageUrls[0];
+      }
+      // Nếu là base64 raw data
+      return `data:image/jpeg;base64,${post.imageUrls[0]}`;
+    }
+    return "/images/default-img.jpg";
+  };
+
   // Default category if missing
   const category = post.category || "General";
 
@@ -62,7 +75,7 @@ const BlogCard = ({ post }) => {
       <CardMedia
         component="img"
         height="200"
-        image={post.imageUrl || post.image || "/default-image.jpg"}
+        image={getImageUrl()}
         alt={post.title || "Blog post"}
         sx={{ height: 200 }}
       />

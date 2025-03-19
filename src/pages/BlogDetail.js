@@ -31,7 +31,31 @@ const BlogDetail = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  // Fetch post data from API
+  // Thay đổi hàm getImageUrl để xử lý base64 tương tự như trong BlogCard
+  const getImageUrl = (post) => {
+    if (post.imageUrls && post.imageUrls.length > 0) {
+      // Nếu là base64 string
+      if (post.imageUrls[0].startsWith("data:")) {
+        return post.imageUrls[0];
+      }
+      // Nếu là base64 raw data
+      return `data:image/jpeg;base64,${post.imageUrls[0]}`;
+    }
+    return "/images/default-img.jpg";
+  };
+
+  // Tương tự xử lý hình ảnh cho sản phẩm
+  const getProductImageUrl = (product) => {
+    if (product.imageUrls && product.imageUrls.length > 0) {
+      if (product.imageUrls[0].startsWith("data:")) {
+        return product.imageUrls[0];
+      }
+      return `data:image/jpeg;base64,${product.imageUrls[0]}`;
+    }
+    return "/images/default-img.jpg";
+  };
+
+  // Chỉnh sửa hàm fetchPost
   const fetchPost = async () => {
     try {
       setLoading(true);
@@ -39,18 +63,23 @@ const BlogDetail = () => {
       // Fetch the blog post by ID
       const response = await axios.get(`/api/post/${id}`);
       const postData = response.data;
+
+      // Không cần xử lý ảnh nữa, truyền trực tiếp data
       setPost(postData);
 
       // Fetch comments for this post
       try {
         const commentsResponse = await axios.get(`/api/comment/post/${id}`);
-        setComments(commentsResponse.data || []);
+        const sortedComments = commentsResponse.data.sort(
+          (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+        );
+        setComments(sortedComments);
       } catch (commentError) {
         console.error("Error fetching comments:", commentError);
         setComments([]);
       }
 
-      // Fetch related posts (based on tags or category)
+      // Fetch related posts
       if ((postData.tags && postData.tags.length > 0) || postData.category) {
         try {
           const tagQuery =
@@ -65,6 +94,8 @@ const BlogDetail = () => {
               limit: 3,
             },
           });
+
+          // Truyền trực tiếp data không cần xử lý ảnh
           setRelatedPosts(relatedResponse.data || []);
         } catch (relatedError) {
           console.error("Error fetching related posts:", relatedError);
@@ -83,10 +114,9 @@ const BlogDetail = () => {
     }
   };
 
-  // Fetch related products based on tags
+  // Chỉnh sửa hàm fetchRelatedProducts
   const fetchRelatedProducts = async (tags) => {
     try {
-      // Call to product API with tags
       const response = await axios.get(`/api/product/related`, {
         params: {
           tags: Array.isArray(tags) ? tags.join(",") : tags,
@@ -97,30 +127,8 @@ const BlogDetail = () => {
       setRelatedProducts(response.data || []);
     } catch (error) {
       console.error("Error fetching related products:", error);
-
-      // Fallback to mock data if API fails
       setRelatedProducts([
-        {
-          id: 1,
-          name: "Hydrating Facial Cleanser",
-          price: 24.99,
-          image: "https://via.placeholder.com/150",
-          category: "Cleansers",
-        },
-        {
-          id: 2,
-          name: "Vitamin C Serum",
-          price: 39.99,
-          image: "https://via.placeholder.com/150",
-          category: "Serums",
-        },
-        {
-          id: 3,
-          name: "Retinol Night Cream",
-          price: 49.99,
-          image: "https://via.placeholder.com/150",
-          category: "Moisturizers",
-        },
+        /* your fallback data */
       ]);
     }
   };
@@ -178,11 +186,7 @@ const BlogDetail = () => {
       {/* Hero Section with Post Image */}
       <div className="relative h-96 bg-gradient-to-r from-pink-100 to-purple-100">
         <img
-          src={
-            post.imageUrl ||
-            post.image ||
-            "https://via.placeholder.com/1200x600"
-          }
+          src={getImageUrl(post)}
           alt={post.title}
           className="w-full h-full object-cover opacity-90"
         />
@@ -320,11 +324,7 @@ const BlogDetail = () => {
                         style={{ textDecoration: "none" }}
                       >
                         <img
-                          src={
-                            relatedPost.imageUrl ||
-                            relatedPost.image ||
-                            "https://via.placeholder.com/350x180"
-                          }
+                          src={getImageUrl(relatedPost)}
                           alt={relatedPost.title}
                           style={{
                             width: "100%",
@@ -396,7 +396,16 @@ const BlogDetail = () => {
             {/* Comments Section */}
             <Box mt={6}>
               <Divider sx={{ mb: 4 }} />
-              <CommentSection postId={post.id} comments={comments} />
+              <CommentSection
+                postId={post.id}
+                comments={comments.map((comment) => ({
+                  id: comment.id,
+                  content: comment.content,
+                  username: comment.username,
+                  createdDate: comment.createdDate,
+                  updatedDate: comment.updatedDate,
+                }))}
+              />
             </Box>
           </Box>
 
@@ -422,12 +431,7 @@ const BlogDetail = () => {
                         <CardMedia
                           component="img"
                           sx={{ width: 80, height: 80, objectFit: "cover" }}
-                          image={
-                            product.productImages?.[0]
-                              ? `data:image/jpeg;base64,${product.productImages[0]}`
-                              : product.image ||
-                                "https://via.placeholder.com/80"
-                          }
+                          image={getProductImageUrl(product)}
                           alt={product.name}
                         />
                         <CardContent sx={{ flex: "1 1 auto", py: 1 }}>

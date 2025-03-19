@@ -48,15 +48,10 @@ const Blog = () => {
       }
 
       // Fetch posts from API
-      const response = await axios.get(`/api/post?TagIds=${selectedTag.id}`);
-      console.log(`/api/post?TagIds=${selectedTag.id}`);
+      const response = await axios.get(`/api/post`, { params });
       console.log("API Response:", response.data);
-      console.log(
-        "Total posts:",
-        response.data.items ? response.data.items.length : 0
-      );
 
-      // Update posts state
+      // Không cần xử lý ảnh ở đây nữa, truyền trực tiếp data từ API
       setPosts(response.data.items || []);
       setTotalPages(response.data.totalPages || 1);
     } catch (error) {
