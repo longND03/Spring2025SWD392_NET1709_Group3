@@ -10,13 +10,15 @@ import {
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
+import axios from "../api/axios";
 
 const CommentSection = ({ postId, comments: initialComments = [] }) => {
   const [comments, setComments] = useState(initialComments);
   const [newComment, setNewComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
 
-  const handleSubmitComment = (e) => {
+  const handleSubmitComment = async (e) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to comment");
@@ -27,18 +29,86 @@ const CommentSection = ({ postId, comments: initialComments = [] }) => {
       return;
     }
 
-    const comment = {
-      id: Date.now(),
-      text: newComment,
-      author: user.name || user.email,
-      avatar: user.avatar || "https://via.placeholder.com/40",
-      date: new Date().toLocaleDateString(),
-      postId: postId,
-    };
+    setSubmitting(true);
+    try {
+      // Chuẩn bị dữ liệu gửi đến API theo định dạng mới
+      const commentData = {
+        content: newComment,
+        userId: user.id, // Sử dụng userId từ user đang đăng nhập
+        postId: parseInt(postId), // Đảm bảo postId là số nguyên
+      };
 
-    setComments([...comments, comment]);
-    setNewComment("");
-    toast.success("Comment posted successfully!");
+      console.log("Sending comment data:", commentData);
+
+      // Gửi comment đến API
+      const response = await axios.post("/api/comment", commentData, {
+        headers: {
+          "Content-Type": "application/json",
+          // Authorization header sẽ được tự động thêm bởi axios interceptor nếu bạn đã cấu hình
+        },
+      });
+
+      // Thêm comment mới vào danh sách hiện tại
+      const addedComment = response.data;
+
+      // Đảm bảo comment có username để hiển thị trong UI
+      const displayComment = {
+        ...addedComment,
+        username: user.name || user.email || "Anonymous",
+      };
+
+      setComments([displayComment, ...comments]);
+      setNewComment("");
+      toast.success("Comment posted successfully!");
+    } catch (error) {
+      console.error("Error posting comment:", error);
+
+      // Hiển thị thông báo lỗi chi tiết hơn
+      if (error.response) {
+        // Server trả về lỗi với status code
+        toast.error(
+          `Failed to post comment: ${
+            error.response.data.message || error.response.statusText
+          }`
+        );
+      } else if (error.request) {
+        // Không nhận được response
+        toast.error("Network error. Please check your connection.");
+      } else {
+        // Lỗi khác
+        toast.error("Failed to post comment. Please try again.");
+      }
+
+      // Fallback nếu API lỗi - thêm comment vào UI nhưng không lưu vào database
+      if (process.env.NODE_ENV === "development") {
+        const tempComment = {
+          id: Date.now(),
+          content: newComment,
+          username: user.name || user.email || "Anonymous",
+          createdDate: new Date().toISOString(),
+          updatedDate: new Date().toISOString(),
+          postId: postId,
+          userId: user.id,
+        };
+        setComments([tempComment, ...comments]);
+        console.warn("Using fallback comment display in development mode");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Hàm format date từ ISO string sang định dạng thân thiện với người dùng
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -59,20 +129,20 @@ const CommentSection = ({ postId, comments: initialComments = [] }) => {
             }
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            disabled={!user}
+            disabled={!user || submitting}
             sx={{ mb: 2 }}
           />
           <Button
             type="submit"
             variant="contained"
-            disabled={!user}
+            disabled={!user || submitting}
             sx={{
               bgcolor: "#9C27B0",
               "&:hover": { bgcolor: "#7B1FA2" },
               "&:disabled": { bgcolor: "#E1BEE7" },
             }}
           >
-            Post Comment
+            {submitting ? "Posting..." : "Post Comment"}
           </Button>
         </form>
       </Paper>
@@ -83,7 +153,12 @@ const CommentSection = ({ postId, comments: initialComments = [] }) => {
           comments.map((comment) => (
             <Paper key={comment.id} sx={{ p: 2, mb: 2 }}>
               <Box sx={{ display: "flex", alignItems: "start", gap: 2 }}>
-                <Avatar src={comment.avatar} alt={comment.author} />
+                <Avatar
+                  alt={comment.username}
+                  sx={{ bgcolor: generateAvatarColor(comment.username) }}
+                >
+                  {comment.username.charAt(0).toUpperCase()}
+                </Avatar>
                 <Box sx={{ flex: 1 }}>
                   <Box
                     sx={{
@@ -94,13 +169,13 @@ const CommentSection = ({ postId, comments: initialComments = [] }) => {
                     }}
                   >
                     <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-                      {comment.author}
+                      {comment.username}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {comment.date}
+                      {formatDate(comment.createdDate)}
                     </Typography>
                   </Box>
-                  <Typography variant="body2">{comment.text}</Typography>
+                  <Typography variant="body2">{comment.content}</Typography>
                 </Box>
               </Box>
             </Paper>
@@ -113,6 +188,32 @@ const CommentSection = ({ postId, comments: initialComments = [] }) => {
       </Box>
     </Box>
   );
+};
+
+// Hàm tạo màu avatar dựa trên username
+const generateAvatarColor = (username) => {
+  const colors = [
+    "#e91e63",
+    "#9c27b0",
+    "#673ab7",
+    "#3f51b5",
+    "#2196f3",
+    "#00bcd4",
+    "#009688",
+    "#4caf50",
+    "#ff9800",
+    "#ff5722",
+  ];
+
+  // Tạo số từ chuỗi username
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  // Chọn màu từ mảng colors
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
 };
 
 export default CommentSection;
