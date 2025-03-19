@@ -64,7 +64,12 @@ const StaffCreateBlog = ({ open, onClose, onSave }) => {
             await axios.post('/api/post', {
                 title: title,
                 content: content,
-                tagIds: selectedTags.map(tag => tag.id)
+                tagIds: selectedTags.map(tag => tag.id),
+                imageFiles: selectedImage
+            }, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
             toast.success('Post saved successfully');

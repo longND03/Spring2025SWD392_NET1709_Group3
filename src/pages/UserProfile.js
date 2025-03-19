@@ -40,7 +40,7 @@ const UserProfile = () => {
           <div className="p-3 flex flex-col items-center">
             {user?.image ? (
               <img
-                src={user?.image}
+                src={`data:image/jpeg;base64,${user?.image}`}
                 alt="User Avatar"
                 className="w-20 h-20 rounded-full mb-3"
               />

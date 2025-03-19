@@ -43,7 +43,7 @@ const ProductCard = ({ product }) => {
     >
       <CardMedia
         component="img"
-        image={`data:image/jpeg;base64,${product.productImages[0]}`}
+        image={`data:image/jpeg;base64,${product.productImage}`}
         alt={product.name}
         sx={{ 
           height: 250,

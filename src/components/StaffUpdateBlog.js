@@ -24,6 +24,7 @@ const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
     const [imagePreview, setImagePreview] = useState('');
     const fileInputRef = useRef(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     const editor = useEditor({
         extensions: [
@@ -47,25 +48,56 @@ const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
 
     // Load post data when component mounts or post changes
     useEffect(() => {
-        if (post) {
+        if (post && open) {
             setTitle(post.title);
             setContent(post.content);
             editor?.commands.setContent(post.content);
             
-            // Convert tag strings to objects if needed
-            const tagObjects = post.tags.map(tagName => ({
-                id: tagName, // You might need to adjust this based on your data structure
-                name: tagName
-            }));
-            setSelectedTags(tagObjects);
+            // Handle existing image if available
+            if (post.imageUrls && post.imageUrls.length > 0) {
+                const imageBase64 = post.imageUrls[0];
+                if (imageBase64) {
+                    const dataUrlPrefix = 'data:image/jpeg;base64,';
+                    const imageUrl = imageBase64.startsWith('data:') 
+                        ? imageBase64 
+                        : `${dataUrlPrefix}${imageBase64}`;
+                    setImagePreview(imageUrl);
+                }
+            } else {
+                setImagePreview('');
+            }
+            setIsInitialized(true);
         }
-    }, [post, editor]);
+    }, [post, editor, open]);
+
+    // Effect to clear the form when modal is closed
+    useEffect(() => {
+        if (!open && isInitialized) {
+            setTitle('');
+            setContent('');
+            setSelectedTags([]);
+            setSelectedImage(null);
+            setImagePreview('');
+            editor?.commands.clearContent();
+            setIsInitialized(false);
+        }
+    }, [open, editor, isInitialized]);
 
     useEffect(() => {
         const fetchTags = async () => {
             try {
                 const response = await axios.get('/api/tag');
                 setAvailableTags(response.data);
+                
+                // If post is available, match tag names with tag IDs
+                if (post && post.tags && post.tags.length > 0) {
+                    const tagObjects = post.tags.map(tagName => {
+                        // Find the tag object with matching name from available tags
+                        const matchingTag = response.data.find(tag => tag.name === tagName);
+                        return matchingTag || { id: tagName, name: tagName }; // Fallback if no match found
+                    });
+                    setSelectedTags(tagObjects);
+                }
             } catch (error) {
                 console.error('Error fetching tags:', error);
                 toast.error('Failed to load tags');
@@ -73,14 +105,27 @@ const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
         };
 
         fetchTags();
-    }, []);
+    }, [post]);
 
     const handleSave = async () => {
         try {
+
+            console.log({
+                title: title,
+                content: content,
+                tagIds: selectedTags.map(tag => tag.id),
+                imageFiles: selectedImage
+            });
+            
             await axios.put(`/api/post/${post.id}`, {
                 title: title,
                 content: content,
-                tagIds: selectedTags.map(tag => tag.id)
+                tagIds: selectedTags.map(tag => tag.id),
+                imageFiles: selectedImage
+            }, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
             toast.success('Post updated successfully');
@@ -150,6 +195,7 @@ const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
     const handleConfirmClose = () => {
         setShowConfirmDialog(false);
         onClose();
+        // Form will be cleared by the useEffect above
     };
 
     return (
