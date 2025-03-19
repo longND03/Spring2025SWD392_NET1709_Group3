@@ -166,7 +166,19 @@ const StaffOrder = () => {
   const handleCloseSnackbar = () => {
     setUpdateMessage('');
   };
-
+// Sắp xếp đơn hàng - đơn hàng hoàn thành hiển thị trước
+const sortedOrders = [...orders].sort((a, b) => {
+  // Đơn hàng "Completed" hiển thị trước
+  if (a.statusName === 'Waiting' && b.statusName !== 'Waiting') return -1;
+  if (a.statusName !== 'Waiting' && b.statusName === 'Waiting') return 1;
+  
+  // Sau đó sắp xếp theo "Waiting" và "Canceled"
+  if (a.statusName === 'Completed' && b.statusName === 'Canceled') return -1;
+  if (a.statusName === 'Canceled' && b.statusName === 'Completed') return 1;
+  
+  // Nếu cùng trạng thái, sắp xếp theo ID (mới nhất trước)
+  return b.id - a.id;
+});
   // Added helper function to get status ID
   const getStatusId = (statusName) => {
     switch (statusName) {
@@ -303,12 +315,12 @@ const StaffOrder = () => {
       </Box>
 
       <Box sx={{ mb: 4 }}>
-        {orders.map(order => (
+        {sortedOrders.map(order =>  (
           <motion.div
-            key={order.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+          key={order.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
           >
             <Card 
               sx={{ 
