@@ -12,6 +12,42 @@ import {
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 const BlogCard = ({ post }) => {
+  // Format date function
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Generate excerpt from content or description
+  const getExcerpt = () => {
+    if (post.excerpt) return post.excerpt;
+    if (post.description && post.description.length > 0) {
+      return post.description.length > 120
+        ? post.description.substring(0, 120) + "..."
+        : post.description;
+    }
+    if (post.content && post.content.length > 0) {
+      return post.content.length > 120
+        ? post.content.substring(0, 120) + "..."
+        : post.content;
+    }
+    return "Read more about this article...";
+  };
+
+  // Default category if missing
+  const category = post.category || "General";
+
+  // Display date from publishedDate or createdDate or fallback to current date
+  const displayDate =
+    post.publishedDate ||
+    post.createdDate ||
+    post.date ||
+    new Date().toISOString();
+
   return (
     <Card
       className="h-full flex flex-col transition-transform duration-300 hover:shadow-lg hover:-translate-y-1"
@@ -23,18 +59,19 @@ const BlogCard = ({ post }) => {
         borderRadius: "12px",
       }}
     >
-<CardMedia
-  component="img"
-  height="200"
-  image={post.image || "/default-image.jpg"} 
-  alt={post.title}
-/>
+      <CardMedia
+        component="img"
+        height="200"
+        image={post.imageUrl || post.image || "/default-image.jpg"}
+        alt={post.title || "Blog post"}
+        sx={{ height: 200 }}
+      />
       <CardContent
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
       >
         <Box mb={1}>
           <Chip
-            label={post.category}
+            label={category}
             size="small"
             sx={{
               bgcolor: "#9C27B0",
@@ -55,14 +92,12 @@ const BlogCard = ({ post }) => {
             lineHeight: 1.3,
           }}
         >
-          {post.title}
+          {post.title || "Untitled Post"}
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-  {post.excerpt || (post.description.length > 120 
-    ? post.description.substring(0, 120) + "..." 
-    : post.description)}
-</Typography>
+          {getExcerpt()}
+        </Typography>
 
         <Box
           sx={{
@@ -73,7 +108,7 @@ const BlogCard = ({ post }) => {
           }}
         >
           <Typography variant="caption" color="text.secondary">
-            {post.date}
+            {formatDate(displayDate)}
           </Typography>
 
           <Link to={`/blog/${post.id}`} style={{ textDecoration: "none" }}>
