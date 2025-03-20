@@ -101,33 +101,19 @@ const OrdersHistoryBox = ({ userInfo }) => {
       return;
     }
 
-    // Find the order to check its status
-    const orderToCancel = orders.find(order => order.id === orderId);
-    
-    if (orderToCancel && orderToCancel.statusName === 'Waiting') {
-      try {
+    try {
         const token = localStorage.getItem('token');
-        const status = 6; // Assuming 6 is the status code for "Cancelled"
-
-        const response = await axios.put(`http://localhost:5296/api/order/status/${orderId}/${status}`, {}, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        const response = await axios.put(`http://localhost:5296/api/order/cancelorder/${orderId}`, {}, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         });
 
-        // Update the orders state to reflect the cancellation
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
-            order.id === orderId ? { ...order, statusName: 'Cancelled' } : order
-          )
-        );
+        // Handle successful cancellation
         alert(`Order #${orderId} has been canceled successfully.`);
-      } catch (error) {
+    } catch (error) {
         console.error('Error canceling order:', error);
         alert('Failed to cancel order. Please try again.');
-      }
-    } else {
-      alert('This order cannot be canceled because it is not in "Waiting" status.');
     }
   };
 
