@@ -10,6 +10,9 @@ import {
   Chip,
 } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
 
 const BlogCard = ({ post }) => {
   // Format date function
@@ -22,20 +25,25 @@ const BlogCard = ({ post }) => {
     });
   };
 
-  // Generate excerpt from content or description
+  // Initialize TipTap editor for read-only content
+  const editor = useEditor({
+    extensions: [StarterKit, Underline],
+    content: post.content,
+    editable: false,
+  });
+
+  // Generate excerpt from content
   const getExcerpt = () => {
     if (post.excerpt) return post.excerpt;
-    if (post.description && post.description.length > 0) {
-      return post.description.length > 120
-        ? post.description.substring(0, 120) + "..."
-        : post.description;
-    }
-    if (post.content && post.content.length > 0) {
-      return post.content.length > 120
-        ? post.content.substring(0, 120) + "..."
-        : post.content;
-    }
-    return "Read more about this article...";
+
+    // Remove HTML tags for plain text excerpt
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = post.content || "";
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
+
+    return textContent.length > 120
+      ? textContent.substring(0, 120) + "..."
+      : textContent;
   };
 
   // Get image URL function
@@ -108,9 +116,9 @@ const BlogCard = ({ post }) => {
           {post.title || "Untitled Post"}
         </Typography>
 
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <div className="prose prose-sm max-w-none text-gray-600 mb-4">
           {getExcerpt()}
-        </Typography>
+        </div>
 
         <Box
           sx={{
