@@ -269,24 +269,7 @@ const StaffBlogManagement = () => {
           Create New Post
         </Button>
       </div>
-
-      <StaffCreateBlog
-        open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSave={fetchPosts}
-      />
-
-      <StaffUpdateBlog
-        open={isUpdateModalOpen}
-        onClose={() => {
-          setIsUpdateModalOpen(false);
-          setSelectedPost(null);
-        }}
-        onSave={handleUpdateSuccess}
-        post={selectedPost}
-      />
-
-      {/* Confirmation Dialog */}
+      {/* Add the confirmation dialog */}
       {confirmationDialog.open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
@@ -314,65 +297,87 @@ const StaffBlogManagement = () => {
         </div>
       )}
 
-      {/* Draft Posts Section */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Draft Posts</h3>
-        </div>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Search drafts..."
-            value={draftSearch}
-            onChange={handleDraftSearch}
-            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-          />
-        </div>
-        <PostTable posts={draftPosts} isDraft={true} isLoading={draftLoading} />
-        {!draftLoading && draftPosts.items.length > 0 && (
-          <div className="flex justify-center mt-4">
-            <Pagination
-              count={draftPosts.totalPages}
-              page={draftPage}
-              onChange={handleDraftPageChange}
-              variant="outlined"
-              shape="rounded"
-            />
-          </div>
-        )}
-      </div>
+      <StaffCreateBlog
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={fetchPosts}
+      />
 
-      {/* Published Posts Section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Published Posts</h3>
-        </div>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Search published..."
-            value={publishedSearch}
-            onChange={handlePublishedSearch}
-            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-          />
-        </div>
-        <PostTable
-          posts={publishedPosts}
-          isDraft={false}
-          isLoading={publishedLoading}
-        />
-        {!publishedLoading && publishedPosts.items.length > 0 && (
-          <div className="flex justify-center mt-4">
-            <Pagination
-              count={publishedPosts.totalPages}
-              page={publishedPage}
-              onChange={handlePublishedPageChange}
-              variant="outlined"
-              shape="rounded"
+      <StaffUpdateBlog
+        open={isUpdateModalOpen}
+        onClose={() => {
+          setIsUpdateModalOpen(false);
+          setSelectedPost(null);
+        }}
+        onSave={handleUpdateSuccess}
+        post={selectedPost}
+      />
+
+      <>
+        {/* Draft Posts Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Draft Posts</h3>
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search drafts..."
+              value={draftSearch}
+              onChange={handleDraftSearch}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
             />
           </div>
-        )}
-      </div>
+          <PostTable
+            posts={draftPosts}
+            isDraft={true}
+            isLoading={draftLoading}
+          />
+          {!draftLoading && draftPosts.items.length > 0 && (
+            <div className="flex justify-center mt-4">
+              <Pagination
+                count={draftPosts.totalPages}
+                page={draftPage}
+                onChange={handleDraftPageChange}
+                variant="outlined"
+                shape="rounded"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Published Posts Section */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Published Posts</h3>
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search published..."
+              value={publishedSearch}
+              onChange={handlePublishedSearch}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <PostTable
+            posts={publishedPosts}
+            isDraft={false}
+            isLoading={publishedLoading}
+          />
+          {!publishedLoading && publishedPosts.items.length > 0 && (
+            <div className="flex justify-center mt-4">
+              <Pagination
+                count={publishedPosts.totalPages}
+                page={publishedPage}
+                onChange={handlePublishedPageChange}
+                variant="outlined"
+                shape="rounded"
+              />
+            </div>
+          )}
+        </div>
+      </>
     </div>
   );
 };
