@@ -272,6 +272,9 @@ const SkinTest = () => {
             <div className="mb-20 rounded-xl shadow-lg overflow-hidden bg-white p-6">
               <h3 className="text-xl font-semibold mb-4">Your Results</h3>
               <p className="text-lg text-gray-700" dangerouslySetInnerHTML={{ __html: result }}></p>
+              <p className="text-red-600 mt-4 text-sm italic">
+                Disclaimer: This quiz is for reference purposes only and is intended to provide a general prediction of the skin type you may have. It is not a substitute for professional dermatological advice. For an accurate skin assessment, please consult a dermatologist or skincare specialist.
+              </p>
             </div>
           </div>
 

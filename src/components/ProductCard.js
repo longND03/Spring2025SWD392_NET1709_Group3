@@ -64,6 +64,9 @@ const ProductCard = ({ product }) => {
             <h2 className="text-xl font-semibold mb-2 line-clamp-2">
               {product.name}
             </h2>
+            <p className="text-blue-600 text-sm mb-2">
+              {product.brand}
+            </p>
           </div>
 
           <div>
