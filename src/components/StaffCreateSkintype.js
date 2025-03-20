@@ -40,6 +40,10 @@ const StaffCreateSkintype = ({ open, onClose, onSave }) => {
             await axios.post('/api/skintype', {
                 name: formData.name.trim(),
                 description: formData.description.trim()
+            }, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             
             toast.success(messages.success.skintype.create);

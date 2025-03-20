@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Axios from '../api/axios';
-import { Pagination, CircularProgress, Button } from '@mui/material';
+import { Pagination, CircularProgress, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { toast } from 'react-toastify';
+import PackagingModal from '../components/PackagingModal';
+import FormulationModal from '../components/FormulationModal';
+import IngredientModal from '../components/IngredientModal';
 
 const PackagingFormulationIngredientManagement = () => {
     const { user } = useAuth();
@@ -13,6 +16,21 @@ const PackagingFormulationIngredientManagement = () => {
     const [error, setError] = useState({ packagings: null, formulations: null, ingredients: null });
     const [page, setPage] = useState({ packagings: 1, formulations: 1, ingredients: 1 });
     const [searchTerm, setSearchTerm] = useState({ packagings: '', formulations: '', ingredients: '' });
+    
+    // Modal states
+    const [isPackagingModalOpen, setIsPackagingModalOpen] = useState(false);
+    const [isFormulationModalOpen, setIsFormulationModalOpen] = useState(false);
+    const [isIngredientModalOpen, setIsIngredientModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    
+    // Delete confirmation dialog state
+    const [deleteDialog, setDeleteDialog] = useState({
+        open: false,
+        id: null,
+        type: null,
+        title: '',
+        message: ''
+    });
 
     // Pagination settings
     const itemsPerPage = 10;
@@ -109,6 +127,100 @@ const PackagingFormulationIngredientManagement = () => {
     const paginatedFormulations = filterAndPaginateData(formulations, searchTerm.formulations, page.formulations);
     const paginatedIngredients = filterAndPaginateData(ingredients, searchTerm.ingredients, page.ingredients);
 
+    const handleDelete = async () => {
+        const { id, type } = deleteDialog;
+        try {
+            switch (type) {
+                case 'packaging':
+                    await Axios.delete(`/api/packaging/${id}`);
+                    toast.success('Packaging deleted successfully');
+                    fetchPackagings();
+                    break;
+                case 'formulation':
+                    await Axios.delete(`/api/formulationtype/${id}`);
+                    toast.success('Formulation deleted successfully');
+                    fetchFormulations();
+                    break;
+                case 'ingredient':
+                    await Axios.delete(`/api/ingredient/${id}`);
+                    toast.success('Ingredient deleted successfully');
+                    fetchIngredients();
+                    break;
+                default:
+                    break;
+            }
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            toast.error('Failed to delete item');
+        } finally {
+            setDeleteDialog({ open: false, id: null, type: null, title: '', message: '' });
+        }
+    };
+
+    const handleDeleteClick = (id, type) => {
+        setDeleteDialog({
+            open: true,
+            id,
+            type,
+            title: `Delete ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+            message: `Are you sure you want to delete this ${type}? This action cannot be undone.`
+        });
+    };
+
+    const handleEdit = (item, type) => {
+        setSelectedItem(item);
+        switch (type) {
+            case 'packaging':
+                setIsPackagingModalOpen(true);
+                break;
+            case 'formulation':
+                setIsFormulationModalOpen(true);
+                break;
+            case 'ingredient':
+                setIsIngredientModalOpen(true);
+                break;
+            default:
+                break;
+        }
+    };
+
+    const handleModalClose = (type) => {
+        setSelectedItem(null);
+        switch (type) {
+            case 'packaging':
+                setIsPackagingModalOpen(false);
+                break;
+            case 'formulation':
+                setIsFormulationModalOpen(false);
+                break;
+            case 'ingredient':
+                setIsIngredientModalOpen(false);
+                break;
+            default:
+                break;
+        }
+    };
+
+    const handleModalSave = (type) => {
+        switch (type) {
+            case 'packaging':
+                fetchPackagings();
+                setIsPackagingModalOpen(false);
+                break;
+            case 'formulation':
+                fetchFormulations();
+                setIsFormulationModalOpen(false);
+                break;
+            case 'ingredient':
+                fetchIngredients();
+                setIsIngredientModalOpen(false);
+                break;
+            default:
+                break;
+        }
+        setSelectedItem(null);
+    };
+
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-2xl font-bold mb-4">Packaging, Formulation & Ingredient Management</h1>
@@ -122,6 +234,7 @@ const PackagingFormulationIngredientManagement = () => {
                     <h2 className="text-xl font-semibold">Manage Packagings</h2>
                     <Button
                         variant="contained"
+                        onClick={() => setIsPackagingModalOpen(true)}
                         sx={{
                             bgcolor: '#4CAF50',
                             '&:hover': {
@@ -180,13 +293,13 @@ const PackagingFormulationIngredientManagement = () => {
                                                 <td className="py-2 px-4 border-b">
                                                     <button
                                                         className="text-blue-500 hover:text-blue-700 mr-2"
-                                                        onClick={() => {/* TODO: Implement edit */}}
+                                                        onClick={() => handleEdit(packaging, 'packaging')}
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         className="text-red-500 hover:text-red-700"
-                                                        onClick={() => {/* TODO: Implement delete */}}
+                                                        onClick={() => handleDeleteClick(packaging.id, 'packaging')}
                                                     >
                                                         Delete
                                                     </button>
@@ -227,6 +340,7 @@ const PackagingFormulationIngredientManagement = () => {
                     <h2 className="text-xl font-semibold">Manage Formulations</h2>
                     <Button
                         variant="contained"
+                        onClick={() => setIsFormulationModalOpen(true)}
                         sx={{
                             bgcolor: '#4CAF50',
                             '&:hover': {
@@ -301,13 +415,13 @@ const PackagingFormulationIngredientManagement = () => {
                                                 <td className="py-2 px-4 border-b">
                                                     <button
                                                         className="text-blue-500 hover:text-blue-700 mr-2"
-                                                        onClick={() => {/* TODO: Implement edit */}}
+                                                        onClick={() => handleEdit(formulation, 'formulation')}
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         className="text-red-500 hover:text-red-700"
-                                                        onClick={() => {/* TODO: Implement delete */}}
+                                                        onClick={() => handleDeleteClick(formulation.id, 'formulation')}
                                                     >
                                                         Delete
                                                     </button>
@@ -348,6 +462,7 @@ const PackagingFormulationIngredientManagement = () => {
                     <h2 className="text-xl font-semibold">Manage Ingredients</h2>
                     <Button
                         variant="contained"
+                        onClick={() => setIsIngredientModalOpen(true)}
                         sx={{
                             bgcolor: '#4CAF50',
                             '&:hover': {
@@ -400,13 +515,13 @@ const PackagingFormulationIngredientManagement = () => {
                                                 <td className="py-2 px-4 border-b">
                                                     <button
                                                         className="text-blue-500 hover:text-blue-700 mr-2"
-                                                        onClick={() => {/* TODO: Implement edit */}}
+                                                        onClick={() => handleEdit(ingredient, 'ingredient')}
                                                     >
                                                         Edit
                                                     </button>
                                                     <button
                                                         className="text-red-500 hover:text-red-700"
-                                                        onClick={() => {/* TODO: Implement delete */}}
+                                                        onClick={() => handleDeleteClick(ingredient.id, 'ingredient')}
                                                     >
                                                         Delete
                                                     </button>
@@ -438,6 +553,42 @@ const PackagingFormulationIngredientManagement = () => {
                     </>
                 )}
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ ...deleteDialog, open: false })}>
+                <DialogTitle>{deleteDialog.title}</DialogTitle>
+                <DialogContent>
+                    <p>{deleteDialog.message}</p>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialog({ ...deleteDialog, open: false })}>Cancel</Button>
+                    <Button onClick={handleDelete} color="error">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Modal Components */}
+            <PackagingModal
+                open={isPackagingModalOpen}
+                onClose={() => handleModalClose('packaging')}
+                onSave={() => handleModalSave('packaging')}
+                packaging={selectedItem}
+            />
+
+            <FormulationModal
+                open={isFormulationModalOpen}
+                onClose={() => handleModalClose('formulation')}
+                onSave={() => handleModalSave('formulation')}
+                formulation={selectedItem}
+            />
+
+            <IngredientModal
+                open={isIngredientModalOpen}
+                onClose={() => handleModalClose('ingredient')}
+                onSave={() => handleModalSave('ingredient')}
+                ingredient={selectedItem}
+            />
         </div>
     );
 };
