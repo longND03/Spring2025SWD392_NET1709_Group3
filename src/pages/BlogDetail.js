@@ -17,6 +17,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CommentSection from "../components/CommentSection";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
+import "../styles/tiptap.css";
 
 const BlogDetail = () => {
   const { id } = useParams();
@@ -30,99 +31,6 @@ const BlogDetail = () => {
     fetchPost();
     window.scrollTo(0, 0);
   }, [id]);
-
-  useEffect(() => {
-    // Tạo style element
-    const styleElement = document.createElement("style");
-    styleElement.textContent = `
-      .tiptap-content {
-        font-family: inherit;
-        line-height: 1.6;
-        color: #333;
-      }
-      .tiptap-content h1 {
-        font-size: 2em;
-        margin-top: 1em;
-        margin-bottom: 0.5em;
-        font-weight: bold;
-      }
-      .tiptap-content h2 {
-        font-size: 1.5em;
-        margin-top: 1em;
-        margin-bottom: 0.5em;
-        font-weight: bold;
-      }
-      .tiptap-content h3 {
-        font-size: 1.17em;
-        margin-top: 1em;
-        margin-bottom: 0.5em;
-        font-weight: bold;
-      }
-      .tiptap-content p {
-        margin-bottom: 1em;
-      }
-      .tiptap-content strong {
-        font-weight: bold;
-      }
-      .tiptap-content em {
-        font-style: italic;
-      }
-      .tiptap-content u {
-        text-decoration: underline;
-      }
-      .tiptap-content s {
-        text-decoration: line-through;
-      }
-      .tiptap-content ul, .tiptap-content ol {
-        padding-left: 2em;
-        margin-bottom: 1em;
-      }
-      .tiptap-content ul li {
-        list-style-type: disc;
-        margin-bottom: 0.5em;
-      }
-      .tiptap-content ol li {
-        list-style-type: decimal;
-        margin-bottom: 0.5em;
-      }
-      .tiptap-content blockquote {
-        border-left: 3px solid #ccc;
-        margin-left: 0;
-        margin-right: 0;
-        padding-left: 1em;
-        color: #666;
-        font-style: italic;
-      }
-      .tiptap-content pre {
-        background-color: #f5f5f5;
-        border-radius: 4px;
-        padding: 0.75em;
-        white-space: pre-wrap;
-        margin-bottom: 1em;
-      }
-      .tiptap-content code {
-        background-color: #f5f5f5;
-        border-radius: 3px;
-        padding: 0.2em 0.4em;
-        font-family: monospace;
-      }
-      .tiptap-content a {
-        color: #9C27B0;
-        text-decoration: underline;
-      }
-      .tiptap-content a:hover {
-        color: #7B1FA2;
-      }
-    `;
-
-    // Thêm style vào head
-    document.head.appendChild(styleElement);
-
-    // Cleanup khi component unmount
-    return () => {
-      document.head.removeChild(styleElement);
-    };
-  }, []);
 
   // Thay đổi hàm getImageUrl để xử lý base64 tương tự như trong BlogCard
   const getImageUrl = (post) => {
@@ -148,6 +56,109 @@ const BlogDetail = () => {
     return "/images/default-img.jpg";
   };
 
+  // Fetch related posts using /api/post with TagIds filter
+  const fetchRelatedPosts = async (post) => {
+    try {
+      // Check if we have tag names from the post
+      let tagNames = [];
+      let tagIds = [];
+
+      // Debug data structure
+      if (process.env.NODE_ENV === "development") {
+        console.group("Related Posts Debug");
+        console.log("Post Data:", post);
+        console.log("Tags:", post.tags);
+        console.log("TagIds:", post.tagIds);
+        console.groupEnd();
+      }
+
+      // Try to get tags as strings first
+      if (
+        post.tags &&
+        post.tags.length > 0 &&
+        typeof post.tags[0] === "string"
+      ) {
+        tagNames = post.tags;
+
+        // Fetch tag IDs from tag names
+        try {
+          const tagsResponse = await axios.get("/api/tag");
+          const allTags = tagsResponse.data || [];
+
+          // Find matching tags by name
+          const matchingTags = allTags.filter((tag) =>
+            tagNames.some(
+              (name) => name.toLowerCase() === tag.name.toLowerCase()
+            )
+          );
+
+          if (matchingTags.length > 0) {
+            tagIds = matchingTags.map((tag) => tag.id);
+            console.log("Found tag IDs:", tagIds);
+          }
+        } catch (error) {
+          console.error("Error fetching tags:", error);
+        }
+      }
+      // Try other tag formats if needed
+      else if (post.tagIds && post.tagIds.length > 0) {
+        tagIds = post.tagIds;
+      } else if (
+        post.tags &&
+        post.tags.length > 0 &&
+        typeof post.tags[0] === "object"
+      ) {
+        // If tags are objects with id property
+        tagIds = post.tags.map((tag) => tag.id);
+      }
+
+      // Only proceed if we have tags
+      if (tagIds.length === 0) {
+        console.log("No tag IDs found for related posts");
+        setRelatedPosts([]);
+        return;
+      }
+
+      // Fetch posts with tag filter - send as array
+      const response = await axios.get("/api/post", {
+        params: {
+          TagIds: tagIds, // Send all matching tag IDs
+          PageSize: 3, // Limit to 3 posts
+          PageNumber: 1, // First page
+          Status: true, // Only published posts
+          IsDeleted: false, // Not deleted posts
+        },
+        paramsSerializer: (params) => {
+          // Handle array params properly
+          let result = [];
+          for (const key in params) {
+            if (Array.isArray(params[key])) {
+              params[key].forEach((val) => {
+                result.push(`${key}=${val}`);
+              });
+            } else {
+              result.push(`${key}=${params[key]}`);
+            }
+          }
+          return result.join("&");
+        },
+      });
+
+      console.log("Related posts API response:", response.data);
+
+      // Filter out the current post
+      const filteredPosts = response.data.items.filter(
+        (item) => item.id !== parseInt(id)
+      );
+
+      // Take only the first 3 posts
+      setRelatedPosts(filteredPosts.slice(0, 3));
+    } catch (error) {
+      console.error("Error fetching related posts:", error);
+      setRelatedPosts([]);
+    }
+  };
+
   // Chỉnh sửa hàm fetchPost
   const fetchPost = async () => {
     try {
@@ -156,6 +167,13 @@ const BlogDetail = () => {
       // Fetch the blog post by ID
       const response = await axios.get(`/api/post/${id}`);
       const postData = response.data;
+
+      if (process.env.NODE_ENV === "development") {
+        console.group("Post Data Debug");
+        console.log("Post ID:", id);
+        console.log("Post Response:", postData);
+        console.groupEnd();
+      }
 
       // Không cần xử lý ảnh nữa, truyền trực tiếp data
       setPost(postData);
@@ -172,32 +190,11 @@ const BlogDetail = () => {
         setComments([]);
       }
 
-      // Fetch related posts
-      if ((postData.tags && postData.tags.length > 0) || postData.category) {
-        try {
-          const tagQuery =
-            postData.tags?.length > 0
-              ? postData.tags.join(",")
-              : postData.category;
+      // Fetch related posts using the post data
+      fetchRelatedPosts(postData);
 
-          const relatedResponse = await axios.get(`/api/post/related`, {
-            params: {
-              tags: tagQuery,
-              exclude: id,
-              limit: 3,
-            },
-          });
-
-          // Truyền trực tiếp data không cần xử lý ảnh
-          setRelatedPosts(relatedResponse.data || []);
-        } catch (relatedError) {
-          console.error("Error fetching related posts:", relatedError);
-          setRelatedPosts([]);
-        }
-      }
-
-      // Fetch related products based on tags
-      fetchRelatedProducts(postData.tags || [postData.category]);
+      // Fetch related products
+      fetchRelatedProducts(postData);
     } catch (error) {
       console.error("Error fetching post:", error);
       toast.error("Failed to load blog post. Please try again later.");
@@ -208,21 +205,70 @@ const BlogDetail = () => {
   };
 
   // Chỉnh sửa hàm fetchRelatedProducts
-  const fetchRelatedProducts = async (tags) => {
+  const fetchRelatedProducts = async (post) => {
     try {
-      const response = await axios.get(`/api/product/related`, {
+      // Try to get tag names and IDs
+      let tagNames = [];
+      let tagIds = [];
+
+      if (
+        post.tags &&
+        post.tags.length > 0 &&
+        typeof post.tags[0] === "string"
+      ) {
+        tagNames = post.tags;
+
+        // Fetch tag IDs from tag names for products
+        try {
+          const tagsResponse = await axios.get("/api/tag");
+          const allTags = tagsResponse.data || [];
+
+          // Find matching tags by name
+          const matchingTags = allTags.filter((tag) =>
+            tagNames.some(
+              (name) => name.toLowerCase() === tag.name.toLowerCase()
+            )
+          );
+
+          if (matchingTags.length > 0) {
+            tagIds = matchingTags.map((tag) => tag.id);
+            console.log("Found product tag IDs:", tagIds);
+          }
+        } catch (error) {
+          console.error("Error fetching tags for products:", error);
+        }
+      }
+      // Try other formats if needed
+      else if (post.tagIds && post.tagIds.length > 0) {
+        tagIds = post.tagIds;
+      } else if (post.tags && post.tags.length > 0) {
+        if (typeof post.tags[0] === "object" && post.tags[0].id) {
+          tagIds = post.tags.map((tag) => tag.id);
+        } else if (typeof post.tags[0] === "number") {
+          tagIds = post.tags;
+        }
+      }
+
+      if (tagIds.length === 0) {
+        console.log("No tag IDs found for related products");
+        setRelatedProducts([]);
+        return;
+      }
+
+      // Use product API with TagIds filter
+      const response = await axios.get("/api/product", {
         params: {
-          tags: Array.isArray(tags) ? tags.join(",") : tags,
-          limit: 3,
+          TagIds: tagIds[0], // Use first tag ID for products
+          PageSize: 3,
+          PageNumber: 1,
         },
       });
 
-      setRelatedProducts(response.data || []);
+      console.log("Related products API response:", response.data);
+      setRelatedProducts(response.data.items || []);
     } catch (error) {
       console.error("Error fetching related products:", error);
-      setRelatedProducts([
-        /* your fallback data */
-      ]);
+      setRelatedProducts([]);
     }
   };
 
