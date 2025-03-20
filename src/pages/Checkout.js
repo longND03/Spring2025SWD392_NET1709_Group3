@@ -333,7 +333,7 @@ const Checkout = () => {
           {cart.map((item) => (
             <div key={item.id} className="flex items-center border-b pb-4">
               <img
-                src={`data:image/jpeg;base64,${item.productImage}`}
+                src={item.productImage}
                 alt={item.name}
                 className="w-20 h-20 object-cover rounded"
               />
