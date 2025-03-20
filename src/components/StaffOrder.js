@@ -133,8 +133,8 @@ const StaffOrder = () => {
     try {
       setUpdatingOrderId(orderId);
       
-      // Fix: Updated to use URL parameters instead of request body
-      const statusId = status === 'Completed' ? 5 : status === 'Canceled' ? 6 : 4; // Add mapping for status names to IDs
+      // Updated status mapping according to the new requirements
+      const statusId = status === 'Completed' ? 5 : status === 'Canceled' ? 6 : status === 'Shipping' ? 4 : 3; // Map status names to IDs
       const response = await fetch(`http://localhost:5296/api/order/status/${orderId}/${statusId}`, {
         method: 'PUT',
         headers: {
@@ -180,17 +180,20 @@ const StaffOrder = () => {
     setUpdateMessage('');
   };
 
-  // Sắp xếp đơn hàng - đơn hàng hoàn thành hiển thị trước
+  // Sắp xếp đơn hàng - theo thứ tự Waiting, Shipping, Completed
   const sortedOrders = [...orders].sort((a, b) => {
-    // Đơn hàng "Completed" hiển thị trước
-    if (a.statusName === 'Waiting' && b.statusName !== 'Waiting') return -1;
-    if (a.statusName !== 'Waiting' && b.statusName === 'Waiting') return 1;
-    
-    // Sau đó sắp xếp theo "Waiting" và "Canceled"
-    if (a.statusName === 'Completed' && b.statusName === 'Canceled') return -1;
-    if (a.statusName === 'Canceled' && b.statusName === 'Completed') return 1;
-    
-    // Nếu cùng trạng thái, sắp xếp theo ID (mới nhất trước)
+    const statusOrder = {
+      'Waiting': 1,
+      'Shipping': 2,
+      'Completed': 3,
+      'Canceled': 4 // Optional: if you want to include Canceled in the sorting
+    };
+
+    // Sort by status first
+    const statusComparison = (statusOrder[a.statusName] || 5) - (statusOrder[b.statusName] || 5);
+    if (statusComparison !== 0) return statusComparison;
+
+    // If statuses are the same, sort by ID (newest first)
     return b.id - a.id;
   });
 
