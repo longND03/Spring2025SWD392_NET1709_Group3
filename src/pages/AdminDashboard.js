@@ -134,7 +134,7 @@ const AdminDashboard = () => {
               onClick={() => navigate('/logout')} 
               className="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-md transition duration-300 ease-in-out"
             >
-              Đăng xuất
+              Logout
             </button>
           </div>
         </div>

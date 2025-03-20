@@ -27,7 +27,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Button
 } from '@mui/material';
 import { 
   ExpandMore, 
@@ -38,7 +39,8 @@ import {
   Home, 
   CalendarToday, 
   ShoppingCart,
-  CheckCircle
+  CheckCircle,
+  Cancel
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
@@ -61,26 +63,59 @@ const StaffOrder = () => {
   const [sortField, setSortField] = useState('orderDate');
   const [sortDirection, setSortDirection] = useState('desc');
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await fetch('http://localhost:5296/api/order/all', {
-          headers: {
-            'Authorization': `Bearer ${user.token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch orders');
-        }
-        const data = await response.json();
-        setOrders(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5296/api/order/all', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
       }
-    };
+      const data = await response.json();
+      
+      // Ensure orders are properly processed with status names
+      const processedData = data.map(order => {
+        return {
+          ...order,
+          // Make sure statusName is correctly set based on actual status
+          statusName: getStatusNameFromId(order.statusId || order.statusID)
+        };
+      });
+      
+      setOrders(processedData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Helper function to convert status ID to statusName
+  const getStatusNameFromId = (statusId) => {
+    switch (Number(statusId)) {
+      case 3: return 'Waiting';
+      case 4: return 'Shipping';
+      case 5: return 'Completed';
+      case 6: return 'Canceled';
+      default: return 'Unknown';
+    }
+  };
+
+  // Helper function to get status ID from name
+  const getStatusId = (statusName) => {
+    switch (statusName) {
+      case 'Waiting': return 3;
+      case 'Shipping': return 4;
+      case 'Completed': return 5;
+      case 'Canceled': return 6;
+      default: return 3;
+    }
+  };
+
+  useEffect(() => {
     fetchOrders();
   }, [user.token]);
 
@@ -120,6 +155,9 @@ const StaffOrder = () => {
       case 'Canceled':
         return { bg: '#fce8e6', text: '#ea4335', icon: 'cancel' };
       case 'Waiting':
+        return { bg: '#fff8e1', text: '#ffa000', icon: 'schedule' };
+      case 'Shipping':
+        return { bg: '#e3f2fd', text: '#1976d2', icon: 'local_shipping' };
       default:
         return { bg: '#fff8e1', text: '#ffa000', icon: 'schedule' };
     }
@@ -129,12 +167,13 @@ const StaffOrder = () => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
-  const updateOrderStatus = async (orderId, status) => {
+  const updateOrderStatus = async (orderId, statusName) => {
     try {
       setUpdatingOrderId(orderId);
       
-      // Updated status mapping according to the new requirements
-      const statusId = status === 'Completed' ? 5 : status === 'Canceled' ? 6 : status === 'Shipping' ? 4 : 3; // Map status names to IDs
+      // Get status ID from name
+      const statusId = getStatusId(statusName);
+      
       const response = await fetch(`http://localhost:5296/api/order/status/${orderId}/${statusId}`, {
         method: 'PUT',
         headers: {
@@ -142,7 +181,6 @@ const StaffOrder = () => {
         }
       });
       
-      // Improved error handling
       if (!response.ok) {
         const errorText = await response.text();
         let errorMessage;
@@ -156,17 +194,15 @@ const StaffOrder = () => {
       }
   
       // Update orders state after successful status update
-      const updatedOrders = orders.map(order => 
-        order.id === orderId ? { ...order, statusName: status } : order
-      );
-      setOrders(updatedOrders);
-      setUpdateMessage(`Order #${orderId} has been marked as ${status}`);
+      setOrders(prevOrders => prevOrders.map(order => 
+        order.id === orderId ? { ...order, statusName: statusName, statusId: statusId } : order
+      ));
+      
+      setUpdateMessage(`Order #${orderId} has been marked as ${statusName}`);
       setUpdateSuccess(true);
       
       // Refresh the order list after updating status
-      setTimeout(() => {
-        fetchOrders();
-      }, 1000);
+      fetchOrders();
     } catch (err) {
       console.error('Update order status error:', err);
       setUpdateMessage(`Failed to update order: ${err.message}`);
@@ -178,33 +214,6 @@ const StaffOrder = () => {
 
   const handleCloseSnackbar = () => {
     setUpdateMessage('');
-  };
-
-  // Sắp xếp đơn hàng - theo thứ tự Waiting, Shipping, Completed
-  const sortedOrders = [...orders].sort((a, b) => {
-    const statusOrder = {
-      'Waiting': 1,
-      'Shipping': 2,
-      'Completed': 3,
-      'Canceled': 4 // Optional: if you want to include Canceled in the sorting
-    };
-
-    // Sort by status first
-    const statusComparison = (statusOrder[a.statusName] || 5) - (statusOrder[b.statusName] || 5);
-    if (statusComparison !== 0) return statusComparison;
-
-    // If statuses are the same, sort by ID (newest first)
-    return b.id - a.id;
-  });
-
-  // Added helper function to get status ID
-  const getStatusId = (statusName) => {
-    switch (statusName) {
-      case 'Completed': return 5;
-      case 'Canceled': return 6;
-      case 'Waiting': return 4;
-      default: return 4;
-    }
   };
 
   // Sort orders function
@@ -220,6 +229,7 @@ const StaffOrder = () => {
           comparison = b.totalAmount - a.totalAmount;
           break;
         case 'statusId':
+          // Use getStatusId to ensure consistent comparison
           comparison = getStatusId(b.statusName) - getStatusId(a.statusName);
           break;
         default:
@@ -229,33 +239,6 @@ const StaffOrder = () => {
       return sortDirection === 'asc' ? -comparison : comparison;
     });
   };
-
-  // Added function to refresh orders
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:5296/api/order/all', {
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders');
-      }
-      const data = await response.json();
-      setOrders(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Get current orders for pagination
-  const indexOfLastOrder = page * ordersPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const sortedAndFilteredOrders = sortOrders(orders);
-  const currentOrders = sortedAndFilteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
 
   // Change page handler
   const handlePageChange = (event, value) => {
@@ -274,37 +257,34 @@ const StaffOrder = () => {
   };
 
   const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Do you want to cancel this order?")) {
-      return;
-    }
-    setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5296/api/order/remove/${orderId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-        }
+      setUpdatingOrderId(orderId);
+      const response = await fetch(`http://localhost:5296/api/order/cancelorder/${orderId}`, {
+          method: 'PUT',
+          headers: {
+              'Authorization': `Bearer ${user.token}`,
+              'Content-Type': 'application/json',
+          },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to cancel order');
+          const errorText = await response.text();
+          throw new Error(`Failed to cancel order: ${errorText}`);
       }
 
-      // Update the orders state to remove the canceled order
-      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+      // Update the order status in the current state to show immediate feedback
+      setOrders(prevOrders => prevOrders.map(order => 
+        order.id === orderId ? { ...order, statusName: 'Canceled', statusId: 6 } : order
+      ));
+      
       setUpdateMessage(`Order #${orderId} has been canceled`);
       setUpdateSuccess(true);
-      
-      // Optionally, refresh the order list
-      setTimeout(() => {
-        fetchOrders();
-      }, 1000);
     } catch (err) {
       console.error('Cancel order error:', err);
       setUpdateMessage(`Failed to cancel order: ${err.message}`);
       setUpdateSuccess(false);
     } finally {
-      setLoading(false);
+      setUpdatingOrderId(null);
     }
   };
 
@@ -319,6 +299,17 @@ const StaffOrder = () => {
       <Typography variant="h6">Error: {error}</Typography>
     </Paper>
   );
+
+  // Calculate counts for the status cards
+  const pendingCount = orders.filter(order => order.statusName === 'Waiting').length;
+  const completedCount = orders.filter(order => order.statusName === 'Completed').length;
+  const canceledCount = orders.filter(order => order.statusName === 'Canceled').length;
+
+  // Get current orders for pagination
+  const indexOfLastOrder = page * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const sortedAndFilteredOrders = sortOrders(orders);
+  const currentOrders = sortedAndFilteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -369,7 +360,7 @@ const StaffOrder = () => {
                 Pending Orders
               </Typography>
               <Typography variant="h3" fontWeight="bold" color="#1976d2">
-                {orders.filter(order => order.statusName === 'Waiting').length}
+                {pendingCount}
               </Typography>
             </Paper>
           </Grid>
@@ -387,7 +378,7 @@ const StaffOrder = () => {
                 Completed Orders
               </Typography>
               <Typography variant="h3" fontWeight="bold" color="#2e7d32">
-                {orders.filter(order => order.statusName === 'Completed').length}
+                {completedCount}
               </Typography>
             </Paper>
           </Grid>
@@ -405,7 +396,7 @@ const StaffOrder = () => {
                 Canceled Orders
               </Typography>
               <Typography variant="h3" fontWeight="bold" color="#c62828">
-                {orders.filter(order => order.statusName === 'Canceled').length}
+                {canceledCount}
               </Typography>
             </Paper>
           </Grid>
@@ -459,11 +450,13 @@ const StaffOrder = () => {
                         sx={{ 
                           width: 56, 
                           height: 56, 
-                          bgcolor: '#E91E63',
-                          boxShadow: '0 2px 10px rgba(233, 30, 99, 0.2)'
+                          bgcolor: order.statusName === 'Canceled' ? '#c62828' : '#E91E63',
+                          boxShadow: order.statusName === 'Canceled' 
+                            ? '0 2px 10px rgba(198, 40, 40, 0.2)' 
+                            : '0 2px 10px rgba(233, 30, 99, 0.2)'
                         }}
                       >
-                        <ShoppingCart />
+                        {order.statusName === 'Canceled' ? <Cancel /> : <ShoppingCart />}
                       </Avatar>
                     </Grid>
                     <Grid item xs={12} md={5}>
@@ -501,7 +494,7 @@ const StaffOrder = () => {
                         <Typography variant="subtitle2" color="text.secondary">
                           Total Amount
                         </Typography>
-                        <Typography variant="h6" fontWeight="bold" color="#E91E63">
+                        <Typography variant="h6" fontWeight="bold" color={order.statusName === 'Canceled' ? '#c62828' : '#E91E63'}>
                           {formatCurrency(order.totalAmount)}
                         </Typography>
                       </Box>
@@ -528,6 +521,7 @@ const StaffOrder = () => {
                             bgcolor: '#f5f5f5', 
                             '&:hover': { bgcolor: '#e0e0e0' } 
                           }}
+                          disabled={updatingOrderId === order.id}
                         >
                           {expandedOrder === order.id ? <ExpandLess /> : <ExpandMore />}
                         </IconButton>
@@ -540,15 +534,19 @@ const StaffOrder = () => {
                             onClick={() => handleCancelOrder(order.id)}
                             sx={{ 
                               bgcolor: '#f5f5f5', 
-                              '&:hover': { bgcolor: '#e0e0e0' },
+                              '&:hover': { bgcolor: '#ffebee', color: '#c62828' },
                               transition: 'all 0.2s'
                             }}
+                            disabled={updatingOrderId === order.id}
                           >
                             <Typography variant="body2">Cancel</Typography>
                           </IconButton>
                         )}
                         {order.statusName === 'Completed' && (
                           <CheckCircle sx={{ color: '#34a853' }} />
+                        )}
+                        {order.statusName === 'Canceled' && (
+                          <Cancel sx={{ color: '#c62828' }} />
                         )}
                       </Box>
                     </Grid>
@@ -620,7 +618,7 @@ const StaffOrder = () => {
                                 </Typography>
                               </TableCell>
                               <TableCell align="right">
-                                <Typography variant="subtitle2" fontWeight="bold" color="#E91E63">
+                                <Typography variant="subtitle2" fontWeight="bold" color={order.statusName === 'Canceled' ? '#c62828' : '#E91E63'}>
                                   {formatCurrency(order.totalAmount)}
                                 </Typography>
                               </TableCell>

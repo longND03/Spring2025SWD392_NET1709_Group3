@@ -79,7 +79,7 @@ const SkinRoutineBox = ({ userInfo }) => {
       <div className="p-8 bg-white rounded-xl shadow-lg flex justify-center items-center h-64">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
-          <p className="mt-4 text-pink-500 font-medium">Đang tải thông tin chăm sóc da...</p>
+          <p className="mt-4 text-pink-500 font-medium">Loading skincare information...</p>
         </div>
       </div>
     );
@@ -88,7 +88,7 @@ const SkinRoutineBox = ({ userInfo }) => {
   if (error) {
     return (
       <div className="p-8 bg-white rounded-xl shadow-lg">
-        <h2 className="text-2xl font-bold text-pink-500 mb-4">Quy trình chăm sóc da của bạn</h2>
+        <h2 className="text-2xl font-bold text-pink-500 mb-4">Your Skincare Routine</h2>
         <div className="bg-red-50 text-red-500 p-4 rounded-lg border border-red-200">
           <p className="font-medium">{error}</p>
         </div>
@@ -96,7 +96,7 @@ const SkinRoutineBox = ({ userInfo }) => {
           onClick={() => window.location.reload()}
           className="mt-6 bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-lg font-medium transition duration-200 ease-in-out transform hover:scale-105"
         >
-          Thử lại
+          Try Again
         </button>
       </div>
     );
@@ -104,11 +104,11 @@ const SkinRoutineBox = ({ userInfo }) => {
 
   return (
     <div className="p-8 bg-white rounded-xl shadow-lg">
-      <h2 className="text-6xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent text-center mb-7">Quy trình chăm sóc da của bạn</h2>
+      <h2 className="text-6xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent text-center mb-7">Your Skincare Routine</h2>
       
       {!selectedSkinType ? (
         <div className="mb-6">
-          <h3 className="text-xl font-semibold mb-6 text-gray-700">Chọn loại da của bạn</h3>
+          <h3 className="text-xl font-semibold mb-6 text-gray-700">Select Your Skin Type</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {skinTypes.map((type) => (
               <button
@@ -126,7 +126,7 @@ const SkinRoutineBox = ({ userInfo }) => {
         <div>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b border-pink-100">
             <h3 className="text-xl font-semibold text-gray-700">
-              <span className="mr-2">Quy trình cho da</span>
+              <span className="mr-2">Routine for</span>
               <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">{selectedSkinType}</span>
             </h3>
             <button 
@@ -136,7 +136,7 @@ const SkinRoutineBox = ({ userInfo }) => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
               </svg>
-              Thay đổi loại da
+              Change Skin Type
             </button>
           </div>
           
@@ -150,7 +150,7 @@ const SkinRoutineBox = ({ userInfo }) => {
                 }`}
                 onClick={() => setActiveTab('morning')}
               >
-                Buổi sáng
+                Morning
               </button>
               <button
                 className={`py-3 px-6 font-medium transition-colors duration-200 border-b-2 ${
@@ -160,7 +160,7 @@ const SkinRoutineBox = ({ userInfo }) => {
                 }`}
                 onClick={() => setActiveTab('evening')}
               >
-                Buổi tối
+                Evening
               </button>
             </div>
           </div>
@@ -197,7 +197,7 @@ const SkinRoutineBox = ({ userInfo }) => {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                   </svg>
-                  <p className="mt-4 text-gray-600">Không tìm thấy quy trình buổi sáng cho da {selectedSkinType}.</p>
+                  <p className="mt-4 text-gray-600">No morning routine found for {selectedSkinType} skin.</p>
                 </div>
               )}
             </div>
@@ -235,7 +235,7 @@ const SkinRoutineBox = ({ userInfo }) => {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                   </svg>
-                  <p className="mt-4 text-gray-600">Không tìm thấy quy trình buổi tối cho da {selectedSkinType}.</p>
+                  <p className="mt-4 text-gray-600">No evening routine found for {selectedSkinType} skin.</p>
                 </div>
               )}
             </div>
