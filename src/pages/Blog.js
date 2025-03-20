@@ -48,8 +48,33 @@ const Blog = () => {
         params.TagIds = [selectedTag.id];
       }
 
-      // Fetch posts from API
-      const response = await axios.get(`/api/post`, { params });
+      // Debug params when in development
+      if (process.env.NODE_ENV === "development") {
+        console.group("API Call Debug");
+        console.log("Selected Tag:", selectedTag);
+        console.log("API Parameters:", params);
+        console.groupEnd();
+      }
+
+      // Fetch posts from API with proper param serialization for arrays
+      const response = await axios.get(`/api/post`, {
+        params,
+        paramsSerializer: (params) => {
+          // Handle array params properly
+          let result = [];
+          for (const key in params) {
+            if (Array.isArray(params[key])) {
+              params[key].forEach((val) => {
+                result.push(`${key}=${val}`);
+              });
+            } else {
+              result.push(`${key}=${params[key]}`);
+            }
+          }
+          return result.join("&");
+        },
+      });
+
       console.log("API Response:", response.data);
 
       // Không cần xử lý ảnh ở đây nữa, truyền trực tiếp data từ API
@@ -71,7 +96,13 @@ const Blog = () => {
       const response = await axios.get("/api/tag");
       const tagData = response.data || [];
 
-      // Lưu trữ cả object tag thay vì chỉ tên
+      if (process.env.NODE_ENV === "development") {
+        console.group("Tag Fetching Debug");
+        console.log("Tags API Response:", tagData);
+        console.groupEnd();
+      }
+
+      // Lưu trữ cả object tag với ID
       const allOption = { id: 0, name: "All" };
       const sortedTags = [
         allOption,
