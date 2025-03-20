@@ -112,15 +112,19 @@ const StaffSkinTest = () => {
     setLoading(true);
     const formData = new FormData();
     formData.append('content', newAnswer);
-
+    formData.append('questionId', questionId);
+    // You may need to add SkinTypeId if required
+    formData.append('skinTypeId', 1); // Adjust as needed
+  
     try {
-      const response = await axios.post(`http://localhost:5296/api/skintypetest/questions/${questionId}/answers`, formData, {
+      // Modified endpoint to match the API structure
+      const response = await axios.post(`http://localhost:5296/api/skintypetest/${questionId}/answers`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       
-      // Update the state with the new answer
+      // Rest of your code remains the same
       setQuestions(prevQuestions => 
         prevQuestions.map(question => {
           if (question.id === questionId) {
@@ -145,9 +149,12 @@ const StaffSkinTest = () => {
       setLoading(false);
     }
   };
-
   // Function to delete an answer
   const handleDeleteAnswer = async (questionId, answerId) => {
+    // Add confirmation dialog
+    if (!window.confirm("Do you want to delete this answer?")) {
+      return; // Exit if the user cancels
+    }
     setLoading(true);
     try {
       await axios.delete(`http://localhost:5296/api/skintypetest/answers/${answerId}`);
