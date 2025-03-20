@@ -31,6 +31,99 @@ const BlogDetail = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
+  useEffect(() => {
+    // Tạo style element
+    const styleElement = document.createElement("style");
+    styleElement.textContent = `
+      .tiptap-content {
+        font-family: inherit;
+        line-height: 1.6;
+        color: #333;
+      }
+      .tiptap-content h1 {
+        font-size: 2em;
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+        font-weight: bold;
+      }
+      .tiptap-content h2 {
+        font-size: 1.5em;
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+        font-weight: bold;
+      }
+      .tiptap-content h3 {
+        font-size: 1.17em;
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+        font-weight: bold;
+      }
+      .tiptap-content p {
+        margin-bottom: 1em;
+      }
+      .tiptap-content strong {
+        font-weight: bold;
+      }
+      .tiptap-content em {
+        font-style: italic;
+      }
+      .tiptap-content u {
+        text-decoration: underline;
+      }
+      .tiptap-content s {
+        text-decoration: line-through;
+      }
+      .tiptap-content ul, .tiptap-content ol {
+        padding-left: 2em;
+        margin-bottom: 1em;
+      }
+      .tiptap-content ul li {
+        list-style-type: disc;
+        margin-bottom: 0.5em;
+      }
+      .tiptap-content ol li {
+        list-style-type: decimal;
+        margin-bottom: 0.5em;
+      }
+      .tiptap-content blockquote {
+        border-left: 3px solid #ccc;
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 1em;
+        color: #666;
+        font-style: italic;
+      }
+      .tiptap-content pre {
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        padding: 0.75em;
+        white-space: pre-wrap;
+        margin-bottom: 1em;
+      }
+      .tiptap-content code {
+        background-color: #f5f5f5;
+        border-radius: 3px;
+        padding: 0.2em 0.4em;
+        font-family: monospace;
+      }
+      .tiptap-content a {
+        color: #9C27B0;
+        text-decoration: underline;
+      }
+      .tiptap-content a:hover {
+        color: #7B1FA2;
+      }
+    `;
+
+    // Thêm style vào head
+    document.head.appendChild(styleElement);
+
+    // Cleanup khi component unmount
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
+
   // Thay đổi hàm getImageUrl để xử lý base64 tương tự như trong BlogCard
   const getImageUrl = (post) => {
     if (post.imageUrls && post.imageUrls.length > 0) {
@@ -143,6 +236,38 @@ const BlogDetail = () => {
     });
   };
 
+  // Cải thiện hàm renderHtmlContent để xử lý các trường hợp đặc biệt
+  const renderHtmlContent = (htmlContent) => {
+    // Nếu không có nội dung, hiển thị thông báo mặc định
+    if (!htmlContent || htmlContent.trim() === "") {
+      return { __html: `<p>This post doesn't have any content yet.</p>` };
+    }
+
+    try {
+      // Thử parse nội dung HTML
+      return { __html: htmlContent };
+    } catch (error) {
+      console.error("Error rendering HTML content:", error);
+      return {
+        __html: `<p>Error displaying content. Please try again later.</p>`,
+      };
+    }
+  };
+
+  // Thêm debug info khi ở chế độ development
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development" && post) {
+      console.group("BlogDetail Debug Info");
+      console.log("Post ID:", id);
+      console.log("Post data:", post);
+      console.log("Image URLs:", post.imageUrls);
+      console.log("Tags:", post.tags);
+      console.log("Related posts:", relatedPosts);
+      console.log("Comments:", comments);
+      console.groupEnd();
+    }
+  }, [post, id, relatedPosts, comments]);
+
   if (loading) {
     return (
       <Box
@@ -239,14 +364,13 @@ const BlogDetail = () => {
               </Button>
             </Link>
 
-            {/* Post Content */}
+            {/* Post Content - Thay đổi phần hiển thị nội dung */}
             <div className="prose max-w-none">
-              <Typography variant="body1" paragraph>
-                {post.content ||
-                  `This is a detailed content for the blog post "${post.title}". 
-                In a real application, this would be a full article with multiple paragraphs, 
-                possibly with formatting, images, and other rich content elements.`}
-              </Typography>
+              {/* Thay thế Typography bằng div với dangerouslySetInnerHTML */}
+              <div
+                className="tiptap-content"
+                dangerouslySetInnerHTML={renderHtmlContent(post.content)}
+              />
 
               {post.keyTakeaways && post.keyTakeaways.length > 0 && (
                 <>
