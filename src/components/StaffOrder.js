@@ -273,6 +273,41 @@ const StaffOrder = () => {
     setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
   };
 
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Do you want to cancel this order?")) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5296/api/order/remove/${orderId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel order');
+      }
+
+      // Update the orders state to remove the canceled order
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+      setUpdateMessage(`Order #${orderId} has been canceled`);
+      setUpdateSuccess(true);
+      
+      // Optionally, refresh the order list
+      setTimeout(() => {
+        fetchOrders();
+      }, 1000);
+    } catch (err) {
+      console.error('Cancel order error:', err);
+      setUpdateMessage(`Failed to cancel order: ${err.message}`);
+      setUpdateSuccess(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
       <CircularProgress color="secondary" />
@@ -502,18 +537,14 @@ const StaffOrder = () => {
                       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                         {order.statusName === 'Waiting' && (
                           <IconButton 
-                            onClick={() => updateOrderStatus(order.id, 'Completed')}
-                            disabled={updatingOrderId === order.id}
+                            onClick={() => handleCancelOrder(order.id)}
                             sx={{ 
-                              bgcolor: updatingOrderId === order.id ? '#e0e0e0' : '#f5f5f5', 
+                              bgcolor: '#f5f5f5', 
                               '&:hover': { bgcolor: '#e0e0e0' },
                               transition: 'all 0.2s'
                             }}
                           >
-                            {updatingOrderId === order.id ? 
-                              <CircularProgress size={20} color="primary" /> : 
-                              <Typography variant="body2">Complete</Typography>
-                            }
+                            <Typography variant="body2">Cancel</Typography>
                           </IconButton>
                         )}
                         {order.statusName === 'Completed' && (

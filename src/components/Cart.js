@@ -21,7 +21,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }) => {
         <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden">
           {console.log(item)}
           <img 
-            src={`data:image/jpeg;base64,${item.productImage}`}
+            src={item.productImage}
             alt={item.name}
             className="w-full h-full object-cover"
           />
