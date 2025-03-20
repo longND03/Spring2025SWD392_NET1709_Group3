@@ -8,20 +8,27 @@ import StaffCreateBlog from "./StaffCreateBlog";
 import StaffUpdateBlog from "./StaffUpdateBlog";
 
 const StaffBlogManagement = () => {
-    const { user } = useAuth();
-    const [draftPosts, setDraftPosts] = useState({ items: [], totalPages: 1 });
-    const [publishedPosts, setPublishedPosts] = useState({ items: [], totalPages: 1 });
-    const [draftLoading, setDraftLoading] = useState(true);
-    const [publishedLoading, setPublishedLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [publishedPage, setPublishedPage] = useState(1);
-    const [draftPage, setDraftPage] = useState(1);
-    const [draftSearch, setDraftSearch] = useState('');
-    const [publishedSearch, setPublishedSearch] = useState('');
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-    const [selectedPost, setSelectedPost] = useState(null);
-    const [confirmationDialog, setConfirmationDialog] = useState({ open: false, id: null, action: null });
+  const { user } = useAuth();
+  const [draftPosts, setDraftPosts] = useState({ items: [], totalPages: 1 });
+  const [publishedPosts, setPublishedPosts] = useState({
+    items: [],
+    totalPages: 1,
+  });
+  const [draftLoading, setDraftLoading] = useState(true);
+  const [publishedLoading, setPublishedLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [publishedPage, setPublishedPage] = useState(1);
+  const [draftPage, setDraftPage] = useState(1);
+  const [draftSearch, setDraftSearch] = useState("");
+  const [publishedSearch, setPublishedSearch] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [confirmationDialog, setConfirmationDialog] = useState({
+    open: false,
+    id: null,
+    action: null,
+  });
 
   const fetchPosts = async () => {
     try {
@@ -86,44 +93,45 @@ const StaffBlogManagement = () => {
     setPublishedPage(1); // Reset to first page when searching
   };
 
-    const handlePublish = async (postId) => {
-        setConfirmationDialog({
-            open: true,
-            id: postId,
-            action: 'publish',
-            title: 'Confirm Publication',
-            message: 'Are you sure you want to publish this post?'
-        });
-    };
+  const handlePublish = async (postId) => {
+    setConfirmationDialog({
+      open: true,
+      id: postId,
+      action: "publish",
+      title: "Confirm Publication",
+      message: "Are you sure you want to publish this post?",
+    });
+  };
 
-    const handleRemove = async (postId) => {
-        setConfirmationDialog({
-            open: true,
-            id: postId,
-            action: 'remove',
-            title: 'Confirm Removal',
-            message: 'Are you sure you want to remove this post? This action cannot be undone.'
-        });
-    };
+  const handleRemove = async (postId) => {
+    setConfirmationDialog({
+      open: true,
+      id: postId,
+      action: "remove",
+      title: "Confirm Removal",
+      message:
+        "Are you sure you want to remove this post? This action cannot be undone.",
+    });
+  };
 
-    const handleConfirmationAction = async () => {
-        const { id, action } = confirmationDialog;
-        try {
-            if (action === 'remove') {
-                await Axios.delete(`/api/post/soft-delete/${id}`);
-                toast.success('Post removed successfully');
-            } else if (action === 'publish') {
-                await Axios.put(`/api/post/publication/${id}`);
-                toast.success('Post published successfully');
-            }
-            fetchPosts();
-        } catch (error) {
-            console.error(`Error ${action}ing post:`, error);
-            toast.error(`Failed to ${action} post`);
-        } finally {
-            setConfirmationDialog({ open: false, id: null, action: null });
-        }
-    };
+  const handleConfirmationAction = async () => {
+    const { id, action } = confirmationDialog;
+    try {
+      if (action === "remove") {
+        await Axios.delete(`/api/post/soft-delete/${id}`);
+        toast.success("Post removed successfully");
+      } else if (action === "publish") {
+        await Axios.put(`/api/post/publication/${id}`);
+        toast.success("Post published successfully");
+      }
+      fetchPosts();
+    } catch (error) {
+      console.error(`Error ${action}ing post:`, error);
+      toast.error(`Failed to ${action} post`);
+    } finally {
+      setConfirmationDialog({ open: false, id: null, action: null });
+    }
+  };
 
   const handleEdit = (post) => {
     setSelectedPost(post);
@@ -261,35 +269,12 @@ const StaffBlogManagement = () => {
           Create New Post
         </Button>
       </div>
-            {/* Add the confirmation dialog */}
-            {confirmationDialog.open && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-                    <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-4">{confirmationDialog.title}</h3>
-                        <p className="text-gray-600 mb-6">{confirmationDialog.message}</p>
-                        <div className="flex justify-end gap-4">
-                            <button
-                                onClick={() => setConfirmationDialog({ open: false, id: null, action: null })}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleConfirmationAction}
-                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                            >
-                                {confirmationDialog.action === 'remove' ? 'Remove' : 'Publish'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
-            <StaffCreateBlog 
-                open={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                onSave={fetchPosts}
-            />
+      <StaffCreateBlog
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={fetchPosts}
+      />
 
       <StaffUpdateBlog
         open={isUpdateModalOpen}
@@ -301,168 +286,93 @@ const StaffBlogManagement = () => {
         post={selectedPost}
       />
 
-      <>
-        {/* Draft Posts Section */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Draft Posts</h3>
-          </div>
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search drafts..."
-              value={draftSearch}
-              onChange={handleDraftSearch}
-              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-            />
-          </div>
-          <PostTable
-            posts={draftPosts}
-            isDraft={true}
-            isLoading={draftLoading}
-          />
-          {!draftLoading && draftPosts.items.length > 0 && (
-            <div className="flex justify-center mt-4">
-              <Pagination
-                count={draftPosts.totalPages}
-                page={draftPage}
-                onChange={handleDraftPageChange}
-                variant="outlined"
-                shape="rounded"
-              />
+      {/* Confirmation Dialog */}
+      {confirmationDialog.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">
+              {confirmationDialog.title}
+            </h3>
+            <p className="text-gray-600 mb-6">{confirmationDialog.message}</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() =>
+                  setConfirmationDialog({ open: false, id: null, action: null })
+                }
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmationAction}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                {confirmationDialog.action === "remove" ? "Remove" : "Publish"}
+              </button>
             </div>
-
-            {/* Add the confirmation dialog */}
-            {confirmationDialog.open && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-                    <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-4">{confirmationDialog.title}</h3>
-                        <p className="text-gray-600 mb-6">{confirmationDialog.message}</p>
-                        <div className="flex justify-end gap-4">
-                            <button
-                                onClick={() => setConfirmationDialog({ open: false, id: null, action: null })}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleConfirmationAction}
-                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                            >
-                                {confirmationDialog.action === 'remove' ? 'Remove' : 'Publish'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <StaffCreateBlog 
-                open={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                onSave={fetchPosts}
-            />
-
-            <StaffUpdateBlog
-                open={isUpdateModalOpen}
-                onClose={() => {
-                    setIsUpdateModalOpen(false);
-                    setSelectedPost(null);
-                }}
-                onSave={handleUpdateSuccess}
-                post={selectedPost}
-            />
-
-            <>
-                {/* Draft Posts Section */}
-                <div className="mb-8">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold">Draft Posts</h3>
-                    </div>
-                    <div className="mb-4">
-                        <input
-                            type="text"
-                            placeholder="Search drafts..."
-                            value={draftSearch}
-                            onChange={handleDraftSearch}
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
-                    <PostTable posts={draftPosts} isDraft={true} isLoading={draftLoading} />
-                    {!draftLoading && draftPosts.items.length > 0 && (
-                        <div className="flex justify-center mt-4">
-                            <Pagination
-                                count={draftPosts.totalPages}
-                                page={draftPage}
-                                onChange={handleDraftPageChange}
-                                variant="outlined"
-                                shape="rounded"
-                            />
-                        </div>
-                    )}
-                </div>
-
-                {/* Published Posts Section */}
-                <div>
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold">Published Posts</h3>
-                    </div>
-                    <div className="mb-4">
-                        <input
-                            type="text"
-                            placeholder="Search published..."
-                            value={publishedSearch}
-                            onChange={handlePublishedSearch}
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
-                    <PostTable posts={publishedPosts} isDraft={false} isLoading={publishedLoading} />
-                    {!publishedLoading && publishedPosts.items.length > 0 && (
-                        <div className="flex justify-center mt-4">
-                            <Pagination
-                                count={publishedPosts.totalPages}
-                                page={publishedPage}
-                                onChange={handlePublishedPageChange}
-                                variant="outlined"
-                                shape="rounded"
-                            />
-                        </div>
-                    )}
-                </div>
-            </>
+          </div>
         </div>
+      )}
 
-        {/* Published Posts Section */}
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Published Posts</h3>
-          </div>
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search published..."
-              value={publishedSearch}
-              onChange={handlePublishedSearch}
-              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-            />
-          </div>
-          <PostTable
-            posts={publishedPosts}
-            isDraft={false}
-            isLoading={publishedLoading}
+      {/* Draft Posts Section */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Draft Posts</h3>
+        </div>
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search drafts..."
+            value={draftSearch}
+            onChange={handleDraftSearch}
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
           />
-          {!publishedLoading && publishedPosts.items.length > 0 && (
-            <div className="flex justify-center mt-4">
-              <Pagination
-                count={publishedPosts.totalPages}
-                page={publishedPage}
-                onChange={handlePublishedPageChange}
-                variant="outlined"
-                shape="rounded"
-              />
-            </div>
-          )}
         </div>
-      </>
+        <PostTable posts={draftPosts} isDraft={true} isLoading={draftLoading} />
+        {!draftLoading && draftPosts.items.length > 0 && (
+          <div className="flex justify-center mt-4">
+            <Pagination
+              count={draftPosts.totalPages}
+              page={draftPage}
+              onChange={handleDraftPageChange}
+              variant="outlined"
+              shape="rounded"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Published Posts Section */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Published Posts</h3>
+        </div>
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search published..."
+            value={publishedSearch}
+            onChange={handlePublishedSearch}
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+          />
+        </div>
+        <PostTable
+          posts={publishedPosts}
+          isDraft={false}
+          isLoading={publishedLoading}
+        />
+        {!publishedLoading && publishedPosts.items.length > 0 && (
+          <div className="flex justify-center mt-4">
+            <Pagination
+              count={publishedPosts.totalPages}
+              page={publishedPage}
+              onChange={handlePublishedPageChange}
+              variant="outlined"
+              shape="rounded"
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
