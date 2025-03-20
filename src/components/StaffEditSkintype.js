@@ -48,6 +48,10 @@ const StaffEditSkintype = ({ open, onClose, onSave, skintype }) => {
             await axios.put(`/api/skintype/${skintype.id}`, {
                 name: formData.name.trim(),
                 description: formData.description.trim()
+            }, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             
             toast.success('Skintype updated successfully');
