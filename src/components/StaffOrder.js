@@ -22,7 +22,12 @@ import {
   Badge,
   Autocomplete,
   Snackbar,
-  Alert
+  Alert,
+  Pagination,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import { 
   ExpandMore, 
@@ -47,6 +52,14 @@ const StaffOrder = () => {
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
+  
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [ordersPerPage] = useState(10);
+  
+  // Sorting states
+  const [sortField, setSortField] = useState('orderDate');
+  const [sortDirection, setSortDirection] = useState('desc');
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -166,19 +179,21 @@ const StaffOrder = () => {
   const handleCloseSnackbar = () => {
     setUpdateMessage('');
   };
-// Sắp xếp đơn hàng - đơn hàng hoàn thành hiển thị trước
-const sortedOrders = [...orders].sort((a, b) => {
-  // Đơn hàng "Completed" hiển thị trước
-  if (a.statusName === 'Waiting' && b.statusName !== 'Waiting') return -1;
-  if (a.statusName !== 'Waiting' && b.statusName === 'Waiting') return 1;
-  
-  // Sau đó sắp xếp theo "Waiting" và "Canceled"
-  if (a.statusName === 'Completed' && b.statusName === 'Canceled') return -1;
-  if (a.statusName === 'Canceled' && b.statusName === 'Completed') return 1;
-  
-  // Nếu cùng trạng thái, sắp xếp theo ID (mới nhất trước)
-  return b.id - a.id;
-});
+
+  // Sắp xếp đơn hàng - đơn hàng hoàn thành hiển thị trước
+  const sortedOrders = [...orders].sort((a, b) => {
+    // Đơn hàng "Completed" hiển thị trước
+    if (a.statusName === 'Waiting' && b.statusName !== 'Waiting') return -1;
+    if (a.statusName !== 'Waiting' && b.statusName === 'Waiting') return 1;
+    
+    // Sau đó sắp xếp theo "Waiting" và "Canceled"
+    if (a.statusName === 'Completed' && b.statusName === 'Canceled') return -1;
+    if (a.statusName === 'Canceled' && b.statusName === 'Completed') return 1;
+    
+    // Nếu cùng trạng thái, sắp xếp theo ID (mới nhất trước)
+    return b.id - a.id;
+  });
+
   // Added helper function to get status ID
   const getStatusId = (statusName) => {
     switch (statusName) {
@@ -187,6 +202,29 @@ const sortedOrders = [...orders].sort((a, b) => {
       case 'Waiting': return 4;
       default: return 4;
     }
+  };
+
+  // Sort orders function
+  const sortOrders = (orders) => {
+    return [...orders].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortField) {
+        case 'orderDate':
+          comparison = new Date(b.orderDate) - new Date(a.orderDate);
+          break;
+        case 'totalAmount':
+          comparison = b.totalAmount - a.totalAmount;
+          break;
+        case 'statusId':
+          comparison = getStatusId(b.statusName) - getStatusId(a.statusName);
+          break;
+        default:
+          comparison = 0;
+      }
+      
+      return sortDirection === 'asc' ? -comparison : comparison;
+    });
   };
 
   // Added function to refresh orders
@@ -208,6 +246,28 @@ const sortedOrders = [...orders].sort((a, b) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get current orders for pagination
+  const indexOfLastOrder = page * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const sortedAndFilteredOrders = sortOrders(orders);
+  const currentOrders = sortedAndFilteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  // Change page handler
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    setExpandedOrder(null); // Close any expanded orders when changing page
+  };
+
+  // Handle sort change
+  const handleSortChange = (event) => {
+    setSortField(event.target.value);
+  };
+
+  // Handle sort direction change
+  const handleSortDirectionChange = () => {
+    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
   };
 
   if (loading) return (
@@ -314,8 +374,26 @@ const sortedOrders = [...orders].sort((a, b) => {
         </Grid>
       </Box>
 
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel>Sort By</InputLabel>
+          <Select
+            value={sortField}
+            onChange={handleSortChange}
+            label="Sort By"
+          >
+            <MenuItem value="orderDate">Order Date</MenuItem>
+            <MenuItem value="totalAmount">Total Amount</MenuItem>
+            <MenuItem value="statusId">Status</MenuItem>
+          </Select>
+        </FormControl>
+        <IconButton onClick={handleSortDirectionChange}>
+          {sortDirection === 'asc' ? '↑' : '↓'}
+        </IconButton>
+      </Box>
+
       <Box sx={{ mb: 4 }}>
-        {sortedOrders.map(order =>  (
+        {currentOrders.map(order =>  (
           <motion.div
           key={order.id}
           initial={{ opacity: 0, y: 20 }}
@@ -523,6 +601,18 @@ const sortedOrders = [...orders].sort((a, b) => {
             </Card>
           </motion.div>
         ))}
+      </Box>
+
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Pagination
+          count={Math.ceil(orders.length / ordersPerPage)}
+          page={page}
+          onChange={handlePageChange}
+          color="primary"
+          size="large"
+          showFirstButton
+          showLastButton
+        />
       </Box>
     </Box>
   );
