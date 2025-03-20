@@ -13,6 +13,8 @@ const StaffSkinTest = () => {
   const [editQuestionValue, setEditQuestionValue] = useState('');
   const [editAnswerId, setEditAnswerId] = useState(null);
   const [editAnswerValue, setEditAnswerValue] = useState('');
+  const [skinTypeId, setSkinTypeId] = useState(''); // State for selected skin type
+  const [skinTypes, setSkinTypes] = useState([]); // State for available skin types
   
   // Function to fetch the list of questions
   const fetchQuestions = async () => {
@@ -112,9 +114,10 @@ const StaffSkinTest = () => {
     setLoading(true);
     const formData = new FormData();
     formData.append('content', newAnswer);
+    formData.append('skinTypeId', skinTypeId);
 
     try {
-      const response = await axios.post(`http://localhost:5296/api/skintypetest/questions/${questionId}/answers`, formData, {
+      const response = await axios.post(`http://localhost:5296/api/skintypetest/${questionId}/answers`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -134,6 +137,7 @@ const StaffSkinTest = () => {
       );
       
       setNewAnswer('');
+      setSkinTypeId('');
       setQuestionToAddAnswer(null);
       setSuccess('Answer added successfully');
       setTimeout(() => setSuccess(''), 3000);
@@ -148,6 +152,9 @@ const StaffSkinTest = () => {
 
   // Function to delete an answer
   const handleDeleteAnswer = async (questionId, answerId) => {
+    if (!window.confirm("Do you want to delete this answer?")) {
+      return;
+    }
     setLoading(true);
     try {
       await axios.delete(`http://localhost:5296/api/skintypetest/answers/${answerId}`);
@@ -225,6 +232,20 @@ const StaffSkinTest = () => {
     setEditAnswerId(null);
     setEditAnswerValue('');
   };
+
+  // Fetch skin types when the component mounts
+  useEffect(() => {
+    const fetchSkinTypes = async () => {
+      try {
+        const response = await axios.get('http://localhost:5296/api/skintype'); // Adjust the endpoint as needed
+        setSkinTypes(response.data.items); // Assuming the response structure includes an 'items' array
+      } catch (error) {
+        console.error('Error fetching skin types:', error);
+      }
+    };
+
+    fetchSkinTypes();
+  }, []);
 
   useEffect(() => {
     fetchQuestions();
@@ -432,6 +453,17 @@ const StaffSkinTest = () => {
                         className="border rounded p-2 flex-grow focus:outline-none focus:ring-2 focus:ring-[#E91E63]"
                         required
                       />
+                      <select
+                        value={skinTypeId}
+                        onChange={(e) => setSkinTypeId(e.target.value)}
+                        className="border rounded p-2 flex-grow focus:outline-none focus:ring-2 focus:ring-[#E91E63]"
+                        required
+                      >
+                        <option value="" disabled>Select Skin Type</option>
+                        {skinTypes.map(skinType => (
+                          <option key={skinType.id} value={skinType.id}>{skinType.name}</option>
+                        ))}
+                      </select>
                       <div className="flex gap-2">
                         <button 
                           type="submit" 

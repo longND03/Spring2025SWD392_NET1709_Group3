@@ -16,6 +16,7 @@ const OrdersHistoryBox = ({ userInfo }) => {
       try {
         // Get the token from local storage
         const token = localStorage.getItem('token');
+        console.log("Token:", token);
         
         // Include the token in the request headers
         const response = await axios.get(
@@ -93,6 +94,27 @@ const OrdersHistoryBox = ({ userInfo }) => {
   const getFormattedDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Do you want to cancel this order?")) {
+      return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.put(`http://localhost:5296/api/order/cancelorder/${orderId}`, {}, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        // Handle successful cancellation
+        alert(`Order #${orderId} has been canceled successfully.`);
+    } catch (error) {
+        console.error('Error canceling order:', error);
+        alert('Failed to cancel order. Please try again.');
+    }
   };
 
   if (loading) return (
@@ -195,6 +217,22 @@ const OrdersHistoryBox = ({ userInfo }) => {
                       View Details
                     </Typography>
                   </Box>
+
+                  {order.statusName === 'Waiting' && (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#F44336', 
+                          cursor: 'pointer', 
+                          '&:hover': { textDecoration: 'underline' } 
+                        }}
+                        onClick={() => handleCancelOrder(order.id)}
+                      >
+                        Cancel Order
+                      </Typography>
+                    </Box>
+                  )}
                 </CardContent>
               </Card>
             ))}
