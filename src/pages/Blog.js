@@ -38,8 +38,9 @@ const Blog = () => {
       // Prepare query parameters for API call
       const params = {
         PageNumber: page,
-        PageSize: 12,
+        PageSize: 6,
         Status: true,
+        IsDeleted: false,
       };
 
       // Add tag filter if not "All"
@@ -212,35 +213,99 @@ const Blog = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <Box display="flex" justifyContent="center" mt={6} gap={2}>
-                <Button
-                  disabled={page === 1}
-                  onClick={() => handlePageChange(page - 1)}
-                  sx={{
-                    color: "#9C27B0",
-                    "&:disabled": { color: "rgba(0, 0, 0, 0.26)" },
-                  }}
-                >
-                  Previous
-                </Button>
+              <div className="mt-12 flex flex-col items-center space-y-4">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={page === 1}
+                    className={`px-3 py-1 rounded-md ${
+                      page === 1
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                    }`}
+                  >
+                    First
+                  </button>
 
-                <Box display="flex" alignItems="center" mx={2}>
-                  <Typography variant="body2">
-                    Page {page} of {totalPages}
-                  </Typography>
-                </Box>
+                  <button
+                    onClick={() => handlePageChange(page - 1)}
+                    disabled={page === 1}
+                    className={`px-3 py-1 rounded-md ${
+                      page === 1
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                    }`}
+                  >
+                    Previous
+                  </button>
 
-                <Button
-                  disabled={page === totalPages}
-                  onClick={() => handlePageChange(page + 1)}
-                  sx={{
-                    color: "#9C27B0",
-                    "&:disabled": { color: "rgba(0, 0, 0, 0.26)" },
-                  }}
-                >
-                  Next
-                </Button>
-              </Box>
+                  {/* Page numbers */}
+                  <div className="flex items-center space-x-1">
+                    {[...Array(totalPages)].map((_, index) => {
+                      const pageNumber = index + 1;
+                      // Show current page, and 2 pages before and after
+                      if (
+                        pageNumber === 1 ||
+                        pageNumber === totalPages ||
+                        (pageNumber >= page - 2 && pageNumber <= page + 2)
+                      ) {
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            className={`w-8 h-8 rounded-full ${
+                              page === pageNumber
+                                ? "bg-purple-600 text-white"
+                                : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                            }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      } else if (
+                        pageNumber === page - 3 ||
+                        pageNumber === page + 3
+                      ) {
+                        return (
+                          <span key={pageNumber} className="px-1">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(page + 1)}
+                    disabled={page === totalPages}
+                    className={`px-3 py-1 rounded-md ${
+                      page === totalPages
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                    }`}
+                  >
+                    Next
+                  </button>
+
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={page === totalPages}
+                    className={`px-3 py-1 rounded-md ${
+                      page === totalPages
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                    }`}
+                  >
+                    Last
+                  </button>
+                </div>
+
+                <div className="text-sm text-gray-500">
+                  Page {page} of {totalPages}
+                  {posts.length > 0 && ` • Showing ${posts.length} posts`}
+                </div>
+              </div>
             )}
           </>
         )}
