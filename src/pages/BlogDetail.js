@@ -33,22 +33,6 @@ const BlogDetail = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  // Get image URL for blog posts
-  const getImageUrl = (post) => {
-    if (post.imageUrls && post.imageUrls.length > 0) {
-      return post.imageUrls[0];
-    }
-    return "/images/default-img.jpg";
-  };
-
-  // Get image URL for products
-  const getProductImageUrl = (product) => {
-    if (product.imageUrls && product.imageUrls.length > 0) {
-      return product.imageUrls[0];
-    }
-    return "/images/default-img.jpg";
-  };
-
   // Fetch related posts using /api/post with TagIds filter
   const fetchRelatedPosts = async (post) => {
     try {
@@ -249,13 +233,9 @@ const BlogDetail = () => {
       }
 
       // Use product API with TagIds filter
-      const response = await axios.get("/api/product", {
-        params: {
-          TagIds: tagIds[0], // Use first tag ID for products
-          PageSize: 3,
-          PageNumber: 1,
-        },
-      });
+      const baseUrl = `/api/product?PageNumber=1&PageSize=3&IsDeleted=false`;
+      const url = tagIds.length > 0 ? `${baseUrl}&TagIds=${tagIds[0]}` : baseUrl;
+      const response = await axios.get(url);
 
       console.log("Related products API response:", response.data);
       setRelatedProducts(response.data.items || []);
@@ -350,7 +330,7 @@ const BlogDetail = () => {
       {/* Hero Section with Post Image */}
       <div className="relative h-96 bg-gradient-to-r from-pink-100 to-purple-100">
         <img
-          src={getImageUrl(post)}
+          src={(post.imageUrls && post.imageUrls.length > 0) ? post.imageUrls[0] : "/images/default-img.jpg"}
           alt={post.title}
           className="w-full h-full object-cover opacity-90"
         />
@@ -487,7 +467,7 @@ const BlogDetail = () => {
                         style={{ textDecoration: "none" }}
                       >
                         <img
-                          src={getImageUrl(relatedPost)}
+                          src={(relatedPost.imageUrls && relatedPost.imageUrls.length > 0) ? relatedPost.imageUrls[0] : "/images/default-img.jpg"}
                           alt={relatedPost.title}
                           style={{
                             width: "100%",
@@ -512,7 +492,7 @@ const BlogDetail = () => {
                               relatedPost.description?.substring(0, 80) ||
                               ""}
                             {relatedPost.excerpt ||
-                            relatedPost.description?.length > 80
+                              relatedPost.description?.length > 80
                               ? "..."
                               : ""}
                           </Typography>
@@ -530,7 +510,7 @@ const BlogDetail = () => {
                             >
                               {formatDate(
                                 relatedPost.publishedDate ||
-                                  relatedPost.createdDate
+                                relatedPost.createdDate
                               )}
                             </Typography>
                             <Chip
@@ -587,14 +567,14 @@ const BlogDetail = () => {
                     sx={{ mb: 2, boxShadow: 0, border: "1px solid #f0f0f0" }}
                   >
                     <Link
-                      to={`/product/${product.id}`}
+                      to={`/products/${product.id}`}
                       style={{ textDecoration: "none" }}
                     >
                       <Box sx={{ display: "flex", alignItems: "center" }}>
                         <CardMedia
                           component="img"
                           sx={{ width: 80, height: 80, objectFit: "cover" }}
-                          image={getProductImageUrl(product)}
+                          image={product.productImage ? product.productImage : "/images/default-img.jpg"}
                           alt={product.name}
                         />
                         <CardContent sx={{ flex: "1 1 auto", py: 1 }}>
