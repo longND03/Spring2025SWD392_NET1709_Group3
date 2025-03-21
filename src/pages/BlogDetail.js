@@ -18,6 +18,7 @@ import CommentSection from "../components/CommentSection";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
 import "../styles/tiptap.css";
+import SubscribePopup from "../components/SubscribePopup";
 
 const BlogDetail = () => {
   const { id } = useParams();
@@ -633,7 +634,7 @@ const BlogDetail = () => {
                 </Typography>
               )}
 
-              {/* Newsletter Signup */}
+              {/* Thay đổi phần Newsletter Signup */}
               <Box mt={4} p={3} bgcolor="#f8f0ff" borderRadius={2}>
                 <Typography
                   variant="h6"
@@ -645,21 +646,9 @@ const BlogDetail = () => {
                 <Typography variant="body2" paragraph>
                   Get the latest skincare tips and product recommendations.
                 </Typography>
-                <input
-                  type="email"
-                  placeholder="Your email address"
-                  className="w-full p-2 border border-purple-300 rounded mb-2"
-                />
-                <Button
-                  fullWidth
-                  variant="contained"
-                  sx={{
-                    bgcolor: "#9C27B0",
-                    "&:hover": { bgcolor: "#7B1FA2" },
-                  }}
-                >
-                  Subscribe
-                </Button>
+
+                {/* Thay thế TextField và Button bằng component SubscribePopup */}
+                <SubscribePopup buttonLabel="Subscribe" />
               </Box>
             </Box>
           </Box>
