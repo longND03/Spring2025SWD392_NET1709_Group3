@@ -108,7 +108,7 @@ const SkinRoutineBox = ({ userInfo }) => {
       
       {!selectedSkinType ? (
         <div className="mb-6">
-          <h3 className="text-xl font-semibold mb-6 text-gray-700">Select Your Skin Type</h3>
+          <h3 className="text-xl font-semibold mb-6 text-gray-700">Select your skin type</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {skinTypes.map((type) => (
               <button
@@ -197,7 +197,7 @@ const SkinRoutineBox = ({ userInfo }) => {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                   </svg>
-                  <p className="mt-4 text-gray-600">No morning routine found for {selectedSkinType} skin.</p>
+                  <p className="mt-4 text-gray-600">No morning routine found for {selectedSkinType} skin type.</p>
                 </div>
               )}
             </div>
@@ -235,7 +235,7 @@ const SkinRoutineBox = ({ userInfo }) => {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                   </svg>
-                  <p className="mt-4 text-gray-600">No evening routine found for {selectedSkinType} skin.</p>
+                  <p className="mt-4 text-gray-600">No evening routine found for {selectedSkinType} skin type.</p>
                 </div>
               )}
             </div>

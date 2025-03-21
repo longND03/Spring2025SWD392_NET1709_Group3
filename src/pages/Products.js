@@ -66,19 +66,39 @@ const Products = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <h1 className="text-4xl font-semibold text-[#2C3E50] mb-20">
-        Available Products
-      </h1>
-      <Box sx={{ display: 'flex', gap: 4 }}>
+      <div className="relative mb-20 py-16 px-4 rounded-lg overflow-hidden min-h-[200px] flex items-center justify-center">
+        <img 
+          src="https://www.shankara.in/cdn/shop/articles/13_Skincare_Tips_for_Dry_Skin___From_Cleansing_to_Moisturizing.jpg?v=1726823781&width=2048"
+          alt="Cosmetics Background"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#E91E63]/60 via-[#9C27B0]/50 to-[#673AB7]/40"></div>
+        <h1 className="text-4xl font-semibold text-white relative text-center z-10">
+          Available Products
+        </h1>
+      </div>
+      <Box sx={{ display: 'flex', gap: 6 }}>
         {/* Brand Filter Sidebar */}
         <Paper sx={{ 
           p: 3, 
           width: '25%',
           height: 'fit-content',
           position: 'sticky',
-          top: '2rem'
+          top: '2rem',
+          border: '2px solid #e0e0e0',
+          borderRadius: 2,
+          bgcolor: '#f8f9fa',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
         }}>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              mb: 3, 
+              fontWeight: 600,
+              color: '#2C3E50',
+              borderBottom: '2px solid #E91E63',
+              paddingBottom: 1
+            }}>
             Brands
           </Typography>
           <Box sx={{ 
@@ -92,28 +112,33 @@ const Products = () => {
                 key={brand.id}
                 onClick={() => handleBrandChange(brand.id.toString())}
                 sx={{
-                  px: 2,
-                  py: 1,
+                  px: 1.5,
+                  py: 0.5,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   bgcolor: selectedBrand === brand.id.toString() ? '#E91E63' : 'white',
-                  color: selectedBrand === brand.id.toString() ? 'white' : 'inherit',
+                  color: selectedBrand === brand.id.toString() ? 'white' : '#2C3E50',
                   '&:hover': {
                     bgcolor: selectedBrand === brand.id.toString() ? '#C2185B' : '#f5f5f5',
                     transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
                   },
                   boxShadow: selectedBrand === brand.id.toString() ? 3 : 1,
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  maxWidth: 'calc(100% - 8px)', // Account for gap
+                  maxWidth: 'calc(100% - 8px)',
+                  border: '1px solid #e0e0e0',
+                  minHeight: '1.5rem'
                 }}
               >
                 <Typography sx={{ 
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  maxWidth: '100%'
+                  maxWidth: '100%',
+                  fontSize: '0.75rem',
+                  fontWeight: 500
                 }}>
                   {brand.name}
                 </Typography>
