@@ -101,17 +101,16 @@ const StaffCreateBlog = ({ open, onClose, onSave }) => {
             }
 
             setSelectedImage(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+            setImagePreview(URL.createObjectURL(file));
         }
     };
 
     const removeImage = () => {
         setSelectedImage(null);
-        setImagePreview('');
+        if (imagePreview) {
+            URL.revokeObjectURL(imagePreview);
+            setImagePreview('');
+        }
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }

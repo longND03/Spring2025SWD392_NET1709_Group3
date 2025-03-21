@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import messages from '../constants/message.json';
 
 const PersonalInfoBox = ({ userInfo }) => {
-  const { setUser } = useAuth();
+  const { refetchUserData } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingShipping, setIsEditingShipping] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -221,16 +221,14 @@ const PersonalInfoBox = ({ userInfo }) => {
   };
 
   const handleImageClick = () => {
-    if (isEditing) {
-      fileInputRef.current?.click();
-    }
+    fileInputRef.current?.click();
   };
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      // Check file size (10MB = 10 * 1024 * 1024 bytes)
-      if (file.size > 10 * 1024 * 1024) {
+      // Check file size (5MB = 5 * 1024 * 1024 bytes)
+      if (file.size > 5 * 1024 * 1024) {
         toast.error(messages.error.profile.image.size);
         return;
       }
@@ -247,38 +245,49 @@ const PersonalInfoBox = ({ userInfo }) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result);
+        // Only start upload after preview is set
+        handleImageUpload(file);
       };
       reader.readAsDataURL(file);
       setSelectedImage(file);
     }
   };
 
-  const handleImageUpload = async () => {
-    if (!selectedImage) return;
+  const handleImageUpload = async (file) => {
+    if (!file) return;
 
     try {
       const formData = new FormData();
-      formData.append('file', selectedImage);
+      formData.append('imageFile', file);
 
-      const imageResponse = await axios.post(`/api/image/profile/${userInfo.id}`, formData, {
+      const imageResponse = await axios.post('/api/user/profile-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      if (imageResponse.status === 200) {
-        const updatedUser = {
-          ...userInfo,
-          image: imageResponse.data.imageUrl
-        };
-        setUser(updatedUser);
+      if (imageResponse.status >= 200 && imageResponse.status < 300) {
+        // Clear the form and preview
         setSelectedImage(null);
         setPreviewImage(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+
+        // Refetch user data to update the image
+        await refetchUserData();
         toast.success(messages.success.profilePicture);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error(messages.error.profile.image.upload);
+      
+      // Reset on error
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setSelectedImage(null);
+      setPreviewImage(null);
     }
   };
 
@@ -291,12 +300,7 @@ const PersonalInfoBox = ({ userInfo }) => {
       const response = await axios.put(`/api/user/${userInfo.id}`, editedInfo);
       
       if (response.status === 200) {
-        const updatedUser = {
-          ...userInfo,
-          ...editedInfo
-        };
-        setUser(updatedUser);
-        
+        await refetchUserData();
         setIsEditing(false);
         toast.success(messages.success.updateProfile);
       }
@@ -319,12 +323,7 @@ const PersonalInfoBox = ({ userInfo }) => {
       });
 
       if (response.status === 200) {
-        const updatedUser = {
-          ...userInfo,
-          location: locationString
-        };
-        setUser(updatedUser);
-
+        await refetchUserData();
         setIsEditingShipping(false);
         toast.success(messages.success.updateShipping);
       }
@@ -380,20 +379,21 @@ const PersonalInfoBox = ({ userInfo }) => {
         <div className="space-y-4">
           {/* Personal Information Section */}
           <div className="space-y-2 mb-16">
-            <div className="flex justify-between items-center">
-              <h2 className='text-2xl font-semibold'>Personal Information</h2>
-              {!isEditing && (
-                <button
-                  onClick={handleEdit}
-                  className="flex items-center gap-1 text-[#E91E63] hover:text-[#D81B60] px-2 py-1 rounded-md border border-[#E91E63] hover:bg-pink-50 transition-colors text-sm"
-                >
-                  <FaPencilAlt className="text-sm" /> Edit Profile
-                </button>
-              )}
-            </div>
+            <h2 className='text-2xl font-semibold'>Personal Information</h2>
             <Divider />
-            <div className='flex items-center w-full'>
-              <div className='text-left w-1/2'>
+            <div className='grid grid-cols-2 gap-8'>
+              <div className='text-left'>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className='text-lg font-medium'>Basic Information</h3>
+                  {!isEditing && (
+                    <button
+                      onClick={handleEdit}
+                      className="flex items-center gap-1 text-[#E91E63] hover:text-[#D81B60] px-2 py-1 rounded-md border border-[#E91E63] hover:bg-pink-50 transition-colors text-sm"
+                    >
+                      <FaPencilAlt className="text-sm" /> Edit Profile
+                    </button>
+                  )}
+                </div>
                 {!isEditing ? (
                   <div className="space-y-2">
                     <p className="text-base flex">
@@ -488,7 +488,10 @@ const PersonalInfoBox = ({ userInfo }) => {
                   </form>
                 )}
               </div>
-              <div className='flex flex-col items-center w-1/2 gap-4'>
+              <div className='flex flex-col items-center justify-start gap-4'>
+                <div className="w-full text-center">
+                  <h3 className='text-lg font-medium'>Avatar</h3>
+                </div>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -496,49 +499,28 @@ const PersonalInfoBox = ({ userInfo }) => {
                   accept="image/jpeg"
                   className="hidden"
                 />
-                <div 
-                  onClick={handleImageClick}
-                  className={`relative ${isEditing ? 'cursor-pointer group' : ''}`}
-                >
+                <div className="flex flex-col items-center gap-3">
                   {previewImage || userInfo?.image ? (
                     <img
                       src={previewImage || userInfo?.image}
                       alt="User Avatar"
-                      className={`w-40 h-40 rounded-full object-cover ${
-                        isEditing ? 'transition-opacity group-hover:opacity-70' : ''
-                      }`}
+                      className="w-40 h-40 rounded-full object-cover"
                     />
                   ) : (
-                    <div className={`w-32 h-32 text-5xl rounded-full bg-[#E91E63] flex items-center justify-center text-white ${
-                      isEditing ? 'transition-opacity group-hover:opacity-70' : ''
-                    }`}>
+                    <div className="w-32 h-32 text-5xl rounded-full bg-[#E91E63] flex items-center justify-center text-white">
                       {userInfo?.username ? userInfo.username.charAt(0).toUpperCase() : 'U'}
                     </div>
                   )}
-                  {isEditing && (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                      <FaCamera className="text-4xl text-white" />
-                    </div>
-                  )}
+                  <button
+                    onClick={handleImageClick}
+                    className="flex items-center gap-2 text-[#E91E63] hover:text-[#D81B60] px-3 py-1.5 rounded-md border border-[#E91E63] hover:bg-pink-50 transition-colors text-sm"
+                  >
+                    <FaCamera className="text-sm" /> Change Avatar
+                  </button>
                 </div>
-                {isEditing && (
-                  <div className="flex flex-col items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleImageUpload}
-                      disabled={!selectedImage}
-                      className={`py-2 px-6 rounded-md transition-colors duration-200 text-sm flex items-center gap-2
-                        ${selectedImage 
-                          ? 'bg-[#E91E63] hover:bg-[#D81B60] text-white cursor-pointer' 
-                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-                    >
-                      <FaCamera className="text-sm" /> Upload Image
-                    </button>
-                    <p className="text-xs text-gray-500">
-                      {selectedImage ? 'Click to upload your new profile picture' : 'Click on the avatar to select an image'}
-                    </p>
-                  </div>
-                )}
+                <p className="text-xs text-gray-500">
+                  Supported format: JPEG (Max size: 5MB)
+                </p>
               </div>
             </div>
           </div>

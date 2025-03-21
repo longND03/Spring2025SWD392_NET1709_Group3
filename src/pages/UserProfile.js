@@ -6,6 +6,7 @@ import OrdersHistoryBox from '../components/OrdersHistoryBox';
 import SkinRoutineBox from '../components/SkinRoutineBox';
 import { useSearchParams } from 'react-router-dom';
 import PointVoucherBox from '../components/PointVoucherBox';
+import { FaUser, FaLock, FaSpa, FaGift, FaShoppingBag } from 'react-icons/fa';
 
 const UserProfile = () => {
   const { user } = useAuth();
@@ -24,15 +25,15 @@ const UserProfile = () => {
   };
 
   const menuOptions = [
-    { text: 'Profile', value: 'info' },
-    { text: 'Security', value: 'security' },
-    { text: 'Skin Routine', value: 'skinroutine' },
-    { text: 'Points & Vouchers Store', value: 'points' },
-    { text: 'Orders History', value: 'orders' },
+    { text: 'Profile', value: 'info', icon: <FaUser /> },
+    { text: 'Security', value: 'security', icon: <FaLock /> },
+    { text: 'Skin Routine', value: 'skinroutine', icon: <FaSpa /> },
+    { text: 'Points & Vouchers Store', value: 'points', icon: <FaGift /> },
+    { text: 'Orders History', value: 'orders', icon: <FaShoppingBag /> },
   ];
 
   return (
-    <div className="grid grid-cols-[17rem_1fr] min-h-[calc(100vh-4rem)] px-48 py-6">
+    <div className="grid grid-cols-[17rem_1fr] min-h-[calc(100vh-4rem)] px-32 py-6">
       
       {/* side bar */}
       <aside className="bg-[#FADADD] border-r border-gray-200 rounded-lg overflow-hidden">
@@ -40,7 +41,7 @@ const UserProfile = () => {
           <div className="p-3 flex flex-col items-center">
             {user?.image ? (
               <img
-                src={`data:image/jpeg;base64,${user?.image}`}
+                src={user?.image}
                 alt="User Avatar"
                 className="w-20 h-20 rounded-full mb-3"
               />
@@ -59,10 +60,11 @@ const UserProfile = () => {
             <button
               key={item.value}
               onClick={() => handleMenuClick(item.value)}
-              className={`w-full text-left text-base font-semibold px-5 py-2 hover:bg-gray-100 transition-colors ${
+              className={`w-full text-left text-base font-semibold px-5 py-2 hover:bg-gray-100 transition-colors flex items-center gap-3 ${
                 selectedMenu === item.value ? 'bg-gray-100 border-r-3 border-[#E91E63]' : ''
               }`}
             >
+              <span className="text-[#E91E63]">{item.icon}</span>
               {item.text}
             </button>
           ))}

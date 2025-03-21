@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Grid, Button, CircularProgress, Box, Chip, Paper, Rating, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +18,7 @@ import StarIcon from '@mui/icons-material/Star';
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -155,6 +156,18 @@ const ProductDetail = () => {
     setFeedbackToDelete(null);
   };
 
+  const handleBrandClick = async () => {
+    try {
+      const response = await axios.get('/api/brand');
+      const brandData = response.data.find(b => b.name === product.brand);
+      if (brandData) {
+        navigate(`/products?brand=${brandData.id}`);
+      }
+    } catch (error) {
+      console.error("Error finding brand:", error);
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -189,7 +202,7 @@ const ProductDetail = () => {
           >
             {product.productImage ? (
               <img
-                src={`data:image/jpeg;base64,${product.productImage}`}
+                src={product.productImage}
                 alt={product.name}
                 className="w-full rounded-lg object-cover"
                 style={{ maxHeight: '500px' }}
@@ -232,7 +245,12 @@ const ProductDetail = () => {
 
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">Brand</h3>
-                <p className="text-gray-600 dark:text-gray-300">{product.brand}</p>
+                <p 
+                  className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline"
+                  onClick={handleBrandClick}
+                >
+                  {product.brand}
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -254,7 +272,7 @@ const ProductDetail = () => {
               variant="contained"
               fullWidth
               sx={{
-                mt: 'auto',
+                mt: '2',
                 bgcolor: '#E91E63',
                 '&:hover': {
                   bgcolor: '#C2185B'

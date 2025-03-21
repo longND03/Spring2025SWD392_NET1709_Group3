@@ -98,7 +98,7 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
             });
 
             if (product.productImage) {
-                setImagePreview(`data:image/jpeg;base64,${product.productImage}`);
+                setImagePreview(product.productImage);
             }
             setLoading(false);
         }
@@ -155,11 +155,7 @@ const StaffEditProduct = ({ open, onClose, onSave, product }) => {
                 }
                 setSelectedImage(file);
                 setFormData(prev => ({ ...prev, productImageFiles: file }));
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setImagePreview(reader.result);
-                };
-                reader.readAsDataURL(file);
+                setImagePreview(URL.createObjectURL(file));
             }
         } else if (type === 'number') {
             setFormData(prev => ({ ...prev, [name]: parseFloat(value) || '' }));

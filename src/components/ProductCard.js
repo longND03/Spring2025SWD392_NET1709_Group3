@@ -4,6 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import messages from '../constants/message.json';
+import axios from 'axios';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -22,6 +23,19 @@ const ProductCard = ({ product }) => {
     // });
   };
 
+  const handleBrandClick = async (e) => {
+    e.stopPropagation();
+    try {
+      const response = await axios.get('/api/brand');
+      const brandData = response.data.find(b => b.name === product.brand);
+      if (brandData) {
+        navigate(`/products?brand=${brandData.id}`);
+      }
+    } catch (error) {
+      console.error("Error finding brand:", error);
+    }
+  };
+
   const handleCardClick = () => {
     navigate(`/products/${product.id}`);
   };
@@ -29,8 +43,8 @@ const ProductCard = ({ product }) => {
   return (
     <Card 
       sx={{ 
-        width: '12.5rem',
-        height: '20rem',
+        width: '14.063rem',
+        height: '26.5rem',
         display: 'flex', 
         flexDirection: 'column',
         cursor: 'pointer',
@@ -47,10 +61,11 @@ const ProductCard = ({ product }) => {
         image={product.productImage}
         alt={product.name}
         sx={{ 
-          height: '6.25rem',
+          height: '12.5rem',
           width: '100%',
-          objectFit: 'cover',
-          objectPosition: 'center'
+          objectFit: 'contain',
+          objectPosition: 'center',
+          bgcolor: '#f5f5f5'
         }}
       />
       <CardContent sx={{ 
@@ -67,7 +82,10 @@ const ProductCard = ({ product }) => {
             <h2 className="text-sm font-semibold mb-0.5 overflow-hidden text-ellipsis whitespace-nowrap">
               {product.name}
             </h2>
-            <p className="text-xs text-blue-600 mb-0.5 overflow-hidden text-ellipsis whitespace-nowrap">
+            <p 
+              className="text-xs text-blue-600 mb-0.5 overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:underline"
+              onClick={handleBrandClick}
+            >
               {product.brand}
             </p>
           </div>

@@ -178,18 +178,21 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Failed to fetch user data');
       }
 
-      const data = await response.json();
-      const userData = {
-        username: data.username,
-        phone: data.phone,
-        email: data.email,
-        image: data.image,
-        location: data.location,
-        voucherStorage: data.voucherStorage?.[0]?.storages || []
+      const responseData = await response.json();
+
+      const updatedUser = {
+        ...user,
+        username: responseData.username,
+        phone: responseData.phone,
+        email: responseData.email,
+        image: responseData.image,
+        location: responseData.location,
+        voucherStorageId: responseData.voucherStorage?.[0]?.id,
+        voucherStorage: responseData.voucherStorage?.[0]?.storages || []
       };
 
-      setUser((prevUser) => ({ ...prevUser, userData }));
-      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (error) {
       console.error('Refetch user data error:', error);
       throw error;

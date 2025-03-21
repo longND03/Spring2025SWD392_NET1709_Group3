@@ -33,26 +33,18 @@ const BlogDetail = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  // Thay đổi hàm getImageUrl để xử lý base64 tương tự như trong BlogCard
+  // Get image URL for blog posts
   const getImageUrl = (post) => {
     if (post.imageUrls && post.imageUrls.length > 0) {
-      // Nếu là base64 string
-      if (post.imageUrls[0].startsWith("data:")) {
-        return post.imageUrls[0];
-      }
-      // Nếu là base64 raw data
-      return `data:image/jpeg;base64,${post.imageUrls[0]}`;
+      return post.imageUrls[0];
     }
     return "/images/default-img.jpg";
   };
 
-  // Tương tự xử lý hình ảnh cho sản phẩm
+  // Get image URL for products
   const getProductImageUrl = (product) => {
     if (product.imageUrls && product.imageUrls.length > 0) {
-      if (product.imageUrls[0].startsWith("data:")) {
-        return product.imageUrls[0];
-      }
-      return `data:image/jpeg;base64,${product.imageUrls[0]}`;
+      return product.imageUrls[0];
     }
     return "/images/default-img.jpg";
   };
