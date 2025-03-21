@@ -29,14 +29,15 @@ const ProductCard = ({ product }) => {
   return (
     <Card 
       sx={{ 
-        height: '100%', 
+        width: '12.5rem',
+        height: '20rem',
         display: 'flex', 
         flexDirection: 'column',
         cursor: 'pointer',
         transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+          transform: 'translateY(-2px)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
         }
       }}
       onClick={handleCardClick}
@@ -46,7 +47,7 @@ const ProductCard = ({ product }) => {
         image={product.productImage}
         alt={product.name}
         sx={{ 
-          height: 250,
+          height: '6.25rem',
           width: '100%',
           objectFit: 'cover',
           objectPosition: 'center'
@@ -57,46 +58,54 @@ const ProductCard = ({ product }) => {
         display: 'flex', 
         flexDirection: 'column', 
         justifyContent: 'space-between',
-        p: 3 // Increase padding
+        p: 2,
+        overflow: 'hidden',
+        pb: 2.5
       }}>
-        <div className="space-y-3">
-          <div>
-            <h2 className="text-xl font-semibold mb-2 line-clamp-2">
+        <div className="space-y-1.5 flex-1">
+          <div style={{ height: '2.5rem' }}>
+            <h2 className="text-sm font-semibold mb-0.5 overflow-hidden text-ellipsis whitespace-nowrap">
               {product.name}
             </h2>
-            <p className="text-blue-600 text-sm mb-2">
+            <p className="text-xs text-blue-600 mb-0.5 overflow-hidden text-ellipsis whitespace-nowrap">
               {product.brand}
             </p>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold mb-2 text-gray-600">Suitable for:</h3>
-            <div className="flex flex-wrap gap-1 mb-3">
+          <div style={{ height: '2.5rem' }}>
+            <h3 className="text-xs font-semibold mb-0.5 text-gray-600">Suitable for:</h3>
+            <div className="flex flex-wrap gap-0.5 mb-1 overflow-hidden" style={{ maxHeight: '1.5rem' }}>
               {product.productSkinTypes.map((type, index) => (
                 <Chip
                   key={index}
                   label={type}
                   size="small"
-                  color="primary"
                   sx={{
                     bgcolor: '#E91E63',
                     '&:hover': {
                       bgcolor: '#C2185B'
-                    }
+                    },
+                    height: '1.25rem',
+                    '& .MuiChip-label': {
+                      fontSize: '0.75rem',
+                      padding: '0 0.5rem',
+                      color: 'white'
+                    },
+                    color: 'white'
                   }}
                 />
               ))}
             </div>
           </div>
 
-          <div>
-            <p className="text-lg font-semibold text-green-600">
+          <div style={{ height: '1rem' }}>
+            <p className="text-xs font-semibold text-green-600">
               In Stock: {product.stockQuantity}
             </p>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-gray-200">
-            <p className="text-xl font-bold text-[#E91E63]">
+          <div className="mt-1.5 pt-1.5 border-t border-gray-200" style={{ height: '1.5rem' }}>
+            <p className="text-base font-bold text-[#E91E63]">
               ${product.price}
             </p>
           </div>
@@ -105,11 +114,18 @@ const ProductCard = ({ product }) => {
         <Button 
           variant="contained" 
           fullWidth
+          size="small"
           sx={{ 
-            mt: 3,
+            mt: 1.5,
             bgcolor: '#E91E63',
             '&:hover': {
               bgcolor: '#C2185B'
+            },
+            fontSize: '0.8rem',
+            padding: '4px 12px',
+            minHeight: '1.875rem',
+            '& .MuiButton-startIcon': {
+              margin: '0 6px'
             }
           }} 
           onClick={handleAddToCart}
