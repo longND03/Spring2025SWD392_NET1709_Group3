@@ -134,11 +134,7 @@ const StaffCreateProduct = ({ open, onClose, onSave }) => {
                     return;
                 }
                 setFormData(prev => ({ ...prev, productImageFiles: file }));
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setImagePreview(reader.result);
-                };
-                reader.readAsDataURL(file);
+                setImagePreview(URL.createObjectURL(file));
             }
         } else if (type === 'number') {
             setFormData(prev => ({ ...prev, [name]: parseFloat(value) || '' }));

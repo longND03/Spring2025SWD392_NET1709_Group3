@@ -221,9 +221,7 @@ const PersonalInfoBox = ({ userInfo }) => {
   };
 
   const handleImageClick = () => {
-    if (isEditing) {
-      fileInputRef.current?.click();
-    }
+    fileInputRef.current?.click();
   };
 
   const handleImageChange = (event) => {
@@ -250,6 +248,7 @@ const PersonalInfoBox = ({ userInfo }) => {
       };
       reader.readAsDataURL(file);
       setSelectedImage(file);
+      handleImageUpload(); // Automatically upload after selecting
     }
   };
 
@@ -258,15 +257,16 @@ const PersonalInfoBox = ({ userInfo }) => {
 
     try {
       const formData = new FormData();
-      formData.append('file', selectedImage);
+      formData.append('imageFile', selectedImage);
 
-      const imageResponse = await axios.post(`/api/image/profile/${userInfo.id}`, formData, {
+      const imageResponse = await axios.post(`/api/user/profile-image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      if (imageResponse.status === 200) {
+      if (imageResponse.status >= 200 && imageResponse.status < 300) {
+        console.log("this is running");
         const updatedUser = {
           ...userInfo,
           image: imageResponse.data.imageUrl
@@ -274,11 +274,20 @@ const PersonalInfoBox = ({ userInfo }) => {
         setUser(updatedUser);
         setSelectedImage(null);
         setPreviewImage(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
         toast.success(messages.success.profilePicture);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error(messages.error.profile.image.upload);
+      // Reset the file input and preview on error
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setSelectedImage(null);
+      setPreviewImage(null);
     }
   };
 
@@ -382,18 +391,21 @@ const PersonalInfoBox = ({ userInfo }) => {
           <div className="space-y-2 mb-16">
             <div className="flex justify-between items-center">
               <h2 className='text-2xl font-semibold'>Personal Information</h2>
-              {!isEditing && (
-                <button
-                  onClick={handleEdit}
-                  className="flex items-center gap-1 text-[#E91E63] hover:text-[#D81B60] px-2 py-1 rounded-md border border-[#E91E63] hover:bg-pink-50 transition-colors text-sm"
-                >
-                  <FaPencilAlt className="text-sm" /> Edit Profile
-                </button>
-              )}
             </div>
             <Divider />
             <div className='flex items-center w-full'>
               <div className='text-left w-1/2'>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className='text-lg font-medium'>Basic Information</h3>
+                  {!isEditing && (
+                    <button
+                      onClick={handleEdit}
+                      className="flex items-center gap-1 text-[#E91E63] hover:text-[#D81B60] px-2 py-1 rounded-md border border-[#E91E63] hover:bg-pink-50 transition-colors text-sm"
+                    >
+                      <FaPencilAlt className="text-sm" /> Edit Profile
+                    </button>
+                  )}
+                </div>
                 {!isEditing ? (
                   <div className="space-y-2">
                     <p className="text-base flex">
@@ -498,47 +510,26 @@ const PersonalInfoBox = ({ userInfo }) => {
                 />
                 <div 
                   onClick={handleImageClick}
-                  className={`relative ${isEditing ? 'cursor-pointer group' : ''}`}
+                  className="relative cursor-pointer group"
                 >
                   {previewImage || userInfo?.image ? (
                     <img
                       src={previewImage || userInfo?.image}
                       alt="User Avatar"
-                      className={`w-40 h-40 rounded-full object-cover ${
-                        isEditing ? 'transition-opacity group-hover:opacity-70' : ''
-                      }`}
+                      className="w-40 h-40 rounded-full object-cover transition-opacity group-hover:opacity-70"
                     />
                   ) : (
-                    <div className={`w-32 h-32 text-5xl rounded-full bg-[#E91E63] flex items-center justify-center text-white ${
-                      isEditing ? 'transition-opacity group-hover:opacity-70' : ''
-                    }`}>
+                    <div className="w-32 h-32 text-5xl rounded-full bg-[#E91E63] flex items-center justify-center text-white transition-opacity group-hover:opacity-70">
                       {userInfo?.username ? userInfo.username.charAt(0).toUpperCase() : 'U'}
                     </div>
                   )}
-                  {isEditing && (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                      <FaCamera className="text-4xl text-white" />
-                    </div>
-                  )}
-                </div>
-                {isEditing && (
-                  <div className="flex flex-col items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleImageUpload}
-                      disabled={!selectedImage}
-                      className={`py-2 px-6 rounded-md transition-colors duration-200 text-sm flex items-center gap-2
-                        ${selectedImage 
-                          ? 'bg-[#E91E63] hover:bg-[#D81B60] text-white cursor-pointer' 
-                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-                    >
-                      <FaCamera className="text-sm" /> Upload Image
-                    </button>
-                    <p className="text-xs text-gray-500">
-                      {selectedImage ? 'Click to upload your new profile picture' : 'Click on the avatar to select an image'}
-                    </p>
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                    <FaCamera className="text-4xl text-white" />
                   </div>
-                )}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Click on the avatar to update your profile picture
+                </p>
               </div>
             </div>
           </div>

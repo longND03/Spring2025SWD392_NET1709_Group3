@@ -56,14 +56,7 @@ const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
             
             // Handle existing image if available
             if (post.imageUrls && post.imageUrls.length > 0) {
-                const imageBase64 = post.imageUrls[0];
-                if (imageBase64) {
-                    const dataUrlPrefix = 'data:image/jpeg;base64,';
-                    const imageUrl = imageBase64.startsWith('data:') 
-                        ? imageBase64 
-                        : `${dataUrlPrefix}${imageBase64}`;
-                    setImagePreview(imageUrl);
-                }
+                setImagePreview(post.imageUrls[0]);
             } else {
                 setImagePreview('');
             }
@@ -170,17 +163,16 @@ const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
             }
 
             setSelectedImage(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+            setImagePreview(URL.createObjectURL(file));
         }
     };
 
     const removeImage = () => {
         setSelectedImage(null);
-        setImagePreview('');
+        if (imagePreview) {
+            URL.revokeObjectURL(imagePreview);
+            setImagePreview('');
+        }
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }

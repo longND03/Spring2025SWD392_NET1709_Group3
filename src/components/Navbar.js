@@ -7,6 +7,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const { getCartItemsCount } = useCart();
   const [isOpen, setIsOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -15,6 +16,14 @@ const Navbar = () => {
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchInput.trim())}`);
+      setSearchInput('');
     }
   };
 
@@ -95,22 +104,27 @@ const Navbar = () => {
             {!isStaffOrManager && (
               <>
                 {/* Search Bar */}
-                <div className="relative">
+                <form onSubmit={handleSearch} className="relative">
                   <input
                     type="text"
                     placeholder="Search..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     className="w-64 px-4 py-2 rounded-full
                              bg-gray-100 text-gray-900
                              border border-gray-300
                              focus:outline-none focus:ring-2 focus:ring-pink-500
                              placeholder-gray-500 transition-colors duration-200"
                   />
-                  <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <button 
+                    type="submit"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-[#E91E63] transition-colors duration-200"
+                  >
                     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
-                </div>
+                </form>
 
                 {/* Cart Icon */}
                 <Link to="/cart" className="relative p-2">
@@ -142,7 +156,7 @@ const Navbar = () => {
                 <button className="flex items-center space-x-2 focus:outline-none">
                   {user.image ? (
                     <img
-                      src={`data:image/jpeg;base64,${user?.image}`}
+                      src={user?.image}
                       alt="User Avatar"
                       className="w-8 h-8 rounded-full"
                     />

@@ -4,17 +4,27 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import messages from '../constants/message.json';
-import { Paper, Box, Card, Typography } from '@mui/material';
+import { Paper, Box, Card, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Checkbox, FormGroup, FormControlLabel } from '@mui/material';
 
 const Products = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState({ items: [], totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [brands, setBrands] = useState([]);
-  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [skinTypes, setSkinTypes] = useState([]);
+  const [selectedBrand, setSelectedBrand] = useState(searchParams.get('brand') || null);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [selectedSkinTypes, setSelectedSkinTypes] = useState(
+    searchParams.getAll('SkinTypeIds') || []
+  );
+  const [sortConfig, setSortConfig] = useState({
+    field: searchParams.get('sortBy') || '',
+    ascending: searchParams.get('ascending') !== 'false'
+  });
 
   const { addToCart } = useCart();
   const { user } = useAuth();
@@ -34,6 +44,44 @@ const Products = () => {
   }, []);
 
   useEffect(() => {
+    const fetchSkinTypes = async () => {
+      try {
+        const response = await axios.get('/api/skintype?IsDeleted=false');
+        setSkinTypes(response.data.items);
+      } catch (error) {
+        console.error("Error fetching skin types:", error);
+        toast.error("Failed to load skin types");
+      }
+    };
+    fetchSkinTypes();
+  }, []);
+
+  useEffect(() => {
+    const brandFromUrl = searchParams.get('brand');
+    const searchFromUrl = searchParams.get('search');
+    const sortByFromUrl = searchParams.get('sortBy');
+    const ascendingFromUrl = searchParams.get('ascending');
+    const skinTypesFromUrl = searchParams.getAll('SkinTypeIds');
+    
+    if (brandFromUrl) {
+      setSelectedBrand(brandFromUrl);
+    }
+    if (searchFromUrl) {
+      setSearchQuery(searchFromUrl);
+    }
+    if (sortByFromUrl) {
+      setSortConfig(prev => ({
+        ...prev,
+        field: sortByFromUrl,
+        ascending: ascendingFromUrl !== 'false'
+      }));
+    }
+    if (skinTypesFromUrl.length > 0) {
+      setSelectedSkinTypes(skinTypesFromUrl);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
@@ -41,8 +89,27 @@ const Products = () => {
         if (selectedBrand !== null) {
           url += `&BrandId=${selectedBrand}`;
         }
+        if (searchQuery) {
+          url += `&Name=${searchQuery}`;
+        }
+        if (sortConfig.field) {
+          url += `&SortBy=${sortConfig.field}&Ascending=${sortConfig.ascending}`;
+        }
+        if (selectedSkinTypes.length > 0) {
+          selectedSkinTypes.forEach(typeId => {
+            url += `&SkinTypeIds=${typeId}`;
+          });
+        }
         const response = await axios.get(url);
-        setProducts(response.data);
+        
+        // Sort out-of-stock products to the end
+        const sortedItems = [...response.data.items].sort((a, b) => {
+          if (a.stockQuantity === 0 && b.stockQuantity > 0) return 1;
+          if (a.stockQuantity > 0 && b.stockQuantity === 0) return -1;
+          return 0;
+        });
+
+        setProducts({ ...response.data, items: sortedItems });
       } catch (error) {
         console.error("Error fetching products:", error);
         toast.error(messages.error.loadProducts);
@@ -52,16 +119,78 @@ const Products = () => {
     };
 
     fetchProducts();
-  }, [page, selectedBrand]);
+  }, [page, selectedBrand, searchQuery, sortConfig, selectedSkinTypes]);
 
   const handleBrandChange = (brandId) => {
-    setSelectedBrand(selectedBrand === brandId ? null : brandId);
+    const newBrandId = selectedBrand === brandId ? null : brandId;
+    setSelectedBrand(newBrandId);
     setPage(1);
+    
+    // Update URL
+    const newParams = new URLSearchParams(searchParams);
+    if (newBrandId) {
+      newParams.set('brand', newBrandId);
+    } else {
+      newParams.delete('brand');
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleSearchChange = (event) => {
+    const newSearch = event.target.value;
+    setSearchQuery(newSearch);
+    setPage(1);
+
+    // Update URL
+    const newParams = new URLSearchParams(searchParams);
+    if (newSearch) {
+      newParams.set('search', newSearch);
+    } else {
+      newParams.delete('search');
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleSortChange = (event) => {
+    const [field, ascending] = event.target.value.split(':');
+    setSortConfig({
+      field,
+      ascending: ascending === 'true'
+    });
+    setPage(1);
+
+    // Update URL
+    const newParams = new URLSearchParams(searchParams);
+    if (field) {
+      newParams.set('sortBy', field);
+      newParams.set('ascending', ascending);
+    } else {
+      newParams.delete('sortBy');
+      newParams.delete('ascending');
+    }
+    setSearchParams(newParams);
   };
 
   const handlePageChange = (event, value) => {
     setPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSkinTypeChange = (typeId) => {
+    const newSelectedTypes = selectedSkinTypes.includes(typeId)
+      ? selectedSkinTypes.filter(id => id !== typeId)
+      : [...selectedSkinTypes, typeId];
+    
+    setSelectedSkinTypes(newSelectedTypes);
+    setPage(1);
+
+    // Update URL
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('SkinTypeIds');
+    newSelectedTypes.forEach(id => {
+      newParams.append('SkinTypeIds', id);
+    });
+    setSearchParams(newParams);
   };
 
   return (
@@ -78,18 +207,89 @@ const Products = () => {
         </h1>
       </div>
       <Box sx={{ display: 'flex', gap: 6 }}>
-        {/* Brand Filter Sidebar */}
+        {/* Filters Sidebar */}
         <Paper sx={{ 
           p: 3, 
           width: '25%',
           height: 'fit-content',
-          position: 'sticky',
-          top: '2rem',
           border: '2px solid #e0e0e0',
           borderRadius: 2,
           bgcolor: '#f8f9fa',
           boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
         }}>
+          {/* Search Filter */}
+          <Box sx={{ mb: 4 }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 2, 
+                fontWeight: 600,
+                color: '#2C3E50',
+                borderBottom: '2px solid #E91E63',
+                paddingBottom: 1
+              }}>
+              Search Products
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search by name..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#E91E63',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#E91E63',
+                  },
+                },
+              }}
+            />
+          </Box>
+
+          {/* Sort Filter */}
+          <Box sx={{ mb: 4 }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 2, 
+                fontWeight: 600,
+                color: '#2C3E50',
+                borderBottom: '2px solid #E91E63',
+                paddingBottom: 1
+              }}>
+              Sort By
+            </Typography>
+            <FormControl fullWidth size="small">
+              <Select
+                value={sortConfig.field ? `${sortConfig.field}:${sortConfig.ascending}` : ''}
+                onChange={handleSortChange}
+                displayEmpty
+                sx={{
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#E91E63',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#E91E63',
+                  },
+                }}
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                <MenuItem value="Name:true">Name (A-Z)</MenuItem>
+                <MenuItem value="Name:false">Name (Z-A)</MenuItem>
+                <MenuItem value="Price:true">Price (Low to High)</MenuItem>
+                <MenuItem value="Price:false">Price (High to Low)</MenuItem>
+                <MenuItem value="StockQuantity:true">Stock (Low to High)</MenuItem>
+                <MenuItem value="StockQuantity:false">Stock (High to Low)</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Brand Filter */}
           <Typography 
             variant="h6" 
             sx={{ 
@@ -105,7 +305,8 @@ const Products = () => {
             display: 'flex', 
             flexWrap: 'wrap', 
             gap: 1,
-            maxWidth: '100%'
+            maxWidth: '100%',
+            mb: 4
           }}>
             {brands.map((brand) => (
               <Card
@@ -145,6 +346,43 @@ const Products = () => {
               </Card>
             ))}
           </Box>
+
+          {/* Skin Type Filter */}
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              mb: 2, 
+              fontWeight: 600,
+              color: '#2C3E50',
+              borderBottom: '2px solid #E91E63',
+              paddingBottom: 1
+            }}>
+            Skin Types
+          </Typography>
+          <FormGroup>
+            {skinTypes.map((type) => (
+              <FormControlLabel
+                key={type.id}
+                control={
+                  <Checkbox
+                    checked={selectedSkinTypes.includes(type.id.toString())}
+                    onChange={() => handleSkinTypeChange(type.id.toString())}
+                    sx={{
+                      color: '#E91E63',
+                      '&.Mui-checked': {
+                        color: '#E91E63',
+                      },
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontSize: '0.875rem' }}>
+                    {type.name}
+                  </Typography>
+                }
+              />
+            ))}
+          </FormGroup>
         </Paper>
 
         {/* Products Grid */}
