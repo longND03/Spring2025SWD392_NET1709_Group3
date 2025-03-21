@@ -1,7 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Divider, CircularProgress, Paper, Typography, Box, Card, CardContent, Chip, Dialog, DialogTitle, DialogContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
+import { Divider, CircularProgress, Paper, Typography, Box, Card, CardContent, Chip, Dialog, DialogTitle, DialogContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Pagination, Select, MenuItem, FormControl, InputLabel, OutlinedInput, ListItemIcon } from '@mui/material';
 import axios from 'axios';
-import { CalendarToday, LocalAtm, ShoppingBag, Close } from '@mui/icons-material';
+import { CalendarToday, LocalAtm, ShoppingBag, Close, ArrowUpward, ArrowDownward, CheckCircle } from '@mui/icons-material';
+
+// Constants for pagination and sorting
+const ORDERS_PER_PAGE = 5;
+const STATUS_PRIORITY = {
+  'Waiting': 1,
+  'Shipped': 2,
+  'Complete': 3,
+  'Cancelled': 4
+};
+
+const ALL_STATUSES = Object.keys(STATUS_PRIORITY);
 
 const OrdersHistoryBox = ({ userInfo }) => {
   const [orders, setOrders] = useState([]);
@@ -10,6 +21,13 @@ const OrdersHistoryBox = ({ userInfo }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderDetails, setOrderDetails] = useState([]);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  
+  // Pagination and sorting states
+  const [page, setPage] = useState(1);
+  const [sortField, setSortField] = useState('orderDate');
+  const [sortDirection, setSortDirection] = useState('desc');
+  // Status filter state
+  const [selectedStatuses, setSelectedStatuses] = useState(ALL_STATUSES);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -81,10 +99,9 @@ const OrdersHistoryBox = ({ userInfo }) => {
 
   const getOrderStatusColor = (status) => {
     const statusMap = {
-      'Delivered': '#4CAF50',
       'Waiting': '#FF9800',
       'Shipped': '#2196F3',
-      'Complete': '#FFC107',
+      'Complete': '#4CAF50',
       'Cancelled': '#F44336'
     };
     
@@ -117,6 +134,53 @@ const OrdersHistoryBox = ({ userInfo }) => {
     }
   };
 
+  // Get filtered and sorted orders
+  const getFilteredAndSortedOrders = () => {
+    // First filter by selected statuses
+    const filteredOrders = orders.filter(order => 
+      selectedStatuses.includes(order.statusName || 'Waiting')
+    );
+
+    // Then sort the filtered orders
+    return filteredOrders.sort((a, b) => {
+      if (sortField === 'orderDate') {
+        const dateA = new Date(a.orderDate);
+        const dateB = new Date(b.orderDate);
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      if (sortField === 'finalAmount') {
+        return sortDirection === 'asc' ? a.finalAmount - b.finalAmount : b.finalAmount - a.finalAmount;
+      }
+      return 0;
+    });
+  };
+
+  // Get current page orders
+  const getCurrentPageOrders = () => {
+    const filteredAndSortedOrders = getFilteredAndSortedOrders();
+    const startIndex = (page - 1) * ORDERS_PER_PAGE;
+    return filteredAndSortedOrders.slice(startIndex, startIndex + ORDERS_PER_PAGE);
+  };
+
+  // Handle sort change
+  const handleSortChange = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Handle status filter change
+  const handleStatusChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedStatuses(typeof value === 'string' ? value.split(',') : value);
+    setPage(1); // Reset to first page when filter changes
+  };
+
   if (loading) return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
       <CircularProgress color="secondary" />
@@ -147,96 +211,169 @@ const OrdersHistoryBox = ({ userInfo }) => {
             <ShoppingBag sx={{ mr: 1, verticalAlign: 'middle' }} />
             Order History
           </Typography>
-          <Chip 
-            label={`${orders.length} orders`} 
-            color="secondary" 
-            size="small" 
-          />
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            {/* Status Filter */}
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel>Filter by Status</InputLabel>
+              <Select
+                multiple
+                value={selectedStatuses}
+                onChange={handleStatusChange}
+                input={<OutlinedInput label="Filter by Status" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip
+                        key={value}
+                        label={value}
+                        size="small"
+                        sx={{ 
+                          backgroundColor: getOrderStatusColor(value),
+                          color: 'white',
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
+              >
+                {ALL_STATUSES.map((status) => (
+                  <MenuItem key={status} value={status} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip
+                      label={status}
+                      size="small"
+                      sx={{ 
+                        backgroundColor: getOrderStatusColor(status),
+                        color: 'white',
+                        mr: 1
+                      }}
+                    />
+                    <Box sx={{ flex: 1 }}>{status}</Box>
+                    {selectedStatuses.includes(status) && (
+                      <CheckCircle sx={{ color: '#4CAF50', fontSize: 20 }} />
+                    )}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Existing Sort Controls */}
+            <FormControl size="small">
+              <InputLabel>Sort by</InputLabel>
+              <Select
+                value={sortField}
+                label="Sort by"
+                onChange={(e) => handleSortChange(e.target.value)}
+                sx={{ minWidth: 120 }}
+              >
+                <MenuItem value="orderDate">Date</MenuItem>
+                <MenuItem value="finalAmount">Amount</MenuItem>
+              </Select>
+            </FormControl>
+            <IconButton size="small" onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}>
+              {sortDirection === 'asc' ? <ArrowUpward /> : <ArrowDownward />}
+            </IconButton>
+            <Chip 
+              label={`${getFilteredAndSortedOrders().length} orders`} 
+              color="secondary" 
+              size="small" 
+            />
+          </Box>
         </Box>
         
         <Divider sx={{ mb: 3 }} />
         
         {orders.length > 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {orders.map(order => (
-              <Card 
-                key={order.id} 
-                elevation={1} 
-                sx={{ 
-                  borderRadius: 2,
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-3px)',
-                    boxShadow: 4
-                  }
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', mb: 2 }}>
-                    <Typography variant="h6" fontWeight="bold">
-                      Order #{order.id}
-                    </Typography>
-                    <Chip 
-                      label={order.statusName || 'Waiting'} 
-                      sx={{ 
-                        backgroundColor: getOrderStatusColor(order.statusName || 'Waiting'),
-                        color: 'white',
-                        fontWeight: '500'
-                      }} 
-                    />
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 2, sm: 4 }, mt: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <CalendarToday sx={{ color: '#757575', mr: 1, fontSize: 20 }} />
-                      <Box>
-                        <Typography variant="body2" color="text.secondary">Date</Typography>
-                        <Typography variant="body1">{getFormattedDate(order.orderDate)}</Typography>
+          <>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {getCurrentPageOrders().map(order => (
+                <Card 
+                  key={order.id} 
+                  elevation={1} 
+                  sx={{ 
+                    borderRadius: 2,
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-3px)',
+                      boxShadow: 4
+                    }
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', mb: 2 }}>
+                      <Typography variant="h6" fontWeight="bold">
+                        Order #{order.id}
+                      </Typography>
+                      <Chip 
+                        label={order.statusName || 'Waiting'} 
+                        sx={{ 
+                          backgroundColor: getOrderStatusColor(order.statusName || 'Waiting'),
+                          color: 'white',
+                          fontWeight: '500'
+                        }} 
+                      />
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 2, sm: 4 }, mt: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <CalendarToday sx={{ color: '#757575', mr: 1, fontSize: 20 }} />
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">Date</Typography>
+                          <Typography variant="body1">{getFormattedDate(order.orderDate)}</Typography>
+                        </Box>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <LocalAtm sx={{ color: '#757575', mr: 1, fontSize: 20 }} />
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">Total</Typography>
+                          <Typography variant="body1" fontWeight="500">${order.finalAmount.toFixed(2)}</Typography>
+                        </Box>
                       </Box>
                     </Box>
                     
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <LocalAtm sx={{ color: '#757575', mr: 1, fontSize: 20 }} />
-                      <Box>
-                        <Typography variant="body2" color="text.secondary">Total</Typography>
-                        <Typography variant="body1" fontWeight="500">${order.finalAmount.toFixed(2)}</Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#E91E63', 
-                        cursor: 'pointer', 
-                        '&:hover': { textDecoration: 'underline' } 
-                      }}
-                      onClick={() => handleViewDetails(order)}
-                    >
-                      View Details
-                    </Typography>
-                  </Box>
-
-                  {order.statusName === 'Waiting' && (
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                       <Typography 
                         variant="body2" 
                         sx={{ 
-                          color: '#F44336', 
+                          color: '#E91E63', 
                           cursor: 'pointer', 
                           '&:hover': { textDecoration: 'underline' } 
                         }}
-                        onClick={() => handleCancelOrder(order.id)}
+                        onClick={() => handleViewDetails(order)}
                       >
-                        Cancel Order
+                        View Details
                       </Typography>
                     </Box>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+
+                    {order.statusName === 'Waiting' && (
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: '#F44336', 
+                            cursor: 'pointer', 
+                            '&:hover': { textDecoration: 'underline' } 
+                          }}
+                          onClick={() => handleCancelOrder(order.id)}
+                        >
+                          Cancel Order
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+            
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Pagination 
+                count={Math.ceil(getFilteredAndSortedOrders().length / ORDERS_PER_PAGE)}
+                page={page}
+                onChange={(e, value) => setPage(value)}
+                color="secondary"
+              />
+            </Box>
+          </>
         ) : (
           <Box sx={{ textAlign: 'center', py: 5 }}>
             <ShoppingBag sx={{ fontSize: 60, color: '#E0E0E0', mb: 2 }} />
