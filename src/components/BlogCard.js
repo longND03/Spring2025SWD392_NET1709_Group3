@@ -46,6 +46,47 @@ const BlogCard = ({ post }) => {
       : textContent;
   };
 
+  // Get image URL with proper handling
+  const getImageUrl = () => {
+    // Check if post has imageUrls property and it's an array with content
+    if (
+      post.imageUrls &&
+      Array.isArray(post.imageUrls) &&
+      post.imageUrls.length > 0
+    ) {
+      const imageUrl = post.imageUrls[0];
+
+      // If it's already a complete URL (either http/https or data:image)
+      if (imageUrl.startsWith("http") || imageUrl.startsWith("data:")) {
+        return imageUrl;
+      }
+
+      // If it looks like base64 data without the prefix
+      if (imageUrl.length > 100 && !imageUrl.startsWith("http")) {
+        return `data:image/jpeg;base64,${imageUrl}`;
+      }
+
+      // Otherwise, return as is
+      return imageUrl;
+    }
+
+    // Check if post has a single image property
+    if (post.image) {
+      if (post.image.startsWith("data:") || post.image.startsWith("http")) {
+        return post.image;
+      }
+
+      if (post.image.length > 100 && !post.image.startsWith("http")) {
+        return `data:image/jpeg;base64,${post.image}`;
+      }
+
+      return post.image;
+    }
+
+    // Default fallback image
+    return "/images/default-img.jpg";
+  };
+
   // Default category if missing
   const category = post.category || "General";
 
@@ -70,7 +111,7 @@ const BlogCard = ({ post }) => {
       <CardMedia
         component="img"
         height="200"
-        image={post.imageUrls[0] ? post.imageUrls[0] : "/images/default-img.jpg"}
+        image={getImageUrl()}
         alt={post.title || "Blog post"}
         sx={{ height: 200 }}
       />
