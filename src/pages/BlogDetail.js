@@ -234,10 +234,23 @@ const BlogDetail = () => {
 
       // Use product API with TagIds filter
       const baseUrl = `/api/product?PageNumber=1&PageSize=3&IsDeleted=false`;
-      const url = tagIds.length > 0 ? `${baseUrl}&TagIds=${tagIds[0]}` : baseUrl;
+      const url =
+        tagIds.length > 0 ? `${baseUrl}&TagIds=${tagIds[0]}` : baseUrl;
       const response = await axios.get(url);
 
-      console.log("Related products API response:", response.data);
+      // Debug product data in development mode
+      if (process.env.NODE_ENV === "development") {
+        logDebugInfo("Related Products API Response", {
+          "API URL": url,
+          "Response Status": response.status,
+          "Total Products": response.data.items?.length || 0,
+          "First Product Sample": response.data.items?.[0] || "No products",
+          "Product Image Format": response.data.items?.[0]?.productImage
+            ? `${response.data.items[0].productImage.substring(0, 30)}...`
+            : "None",
+        });
+      }
+
       setRelatedProducts(response.data.items || []);
     } catch (error) {
       console.error("Error fetching related products:", error);
@@ -273,19 +286,108 @@ const BlogDetail = () => {
     }
   };
 
-  // Thêm debug info khi ở chế độ development
-  useEffect(() => {
-    if (process.env.NODE_ENV === "development" && post) {
-      console.group("BlogDetail Debug Info");
-      console.log("Post ID:", id);
-      console.log("Post data:", post);
-      console.log("Image URLs:", post.imageUrls);
-      console.log("Tags:", post.tags);
-      console.log("Related posts:", relatedPosts);
-      console.log("Comments:", comments);
+  // Add debug logging when in development mode
+  const logDebugInfo = (title, info) => {
+    if (process.env.NODE_ENV === "development") {
+      console.group(`Debug Info: ${title}`);
+      Object.entries(info).forEach(([key, value]) => {
+        console.log(`${key}:`, value);
+      });
       console.groupEnd();
     }
-  }, [post, id, relatedPosts, comments]);
+  };
+
+  // Get image URL with proper handling
+  const getImageUrl = (item) => {
+    // Log debug info about the item if in development mode
+    if (process.env.NODE_ENV === "development") {
+      logDebugInfo("Image Processing", {
+        "Item Type": item ? typeof item : "null",
+        "Has imageUrls": item?.imageUrls ? "Yes" : "No",
+        "Has image": item?.image ? "Yes" : "No",
+        "Has productImage": item?.productImage ? "Yes" : "No",
+        "First Image": item?.imageUrls?.[0]
+          ? item.imageUrls[0].substring(0, 50) + "..."
+          : "N/A",
+        Image: item?.image ? item.image.substring(0, 50) + "..." : "N/A",
+        "Product Image": item?.productImage
+          ? item.productImage.substring(0, 50) + "..."
+          : "N/A",
+      });
+    }
+
+    // Check if item has imageUrls property and it's an array with content
+    if (
+      item?.imageUrls &&
+      Array.isArray(item.imageUrls) &&
+      item.imageUrls.length > 0
+    ) {
+      const imageUrl = item.imageUrls[0];
+
+      // If it's already a complete URL (either http/https or data:image)
+      if (imageUrl.startsWith("http") || imageUrl.startsWith("data:")) {
+        return imageUrl;
+      }
+
+      // If it looks like base64 data without the prefix
+      if (imageUrl.length > 100 && !imageUrl.startsWith("http")) {
+        return `data:image/jpeg;base64,${imageUrl}`;
+      }
+
+      // Otherwise, return as is
+      return imageUrl;
+    }
+
+    // Check if item has a single image property
+    if (item?.image) {
+      if (item.image.startsWith("data:") || item.image.startsWith("http")) {
+        return item.image;
+      }
+
+      if (item.image.length > 100 && !item.image.startsWith("http")) {
+        return `data:image/jpeg;base64,${item.image}`;
+      }
+
+      return item.image;
+    }
+
+    // Check if item has productImage property (for products)
+    if (item?.productImage) {
+      if (
+        item.productImage.startsWith("data:") ||
+        item.productImage.startsWith("http")
+      ) {
+        return item.productImage;
+      }
+
+      if (
+        item.productImage.length > 100 &&
+        !item.productImage.startsWith("http")
+      ) {
+        return `data:image/jpeg;base64,${item.productImage}`;
+      }
+
+      return item.productImage;
+    }
+
+    // Default fallback image
+    return "/images/default-img.jpg";
+  };
+
+  // Thêm debug info khi ở chế độ development
+  useEffect(() => {
+    if (post) {
+      logDebugInfo("BlogDetail Component", {
+        "Post ID": id,
+        "Post data": post,
+        "Image URLs": post.imageUrls,
+        Tags: post.tags,
+        "Related posts": relatedPosts,
+        "Related products": relatedProducts,
+        Comments: comments,
+      });
+    }
+  }, [post, id, relatedPosts, comments, relatedProducts]);
 
   if (loading) {
     return (
@@ -330,7 +432,7 @@ const BlogDetail = () => {
       {/* Hero Section with Post Image */}
       <div className="relative h-96 bg-gradient-to-r from-pink-100 to-purple-100">
         <img
-          src={(post.imageUrls && post.imageUrls.length > 0) ? post.imageUrls[0] : "/images/default-img.jpg"}
+          src={getImageUrl(post)}
           alt={post.title}
           className="w-full h-full object-cover opacity-90"
         />
@@ -467,7 +569,7 @@ const BlogDetail = () => {
                         style={{ textDecoration: "none" }}
                       >
                         <img
-                          src={(relatedPost.imageUrls && relatedPost.imageUrls.length > 0) ? relatedPost.imageUrls[0] : "/images/default-img.jpg"}
+                          src={getImageUrl(relatedPost)}
                           alt={relatedPost.title}
                           style={{
                             width: "100%",
@@ -492,7 +594,7 @@ const BlogDetail = () => {
                               relatedPost.description?.substring(0, 80) ||
                               ""}
                             {relatedPost.excerpt ||
-                              relatedPost.description?.length > 80
+                            relatedPost.description?.length > 80
                               ? "..."
                               : ""}
                           </Typography>
@@ -510,7 +612,7 @@ const BlogDetail = () => {
                             >
                               {formatDate(
                                 relatedPost.publishedDate ||
-                                relatedPost.createdDate
+                                  relatedPost.createdDate
                               )}
                             </Typography>
                             <Chip
@@ -574,7 +676,7 @@ const BlogDetail = () => {
                         <CardMedia
                           component="img"
                           sx={{ width: 80, height: 80, objectFit: "cover" }}
-                          image={product.productImage ? product.productImage : "/images/default-img.jpg"}
+                          image={getImageUrl(product)}
                           alt={product.name}
                         />
                         <CardContent sx={{ flex: "1 1 auto", py: 1 }}>
