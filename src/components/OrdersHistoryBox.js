@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Divider, CircularProgress, Paper, Typography, Box, Card, CardContent, Chip, Dialog, DialogTitle, DialogContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Pagination, Select, MenuItem, FormControl, InputLabel, OutlinedInput, ListItemIcon } from '@mui/material';
-import axios from 'axios';
+import axios from '../api/axios';
 import { CalendarToday, LocalAtm, ShoppingBag, Close, ArrowUpward, ArrowDownward, CheckCircle } from '@mui/icons-material';
+import { getCookie } from '../utils/cookies';
 
 // Constants for pagination and sorting
 const ORDERS_PER_PAGE = 5;
@@ -32,8 +33,8 @@ const OrdersHistoryBox = ({ userInfo }) => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        // Get the token from local storage
-        const token = localStorage.getItem('token');
+        // Get the token from cookie instead of localStorage
+        const token = getCookie('token');
         console.log("Token:", token);
         
         // Include the token in the request headers
@@ -60,7 +61,7 @@ const OrdersHistoryBox = ({ userInfo }) => {
   const fetchOrderDetails = async (orderId) => {
     setDetailsLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       console.log("Fetching details for order ID:", orderId);
       
       const response = await axios.get(
@@ -119,7 +120,7 @@ const OrdersHistoryBox = ({ userInfo }) => {
     }
 
     try {
-        const token = localStorage.getItem('token');
+        const token = getCookie('token');
         const response = await axios.put(`http://localhost:5296/api/order/cancelorder/${orderId}`, {}, {
             headers: {
                 'Authorization': `Bearer ${token}`

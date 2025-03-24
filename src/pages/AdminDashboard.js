@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getCookie } from '../utils/cookies';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -30,7 +31,7 @@ const AdminDashboard = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       if (!token) throw new Error('Token not found. Please log in again.');
 
       const response = await fetch('http://localhost:5296/api/user', {
@@ -54,7 +55,7 @@ const AdminDashboard = () => {
   const handleDelete = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        const token = localStorage.getItem('token');
+        const token = getCookie('token');
         if (!token) throw new Error('Token không tìm thấy. Vui lòng đăng nhập lại.');
 
         const response = await fetch(`http://localhost:5296/api/user/${userId}`, {
@@ -82,7 +83,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       if (!token) throw new Error('Token not found. Please log in again.');
 
       const response = await fetch('http://localhost:5296/api/auth/admin-create-account', {

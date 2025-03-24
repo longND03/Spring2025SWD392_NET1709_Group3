@@ -17,16 +17,16 @@ const Login = () => {
     try {
       const result = await login(email, password);
       if (result.success) {
-        // Lưu token vào sessionStorage
-        sessionStorage.setItem('token', result.token); // Lưu token vào sessionStorage
-        // Kiểm tra vai trò người dùng
-        const userRole = result.user.role[0].roleName; // Lấy vai trò đầu tiên
+        // No need to set token in sessionStorage as it's now in cookies
+        
+        // Check user role
+        const userRole = result.user.role[0].roleName;
         if (userRole === "Staff") {
-          navigate('/staff-manager'); // Chuyển hướng đến StaffManager
+          navigate('/staff-manager');
         } else if (userRole === "Manager") {
-          navigate('/admindashboard'); // Chuyển hướng đến AdminDashboard
+          navigate('/admindashboard');
         } else {
-          navigate('/'); // Chuyển hướng đến trang chính
+          navigate('/');
         }
       } else {
         setError(messages.error.login);

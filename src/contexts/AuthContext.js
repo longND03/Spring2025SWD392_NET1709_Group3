@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { useCart } from './CartContext';
+import { setCookie, getCookie, deleteCookie } from '../utils/cookies';
 
 const AuthContext = createContext();
 
@@ -54,13 +55,14 @@ export const AuthProvider = ({ children }) => {
         voucherStorageId: data.data.user.voucherStorage?.[0]?.id,
         voucherStorage: data.data.user.voucherStorage?.[0]?.storages || [],
         role: data.data.user.userRoles,
-        token: data.data.token,
       };
   
       console.log('User role:', userData.role);
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', data.data.token);
+      
+      // Store token in cookie with 24h expiration
+      setCookie('token', data.data.token, 1); // 1 day expiration
   
       return {
         success: true,
@@ -92,7 +94,10 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       setUser(data.user);
-      localStorage.setItem('token', data.token);
+      
+      // Store token in cookie
+      setCookie('token', data.token, 1); // 1 day expiration
+      
       return data;
     } catch (error) {
       console.error(error);
@@ -107,7 +112,10 @@ export const AuthProvider = ({ children }) => {
     try {
       setUser(null);
       localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      
+      // Remove token cookie
+      deleteCookie('token');
+      
       clearCart();
     } finally {
       setLoading(false);
@@ -165,7 +173,7 @@ export const AuthProvider = ({ children }) => {
   const refetchUserData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       if (!token) return;
 
       const response = await fetch(`http://localhost:5296/api/user/${user.id}`, {

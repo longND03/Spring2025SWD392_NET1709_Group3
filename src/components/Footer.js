@@ -5,7 +5,7 @@ const Footer = () => {
     <footer className="bg-gray-100 dark:bg-[#1B2028] transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
           {/* Brand Section */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center">
@@ -98,7 +98,7 @@ const Footer = () => {
           </div>
 
           {/* Newsletter */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
               Stay Updated
             </h3>
@@ -127,7 +127,7 @@ const Footer = () => {
                 Subscribe
               </button>
             </form>
-          </div>
+          </div> */}
         </div>
 
         {/* Bottom Bar */}
