@@ -112,8 +112,9 @@ const Register = () => {
     }
 
     try {
-      await register(formData.username, formData.email, formData.password, formData.location, formData.phone);
-      navigate('/login'); // Redirect after successful registration
+      const response = await register(formData.username, formData.email, formData.password, formData.location, formData.phone);
+      // Navigate to account verification page instead of login
+      navigate('/account-verify', { state: { email: formData.email } });
     } catch (err) {
       console.error('Signup error:', err);
       setErrors(prev => ({

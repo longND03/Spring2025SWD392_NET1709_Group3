@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import SkinTest from "./pages/SkinTest";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AccountVerify from "./pages/AccountVerify";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserProfile from "./pages/UserProfile";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/blog/:id" element={<BlogDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/account-verify" element={<AccountVerify />} />
                 <Route path="/skin-test" element={<SkinTest />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
