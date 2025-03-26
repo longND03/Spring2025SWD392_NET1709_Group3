@@ -14,8 +14,11 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
     try {
       const result = await login(email, password);
+      
       if (result.success) {
         // No need to set token in sessionStorage as it's now in cookies
         
@@ -28,7 +31,13 @@ const Login = () => {
         } else {
           navigate('/');
         }
-      } else {
+      } 
+      else if (result.requiresVerification) {
+        // Redirect to verification page if account requires verification
+        toast.info('Your account requires email verification');
+        navigate('/account-verify', { state: { email: email } });
+      }
+      else {
         setError(messages.error.login);
       }
     } catch (error) {

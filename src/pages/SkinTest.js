@@ -5,6 +5,9 @@ import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
 import ProductCard from '../components/ProductCard';
 import messages from '../constants/message.json';
+import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { saveSkinTestResult, getSkinTestResults } from '../utils/cookies';
 
 const SkinTest = () => {
   const [questions, setQuestions] = useState([]);
@@ -15,10 +18,13 @@ const SkinTest = () => {
   const [error, setError] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
 
   const [recSkintypeId, setRecSkintypeId] = useState([]);
   const [recProduct, setRecProduct] = useState([]);
   const [isRecommendLoading, setIsRecommendLoading] = useState(true);
+  
+  const { user } = useAuth();
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -89,6 +95,14 @@ const SkinTest = () => {
   };
 
   const handleSubmit = () => {
+    if (isSubmitDisabled) return;
+    
+    // Disable submit button for 0.5 seconds
+    setIsSubmitDisabled(true);
+    setTimeout(() => {
+      setIsSubmitDisabled(false);
+    }, 500);
+    
     setHasSubmittedOnce(true);
     // Count occurrences of each skin type and store their IDs
     const skinTypeData = {};
@@ -120,6 +134,7 @@ const SkinTest = () => {
     const highestSkinTypeIds = highestSkinTypes.map(([, data]) => data.id);
     setRecSkintypeId(highestSkinTypeIds);
 
+    // Create the result message for display
     const resultMessage = sortedSkinTypes
       .map(([skinType, data], index) => {
         // Apply bold and large font to all skin types with highest percentage
@@ -132,6 +147,22 @@ const SkinTest = () => {
 
     setResult(`Your skin type analysis: ${resultMessage}`);
     setShowResults(true);
+    
+    // Create simplified result object with just all types
+    const skinTestResult = {
+      types: sortedSkinTypes.map(([skinType, data]) => ({
+        id: data.id,
+        name: skinType,
+        percentage: data.percentage
+      }))
+    };
+    
+    // Save to cookies (will expire in 24 hours)
+    saveSkinTestResult(skinTestResult);
+    
+    // Console log all results for verification
+    console.log('New skin test result:', skinTestResult);
+    console.log('All saved results:', getSkinTestResults());
   };
 
   if (isLoading) {
@@ -255,10 +286,12 @@ const SkinTest = () => {
             onClick={handleSubmit}
             className={`px-6 py-3 rounded-lg font-medium transition-all duration-200
               ${Object.keys(answers).length === questions.length
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                ? isSubmitDisabled 
+                  ? 'bg-blue-400 text-white cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
               ${!hasSubmittedOnce && 'hidden'}`}
-            disabled={Object.keys(answers).length < questions.length}
+            disabled={Object.keys(answers).length < questions.length || isSubmitDisabled}
           >
             Re-submit
           </button>
@@ -272,6 +305,18 @@ const SkinTest = () => {
             <div className="mb-20 rounded-xl shadow-lg overflow-hidden bg-white p-6">
               <h3 className="text-xl font-semibold mb-4">Your Results</h3>
               <p className="text-lg text-gray-700" dangerouslySetInnerHTML={{ __html: result }}></p>
+              
+              <div className="flex items-center justify-between mt-3">
+                <p className="text-sm text-green-600">
+                  Result saved.
+                </p>
+                <Link to="/profile?tab=skinroutine">
+                  <button className="inline-block px-4 py-2 bg-[#E91E63] text-white rounded-md hover:bg-[#D81B60] transition-colors duration-300">
+                    To Skin Routine
+                  </button>
+                </Link>
+              </div>
+              
               <p className="text-red-600 mt-4 text-sm italic">
                 *Disclaimer: This quiz is for reference purposes only and is intended to provide a general prediction of the skin type you may have. It is not a substitute for professional dermatological advice. For an accurate skin assessment, please consult a dermatologist or skincare specialist.
               </p>

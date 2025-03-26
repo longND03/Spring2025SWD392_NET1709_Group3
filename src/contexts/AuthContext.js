@@ -6,14 +6,36 @@ import { setCookie, getCookie, deleteCookie } from '../utils/cookies';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    // Kiểm tra localStorage khi khởi tạo
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const { clearCart } = useCart();
+
+  // Check token on initialization
+  useEffect(() => {
+    const initAuth = () => {
+      const savedUser = localStorage.getItem('user');
+      const token = getCookie('token');
+      
+      // If there's no token but user data exists in localStorage, log out
+      if (!token && savedUser) {
+        console.log('Token expired or missing, logging out');
+        // Clear user data without triggering a full logout flow
+        setUser(null);
+        localStorage.removeItem('user');
+        return;
+      }
+      
+      // If token exists and user data exists, restore the user
+      if (token && savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+      
+      setLoading(false);
+    };
+    
+    initAuth();
+  }, []);
 
   // Lưu user vào localStorage khi có thay đổi
   useEffect(() => {
@@ -42,6 +64,16 @@ export const AuthProvider = ({ children }) => {
         return {
           success: false,
           message: data.message || 'Login failed',
+        };
+      }
+      
+      // Check if account requires verification
+      if (data.requiresVerification) {
+        return {
+          success: false,
+          requiresVerification: true,
+          email: email,
+          message: 'Account requires email verification',
         };
       }
   
@@ -93,11 +125,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       const data = await response.json();
-      setUser(data.user);
       
-      // Store token in cookie
-      setCookie('token', data.token, 1); // 1 day expiration
-      
+      // Don't set user or token here since email verification is required first
+      // Instead, just return the response data
       return data;
     } catch (error) {
       console.error(error);
@@ -107,9 +137,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Add a new function for verifying email
+  const verifyEmail = async (email, verificationCode) => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:5296/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, verificationCode }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Email verification failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Email verification error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setLoading(true);
     try {
+      // Clear everything completely
       setUser(null);
       localStorage.removeItem('user');
       
@@ -174,13 +228,23 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const token = getCookie('token');
-      if (!token) return;
+      if (!token) {
+        // If token is missing, log the user out
+        logout();
+        throw new Error('Authentication token is missing');
+      }
 
       const response = await fetch(`http://localhost:5296/api/user/${user.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+
+      if (response.status === 401) {
+        // If unauthorized, token is invalid or expired, log the user out
+        logout();
+        throw new Error('Authentication token expired');
+      }
 
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
@@ -209,17 +273,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to check if the token is valid
+  const checkTokenValidity = () => {
+    const token = getCookie('token');
+    if (!token && user) {
+      // If no token but user is logged in, log out
+      logout();
+      return false;
+    }
+    return !!token;
+  };
+
   const value = {
     user,
     setUser,
     loading,
     login,
     register,
+    verifyEmail,
     logout,
     isAuthenticated: !!user,
     resetPassword,
     confirmPasswordReset,
-    refetchUserData
+    refetchUserData,
+    checkTokenValidity
   };
 
   return (
