@@ -6,7 +6,11 @@ import { setCookie, getCookie, deleteCookie } from '../utils/cookies';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    // Kiểm tra localStorage khi khởi tạo
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [loading, setLoading] = useState(true);
 
   const { clearCart } = useCart();
@@ -14,21 +18,11 @@ export const AuthProvider = ({ children }) => {
   // Check token on initialization
   useEffect(() => {
     const initAuth = () => {
-      const savedUser = localStorage.getItem('user');
       const token = getCookie('token');
       
-      // If there's no token but user data exists in localStorage, log out
-      if (!token && savedUser) {
-        console.log('Token expired or missing, logging out');
-        // Clear user data without triggering a full logout flow
-        setUser(null);
-        localStorage.removeItem('user');
+      if (!token) {
+        logout();
         return;
-      }
-      
-      // If token exists and user data exists, restore the user
-      if (token && savedUser) {
-        setUser(JSON.parse(savedUser));
       }
       
       setLoading(false);
@@ -39,11 +33,7 @@ export const AuthProvider = ({ children }) => {
 
   // Lưu user vào localStorage khi có thay đổi
   useEffect(() => {
-    if (user) {
       localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
   }, [user]);
 
   const login = async (email, password) => {
