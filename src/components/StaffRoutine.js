@@ -104,8 +104,7 @@ const StaffRoutine = () => {
   const createRoutine = async () => {
     try {
       const token = cookieUtils.getCookie('token');
-      console.log('User token before creating routine:', token);
-      console.log('New Routine:', newRoutine);
+
 
       // Validate required fields
       if (!newRoutine.name || !newRoutine.description || newRoutine.routineSkinTypes.length === 0) {
@@ -114,16 +113,16 @@ const StaffRoutine = () => {
       }
 
       const routineToCreate = {
-        name: newRoutine.name,
-        description: newRoutine.description,
-        routineSkinTypes: newRoutine.routineSkinTypes.map(skinType => ({
+        name: newRoutine.name.trim(),
+        description: newRoutine.description.trim(),
+        skinTypes: newRoutine.routineSkinTypes.map(skinType => ({
             skinTypeId: parseInt(skinType.skinTypeId, 10),
-            percentage: parseInt(skinType.percentage, 10)
+            percentage: Math.max(1, Math.min(100, parseInt(skinType.percentage, 10)))
         })),
-        routineSteps: newRoutine.routineSteps.map(step => ({
-            title: step.title,
-            description: step.description,
-            order: step.order
+        routineSteps: newRoutine.routineSteps.map((step, index) => ({
+            title: step.title.trim(),
+            description: step.description.trim(),
+            order: index + 1
         }))
       };
 
