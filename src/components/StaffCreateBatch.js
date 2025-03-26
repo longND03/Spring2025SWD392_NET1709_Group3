@@ -28,6 +28,8 @@ const StaffCreateBatch = ({ open, onClose, onSave }) => {
 
   const validateDates = (dates) => {
     const now = new Date();
+    // Set time to end of day to allow same-day imports
+    now.setHours(23, 59, 59, 999);
     const manufacture = new Date(dates.manufactureDate);
     const importDate = new Date(dates.importDate);
     const expiry = new Date(dates.expiryDate);
@@ -38,8 +40,8 @@ const StaffCreateBatch = ({ open, onClose, onSave }) => {
       return false;
     }
 
-    // For create: import must be less than current date
-    if (importDate >= now) {
+    // For create: import must be less than or equal to current date
+    if (importDate > now) {
       toast.error(messages.error.batch.validation.importDate.beforeCurrent);
       return false;
     }
