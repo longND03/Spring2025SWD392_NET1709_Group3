@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
+import messages from '../constants/message.json';
 
 const AccountVerify = () => {
   const location = useLocation();
@@ -19,7 +20,7 @@ const AccountVerify = () => {
   // If no email is provided, show a message and redirect to login
   useEffect(() => {
     if (!email) {
-      toast.error('Email address is required for verification');
+      toast.error(messages.error.accountVerification.emailRequired);
       navigate('/login');
     }
   }, [email, navigate]);
@@ -97,7 +98,7 @@ const AccountVerify = () => {
     
     // Validate code length
     if (verificationCode.length !== 6) {
-      setError('Verification code must be 6 digits');
+      setError(messages.validation.required.verificationCode);
       return;
     }
 
@@ -106,10 +107,10 @@ const AccountVerify = () => {
       await verifyEmail(email, verificationCode);
       // If verification successful, show success message
       setVerified(true);
-      toast.success('Account verified successfully!');
+      toast.success(messages.success.accountVerified);
     } catch (err) {
       console.error('Verification error:', err);
-      setError('Invalid verification code. Please try again.');
+      setError(messages.error.accountVerification.invalidCode);
     } finally {
       setLoading(false);
     }

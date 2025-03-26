@@ -20,9 +20,15 @@ const Login = () => {
       const result = await login(email, password);
       
       if (result.success) {
-        // No need to set token in sessionStorage as it's now in cookies
+        // Check email verification status
+        if (result.emailVerified === false) {
+          // Redirect to verification page if email is not verified
+          toast.info(messages.info.account.requiresVerification);
+          navigate('/account-verify', { state: { email: email } });
+          return;
+        }
         
-        // Check user role
+        // Check user role for navigation
         const userRole = result.user.role[0].roleName;
         if (userRole === "Staff") {
           navigate('/staff-manager');
@@ -33,15 +39,15 @@ const Login = () => {
         }
       } 
       else if (result.requiresVerification) {
-        // Redirect to verification page if account requires verification
-        toast.info('Your account requires email verification');
+        // Handle legacy API response for verification
+        toast.info(messages.info.account.requiresVerification);
         navigate('/account-verify', { state: { email: email } });
       }
       else {
         setError(messages.error.login);
       }
     } catch (error) {
-      setError('Failed to login');
+      setError(messages.error.login);
     }
   };
 

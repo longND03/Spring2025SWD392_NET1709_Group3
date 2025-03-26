@@ -10,6 +10,7 @@
     "updateShipping": "Shipping information updated successfully",
     "profilePicture": "Profile picture updated successfully",
     "order": "Order placed successfully!",
+    "accountVerified": "Account verified successfully!",
     "brand": {
       "create": "Brand created successfully",
       "update": "Brand updated successfully",
@@ -32,7 +33,8 @@
     "skintype": {
       "create": "Skintype created successfully",
       "update": "Skintype updated successfully",
-      "delete": "Skintype deleted successfully"
+      "delete": "Skintype deleted successfully",
+      "remove": "Skintype removed"
     },
     "product": {
       "create": "Product created successfully",
@@ -47,15 +49,26 @@
     "feedback": {
       "create": "Review submitted successfully",
       "delete": "Review deleted successfully"
+    },
+    "blog": {
+      "update": "Blog updated successfully"
+    },
+    "tag": {
+      "remove": "Tag removed"
     }
   },
   "error": {
     "login": "Failed to login",
     "register": "Failed to register",
     "loadProducts": "Cannot load product list",
+    "accountVerification": {
+      "emailRequired": "Email address is required for verification",
+      "invalidCode": "Invalid verification code. Please try again."
+    },
     "addToCart": {
       "requireLogin": "Please log in to add items to your cart",
-      "outOfStock": "Product is out of stock"
+      "outOfStock": "Product is out of stock",
+      "minQuantity": "Quantity must be at least 1"
     },
     "cart": {
       "updateQuantity": "Unable to update quantity",
@@ -78,7 +91,9 @@
       "shipping": "Failed to update shipping information",
       "image": {
         "size": "Image size must be less than 10MB",
-        "upload": "Failed to upload image"
+        "upload": "Failed to upload image",
+        "fileType": "Please select an image file",
+        "jpegRequired": "Please select a JPEG image file"
       }
     },
     "server": "Server error",
@@ -90,7 +105,8 @@
       "invalid": "Invalid payment method"
     },
     "order": {
-      "create": "Failed to create order. Please try again."
+      "create": "Failed to create order. Please try again.",
+      "loadDetails": "Failed to load order details."
     },
     "brand": {
       "save": "Failed to save brand",
@@ -112,17 +128,21 @@
     "tag": {
       "save": "Failed to save tag",
       "delete": "Failed to delete tag",
+      "load": "Failed to load tags",
       "required": {
         "name": "Tag name is required"
       },
       "remove": {
         "blog": "Failed to remove tag from blog",
-        "product": "Failed to remove tag from product"
+        "product": "Failed to remove tag from product",
+        "generic": "Failed to remove tag"
       }
     },
     "skintype": {
       "save": "Failed to save skintype",
       "delete": "Failed to delete skintype",
+      "load": "Failed to load skintypes",
+      "remove": "Failed to remove skintype",
       "required": {
         "name": "Skintype name is required",
         "description": "Description is required"
@@ -131,6 +151,7 @@
     "product": {
       "save": "Failed to save product",
       "delete": "Failed to delete product",
+      "load": "Failed to load products",
       "required": {
         "name": "Product Name is required",
         "price": "Price is required",
@@ -149,7 +170,21 @@
     },
     "batch": {
       "save": "Failed to save batch",
-      "delete": "Failed to delete batch"
+      "delete": "Failed to delete batch",
+      "load": "Failed to load batches",
+      "validation": {
+        "manufactureDate": {
+          "beforeCurrent": "Manufacture date must be before current date",
+          "beforeImport": "Manufacture date must be before import date"
+        },
+        "importDate": {
+          "beforeCurrent": "Import date must be before current date"
+        },
+        "expiryDate": {
+          "afterCurrent": "Expiry date must be after current date",
+          "afterImport": "Expiry date must be after import date"
+        }
+      }
     },
     "feedback": {
       "create": "Failed to submit review",
@@ -157,6 +192,25 @@
       "required": {
         "rating": "Please select a rating"
       }
+    },
+    "blog": {
+      "load": "Failed to load blog posts",
+      "loadPost": "Failed to load blog post. Please try again later."
+    },
+    "data": {
+      "loadFailed": "Failed to load necessary data"
+    },
+    "accountVerification": {
+      "emailRequired": "Email address is required for verification"
+    },
+    "brands": {
+      "load": "Failed to load brands"
+    },
+    "skinTypes": {
+      "load": "Failed to load skin types"
+    },
+    "voucher": {
+      "load": "Failed to load voucher details."
     }
   },
   "info": {
@@ -167,6 +221,9 @@
     "cart": {
       "empty": "Your cart is empty",
       "continueShopping": "Continue Shopping"
+    },
+    "account": {
+      "requiresVerification": "Your account requires email verification"
     }
   },
   "validation": {
@@ -180,7 +237,8 @@
         "province": "Province is required",
         "district": "District is required",
         "ward": "Ward is required"
-      }
+      },
+      "verificationCode": "Verification code must be 6 digits"
     },
     "invalid": {
       "email": "Invalid email format"

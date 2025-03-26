@@ -57,8 +57,17 @@ export const AuthProvider = ({ children }) => {
         };
       }
       
-      // Check if account requires verification
-      if (data.requiresVerification) {
+      // Handle banned accounts
+      if (data.isBanned) {
+        return {
+          success: false,
+          message: 'Your account has been banned',
+          bannedAccountId: data.bannedAccountId
+        };
+      }
+      
+      // Check if account requires verification based on new API response
+      if (data.requiresVerification || (data.data && data.data.emailVerified === false)) {
         return {
           success: false,
           requiresVerification: true,
@@ -74,6 +83,7 @@ export const AuthProvider = ({ children }) => {
         email: data.data.user.email,
         image: data.data.user.image,
         location: data.data.user.location,
+        wallet: data.data.user.wallet || 0,
         voucherStorageId: data.data.user.voucherStorage?.[0]?.id,
         voucherStorage: data.data.user.voucherStorage?.[0]?.storages || [],
         role: data.data.user.userRoles,
@@ -85,10 +95,16 @@ export const AuthProvider = ({ children }) => {
       
       // Store token in cookie with 24h expiration
       setCookie('token', data.data.token, 1); // 1 day expiration
+      
+      // Store refresh token if needed
+      if (data.data.refreshToken) {
+        localStorage.setItem('refreshToken', data.data.refreshToken);
+      }
   
       return {
         success: true,
         user: userData,
+        emailVerified: data.data.emailVerified
       };
     } catch (error) {
       console.error('Login error:', error);
@@ -156,6 +172,7 @@ export const AuthProvider = ({ children }) => {
       // Clear everything completely
       setUser(null);
       localStorage.removeItem('user');
+      localStorage.removeItem('refreshToken');
       
       // Remove token cookie
       deleteCookie('token');
@@ -249,6 +266,7 @@ export const AuthProvider = ({ children }) => {
         email: responseData.email,
         image: responseData.image,
         location: responseData.location,
+        wallet: responseData.wallet || 0,
         voucherStorageId: responseData.voucherStorage?.[0]?.id,
         voucherStorage: responseData.voucherStorage?.[0]?.storages || []
       };

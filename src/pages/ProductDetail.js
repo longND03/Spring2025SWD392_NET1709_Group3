@@ -94,25 +94,29 @@ const ProductDetail = () => {
     fetchProductDetail();
   }, [id]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!user) {
       toast.error(messages.error.addToCart.requireLogin);
+      navigate('/login');
       return;
     }
 
-    // Validate quantity
     if (quantity < 1) {
-      toast.error("Quantity must be at least 1");
+      toast.error(messages.error.addToCart.minQuantity);
       return;
     }
 
-    if (quantity > product.stockQuantity) {
+    if (product.stockQuantity < quantity) {
       toast.error(`Only ${product.stockQuantity} items available in stock`);
       return;
     }
 
-    // Add product with quantity to cart
-    addToCart(product, quantity);
+    try {
+      await addToCart(product, quantity);
+      toast.success(messages.success.addToCart.replace('{productName}', product.name));
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
   };
 
   const handleQuantityChange = (e) => {

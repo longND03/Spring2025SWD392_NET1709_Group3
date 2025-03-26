@@ -158,6 +158,11 @@ const StaffEditBatch = ({ open, onClose, onSave, batch }) => {
     }
   };
 
+  const handleConfirmClose = () => {
+    setShowConfirmDialog(false);
+    onClose();
+  };
+
   return (
     <>
       <Modal
@@ -293,7 +298,7 @@ const StaffEditBatch = ({ open, onClose, onSave, batch }) => {
                 Cancel
               </button>
               <button
-                onClick={onClose}
+                onClick={handleConfirmClose}
                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
               >
                 Close

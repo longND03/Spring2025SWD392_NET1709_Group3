@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import StaffCreateProduct from './StaffCreateProduct';
 import StaffCreateBatch from './StaffCreateBatch';
 import StaffEditProduct from './StaffEditProduct';
+import StaffEditBatch from './StaffEditBatch';
 import messages from '../constants/message.json';
 
 const StaffProductManagement = () => {
@@ -22,7 +23,9 @@ const StaffProductManagement = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreateBatchModalOpen, setIsCreateBatchModalOpen] = useState(false);
   const [isEditProductModalOpen, setIsEditProductModalOpen] = useState(false);
+  const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editingBatch, setEditingBatch] = useState(null);
   const [activeTab, setActiveTab] = useState(0); // 0 for active products, 1 for removed products
   const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, id: null, type: null });
 
@@ -288,6 +291,15 @@ const StaffProductManagement = () => {
                       <td className="py-2 px-4 border-b">{formatDate(batch.expiryDate)}</td>
                       <td className="py-2 px-4 border-b">
                         <button 
+                          className="text-blue-500 hover:text-blue-700 mr-2"
+                          onClick={() => {
+                            setEditingBatch(batch);
+                            setIsEditBatchModalOpen(true);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button 
                           className="text-red-500 hover:text-red-700"
                           onClick={() => setDeleteConfirmation({ open: true, id: batch.id, type: 'batch' })}
                         >
@@ -329,6 +341,16 @@ const StaffProductManagement = () => {
         open={isCreateBatchModalOpen}
         onClose={() => setIsCreateBatchModalOpen(false)}
         onSave={refreshAllData}
+      />
+
+      <StaffEditBatch
+        open={isEditBatchModalOpen}
+        onClose={() => {
+          setIsEditBatchModalOpen(false);
+          setEditingBatch(null);
+        }}
+        onSave={refreshAllData}
+        batch={editingBatch}
       />
 
       {/* Delete Confirmation Dialog */}
