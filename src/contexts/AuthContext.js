@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { useCart } from './CartContext';
+import { setCookie, getCookie, deleteCookie } from '../utils/cookies';
 
 const AuthContext = createContext();
 
@@ -10,17 +11,29 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const { clearCart } = useCart();
 
+  // Check token on initialization
+  useEffect(() => {
+    const initAuth = () => {
+      const token = getCookie('token');
+      
+      if (!token) {
+        logout();
+        return;
+      }
+      
+      setLoading(false);
+    };
+    
+    initAuth();
+  }, []);
+
   // Lưu user vào localStorage khi có thay đổi
   useEffect(() => {
-    if (user) {
       localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
   }, [user]);
 
   const login = async (email, password) => {
@@ -43,6 +56,16 @@ export const AuthProvider = ({ children }) => {
           message: data.message || 'Login failed',
         };
       }
+      
+      // Check if account requires verification
+      if (data.requiresVerification) {
+        return {
+          success: false,
+          requiresVerification: true,
+          email: email,
+          message: 'Account requires email verification',
+        };
+      }
   
       const userData = {
         id: data.data.user.id,
@@ -54,13 +77,14 @@ export const AuthProvider = ({ children }) => {
         voucherStorageId: data.data.user.voucherStorage?.[0]?.id,
         voucherStorage: data.data.user.voucherStorage?.[0]?.storages || [],
         role: data.data.user.userRoles,
-        token: data.data.token,
       };
   
       console.log('User role:', userData.role);
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', data.data.token);
+      
+      // Store token in cookie with 24h expiration
+      setCookie('token', data.data.token, 1); // 1 day expiration
   
       return {
         success: true,
@@ -91,8 +115,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       const data = await response.json();
-      setUser(data.user);
-      localStorage.setItem('token', data.token);
+      
+      // Don't set user or token here since email verification is required first
+      // Instead, just return the response data
       return data;
     } catch (error) {
       console.error(error);
@@ -102,12 +127,39 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Add a new function for verifying email
+  const verifyEmail = async (email, verificationCode) => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:5296/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, verificationCode }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Email verification failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Email verification error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setLoading(true);
     try {
+      // Clear everything completely
       setUser(null);
       localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      
+      // Remove token cookie
+      deleteCookie('token');
+      
       clearCart();
     } finally {
       setLoading(false);
@@ -165,14 +217,24 @@ export const AuthProvider = ({ children }) => {
   const refetchUserData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
+      const token = getCookie('token');
+      if (!token) {
+        // If token is missing, log the user out
+        logout();
+        throw new Error('Authentication token is missing');
+      }
 
       const response = await fetch(`http://localhost:5296/api/user/${user.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+
+      if (response.status === 401) {
+        // If unauthorized, token is invalid or expired, log the user out
+        logout();
+        throw new Error('Authentication token expired');
+      }
 
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
@@ -201,17 +263,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to check if the token is valid
+  const checkTokenValidity = () => {
+    const token = getCookie('token');
+    if (!token && user) {
+      // If no token but user is logged in, log out
+      logout();
+      return false;
+    }
+    return !!token;
+  };
+
   const value = {
     user,
     setUser,
     loading,
     login,
     register,
+    verifyEmail,
     logout,
     isAuthenticated: !!user,
     resetPassword,
     confirmPasswordReset,
-    refetchUserData
+    refetchUserData,
+    checkTokenValidity
   };
 
   return (

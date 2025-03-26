@@ -14,21 +14,30 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
     try {
       const result = await login(email, password);
+      
       if (result.success) {
-        // Lưu token vào sessionStorage
-        sessionStorage.setItem('token', result.token); // Lưu token vào sessionStorage
-        // Kiểm tra vai trò người dùng
-        const userRole = result.user.role[0].roleName; // Lấy vai trò đầu tiên
+        // No need to set token in sessionStorage as it's now in cookies
+        
+        // Check user role
+        const userRole = result.user.role[0].roleName;
         if (userRole === "Staff") {
-          navigate('/staff-manager'); // Chuyển hướng đến StaffManager
+          navigate('/staff-manager');
         } else if (userRole === "Manager") {
-          navigate('/admindashboard'); // Chuyển hướng đến AdminDashboard
+          navigate('/admindashboard');
         } else {
-          navigate('/'); // Chuyển hướng đến trang chính
+          navigate('/');
         }
-      } else {
+      } 
+      else if (result.requiresVerification) {
+        // Redirect to verification page if account requires verification
+        toast.info('Your account requires email verification');
+        navigate('/account-verify', { state: { email: email } });
+      }
+      else {
         setError(messages.error.login);
       }
     } catch (error) {

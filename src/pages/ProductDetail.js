@@ -24,6 +24,7 @@ const ProductDetail = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [quantity, setQuantity] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [feedbackToDelete, setFeedbackToDelete] = useState(null);
   const { addToCart } = useCart();
@@ -98,7 +99,41 @@ const ProductDetail = () => {
       toast.error(messages.error.addToCart.requireLogin);
       return;
     }
-    addToCart(product);
+
+    // Validate quantity
+    if (quantity < 1) {
+      toast.error("Quantity must be at least 1");
+      return;
+    }
+
+    if (quantity > product.stockQuantity) {
+      toast.error(`Only ${product.stockQuantity} items available in stock`);
+      return;
+    }
+
+    // Add product with quantity to cart
+    addToCart(product, quantity);
+  };
+
+  const handleQuantityChange = (e) => {
+    let value = parseInt(e.target.value, 10);
+    
+    // If input is NaN, set to 1
+    if (isNaN(value)) {
+      value = 1;
+    }
+    
+    // Ensure quantity is at least 1
+    if (value < 1) {
+      value = 1;
+    }
+    
+    // Ensure quantity doesn't exceed stock
+    if (product && value > product.stockQuantity) {
+      value = product.stockQuantity;
+    }
+    
+    setQuantity(value);
   };
 
   const isCustomer = user?.role?.[0]?.roleName === 'Customer';
@@ -266,6 +301,42 @@ const ProductDetail = () => {
                   ))}
                 </div>
               </div>
+              
+              {isCustomer && product.stockQuantity > 0 && (
+                <div className="space-y-2 mt-4">
+                  <h3 className="text-lg font-semibold">Quantity</h3>
+                  <TextField
+                    type="number"
+                    value={quantity}
+                    onChange={handleQuantityChange}
+                    inputProps={{
+                      min: 1,
+                      max: product.stockQuantity,
+                      step: 1,
+                      style: { 
+                        textAlign: 'center',
+                        appearance: 'textfield'
+                      }
+                    }}
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                      width: '70px',
+                      '& .MuiOutlinedInput-root': {
+                        '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                          '-webkit-appearance': 'none',
+                          margin: 0
+                        }
+                      }
+                    }}
+                  />
+                  <div className="text-sm text-gray-500">
+                    {product.stockQuantity > 0 
+                      ? `Available: ${product.stockQuantity}` 
+                      : "Out of stock"}
+                  </div>
+                </div>
+              )}
             </div>
 
             <Button
