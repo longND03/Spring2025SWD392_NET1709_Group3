@@ -23,7 +23,7 @@ const Login = () => {
         // Check email verification status
         if (result.emailVerified === false) {
           // Redirect to verification page if email is not verified
-          toast.info('Your account requires email verification');
+          toast.info(messages.info.account.requiresVerification);
           navigate('/account-verify', { state: { email: email } });
           return;
         }
@@ -40,14 +40,14 @@ const Login = () => {
       } 
       else if (result.requiresVerification) {
         // Handle legacy API response for verification
-        toast.info('Your account requires email verification');
+        toast.info(messages.info.account.requiresVerification);
         navigate('/account-verify', { state: { email: email } });
       }
       else {
         setError(messages.error.login);
       }
     } catch (error) {
-      setError('Failed to login');
+      setError(messages.error.login);
     }
   };
 

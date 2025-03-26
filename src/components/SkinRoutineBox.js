@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Divider, Accordion, AccordionSummary, AccordionDetails, Tabs, Tab, Pagination } from '@mui/material';
+import { Divider, Accordion, AccordionSummary, AccordionDetails, Tabs, Tab, Pagination, CircularProgress } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { Link } from 'react-router-dom';
 import { getSkinTestResults } from '../utils/cookies';
+import ProductCard from './ProductCard';
 
 const SkinRoutineBox = ({ userInfo }) => {
   const [loading, setLoading] = useState(true);
@@ -25,6 +26,9 @@ const SkinRoutineBox = ({ userInfo }) => {
   const [savedPage, setSavedPage] = useState(1);
   const [recommendedPage, setRecommendedPage] = useState(1);
   const ITEMS_PER_PAGE = 5; // Number of recommended routines per page
+  const [expandedRoutines, setExpandedRoutines] = useState({});
+  const [routineProducts, setRoutineProducts] = useState({});
+  const [loadingProducts, setLoadingProducts] = useState({});
 
   useEffect(() => {
     // Get skin test results from cookies
@@ -330,6 +334,45 @@ const SkinRoutineBox = ({ userInfo }) => {
     setRecommendedPage(1);
   }, [skinPercentages, activeTab]);
 
+  // Fetch recommended products for a routine
+  const fetchRecommendedProducts = async (routineId, skinTypes) => {
+    if (routineProducts[routineId] || !skinTypes || skinTypes.length === 0) return;
+    
+    setLoadingProducts(prev => ({ ...prev, [routineId]: true }));
+    try {
+      // Create query string with skin type IDs
+      const skinTypeIds = skinTypes.map(type => `SkinTypeIds=${type.skinTypeId}`).join('&');
+      const url = `/api/product?PageNumber=1&PageSize=4&IsDeleted=false&${skinTypeIds}`;
+      
+      const response = await axios.get(url);
+      
+      // Sort products to show in-stock products first
+      const sortedProducts = [...response.data.items].sort((a, b) => {
+        if (a.stockQuantity === 0 && b.stockQuantity > 0) return 1;
+        if (a.stockQuantity > 0 && b.stockQuantity === 0) return -1;
+        return 0;
+      });
+      
+      setRoutineProducts(prev => ({ 
+        ...prev, 
+        [routineId]: sortedProducts
+      }));
+    } catch (err) {
+      console.error('Error fetching products for routine:', err);
+    } finally {
+      setLoadingProducts(prev => ({ ...prev, [routineId]: false }));
+    }
+  };
+
+  // Handle routine accordion change
+  const handleAccordionChange = (routineId, isExpanded, skinTypes) => {
+    setExpandedRoutines(prev => ({ ...prev, [routineId]: isExpanded }));
+    
+    if (isExpanded && activeTab === 1) {
+      fetchRecommendedProducts(routineId, skinTypes);
+    }
+  };
+
   if (loading) {
     return (
       <main className="p-4 bg-gray-50">
@@ -363,7 +406,7 @@ const SkinRoutineBox = ({ userInfo }) => {
     );
   }
 
-  const renderRoutineDetails = (routine) => (
+  const renderRoutineDetails = (routine, isSavedRoutine = false) => (
     <AccordionDetails className="bg-white">
       <div className="space-y-4 pl-2">
         <h4 className="font-medium text-gray-800">Routine Steps:</h4>
@@ -383,6 +426,31 @@ const SkinRoutineBox = ({ userInfo }) => {
             ))
           }
         </div>
+        
+        {/* Product recommendations section (only for saved routines) */}
+        {isSavedRoutine && expandedRoutines[routine.id] && (
+          <div className="mt-8">
+            <Divider />
+            <h4 className="font-medium text-gray-800 mt-4 mb-3">Recommended Products for this Routine:</h4>
+            
+            {loadingProducts[routine.id] ? (
+              <div className="flex justify-center items-center py-6">
+                <CircularProgress size={28} sx={{ color: '#E91E63' }} />
+                <p className="ml-3 text-pink-500 font-medium text-sm">Loading recommendations...</p>
+              </div>
+            ) : routineProducts[routine.id] && routineProducts[routine.id].length > 0 ? (
+              <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                {routineProducts[routine.id].map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-600 py-4">
+                No product recommendations available for this routine.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </AccordionDetails>
   );
@@ -559,7 +627,11 @@ const SkinRoutineBox = ({ userInfo }) => {
                   <div>
                     <div className="space-y-4">
                       {currentRecommendedRoutines.map(routine => (
-                        <Accordion key={routine.id} className="border border-pink-100 rounded-lg shadow-sm">
+                        <Accordion 
+                          key={routine.id} 
+                          className="border border-pink-100 rounded-lg shadow-sm"
+                          onChange={(e, expanded) => handleAccordionChange(routine.id, expanded, routine.skinTypes)}
+                        >
                           <AccordionSummary
                             expandIcon={<ExpandMoreIcon className="text-pink-500" />}
                             aria-controls={`routine-${routine.id}-content`}
@@ -599,7 +671,7 @@ const SkinRoutineBox = ({ userInfo }) => {
                               </div>
                             </div>
                           </AccordionSummary>
-                          {renderRoutineDetails(routine)}
+                          {renderRoutineDetails(routine, false)}
                         </Accordion>
                       ))}
                     </div>
@@ -660,7 +732,11 @@ const SkinRoutineBox = ({ userInfo }) => {
                   <div>
                     <div className="space-y-4">
                       {savedRoutines.items.map(routine => (
-                        <Accordion key={routine.id} className="border border-pink-100 rounded-lg shadow-sm">
+                        <Accordion 
+                          key={routine.id} 
+                          className="border border-pink-100 rounded-lg shadow-sm"
+                          onChange={(e, expanded) => handleAccordionChange(routine.id, expanded, routine.skinTypes)}
+                        >
                           <AccordionSummary
                             expandIcon={<ExpandMoreIcon className="text-pink-500" />}
                             aria-controls={`saved-routine-${routine.id}-content`}
@@ -681,7 +757,7 @@ const SkinRoutineBox = ({ userInfo }) => {
                               </div>
                             </div>
                           </AccordionSummary>
-                          {renderRoutineDetails(routine)}
+                          {renderRoutineDetails(routine, true)}
                         </Accordion>
                       ))}
                     </div>

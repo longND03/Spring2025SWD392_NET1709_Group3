@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation, Link, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from '../api/axios';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
+import messages from '../constants/message.json';
 
 const FinishOrderQR = () => {
   const location = useLocation();
@@ -105,6 +106,12 @@ const FinishOrderQR = () => {
     setError(null);
     
     try {
+      if (!id) {
+        setError('Invalid order ID');
+        setLoading(false);
+        return;
+      }
+      
       const token = localStorage.getItem('token') || user?.token;
       console.log('Fetching order data for ID:', id);
 
@@ -139,7 +146,7 @@ const FinishOrderQR = () => {
     } catch (err) {
       console.error('Error fetching order data:', err);
       setError(`Failed to load order details: ${err.message}`);
-      toast.error('Failed to load order details.');
+      toast.error(messages.error.order.loadDetails);
       setLoading(false);
     }
   };
@@ -211,7 +218,7 @@ const FinishOrderQR = () => {
       setVoucherData(response.data);
     } catch (err) {
       console.error('Error fetching voucher data:', err);
-      toast.error('Failed to load voucher details.');
+      toast.error(messages.error.voucher.load);
     } finally {
       setLoading(false);
     }

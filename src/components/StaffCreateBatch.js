@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button, CircularProgress } from '@mui/material';
 import { toast } from 'react-toastify';
 import Axios from '../api/axios';
+import messages from '../constants/message.json';
 
 const StaffCreateBatch = ({ open, onClose, onSave }) => {
   const getCurrentDateTime = () => {
@@ -33,30 +34,30 @@ const StaffCreateBatch = ({ open, onClose, onSave }) => {
     
     // For create: manufacture must be less than current date
     if (manufacture >= now) {
-      toast.error('Manufacture date must be before current date');
+      toast.error(messages.error.batch.validation.manufactureDate.beforeCurrent);
       return false;
     }
 
     // For create: import must be less than current date
     if (importDate >= now) {
-      toast.error('Import date must be before current date');
+      toast.error(messages.error.batch.validation.importDate.beforeCurrent);
       return false;
     }
 
     // For create: expiry must be greater than current date
     if (expiry <= now) {
-      toast.error('Expiry date must be after current date');
+      toast.error(messages.error.batch.validation.expiryDate.afterCurrent);
       return false;
     }
 
     // Common validations
     if (manufacture >= importDate) {
-      toast.error('Manufacture date must be before import date');
+      toast.error(messages.error.batch.validation.manufactureDate.beforeImport);
       return false;
     }
 
     if (expiry <= importDate) {
-      toast.error('Expiry date must be after import date');
+      toast.error(messages.error.batch.validation.expiryDate.afterImport);
       return false;
     }
 
@@ -87,7 +88,7 @@ const StaffCreateBatch = ({ open, onClose, onSave }) => {
       setFilteredProducts(productList);
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Failed to load products');
+      toast.error(messages.error.product.load);
     }
   };
 
@@ -99,7 +100,7 @@ const StaffCreateBatch = ({ open, onClose, onSave }) => {
       setFilteredProducts(productList);
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Failed to load products');
+      toast.error(messages.error.product.load);
     }
   };
 
@@ -180,14 +181,14 @@ const StaffCreateBatch = ({ open, onClose, onSave }) => {
 
       console.log('Submitting batch data:', JSON.stringify(batchData, null, 2));
       await Axios.post('/api/batch', batchData);
-      toast.success('Batch created successfully');
+      toast.success(messages.success.batch.create);
       await fetchProducts(); // Refresh product list
       clearForm(); // Clear the form after successful creation
       onClose();
       onSave();
     } catch (error) {
       console.error('Error creating batch:', error);
-      toast.error(error.response?.data?.message || 'Failed to create batch');
+      toast.error(error.response?.data?.message || messages.error.batch.save);
     } finally {
       setLoading(false);
     }
