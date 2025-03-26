@@ -38,6 +38,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import DateRangeIcon from '@mui/icons-material/DateRange';
+import cookieUtils from '../utils/cookies';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -94,7 +95,7 @@ const StaffAnalytics = () => {
       setLoading(true);
       const response = await fetch('http://localhost:5296/api/order/all', {
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${cookieUtils.getCookie('token')}`,
         },
       });
       if (!response.ok) {

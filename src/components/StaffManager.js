@@ -19,7 +19,8 @@ import {
   ConfirmationNumber, 
   ShoppingCart, 
   Article, 
-  Face 
+  Face,
+  Schedule
 } from '@mui/icons-material';
 
 import StaffVoucher from './StaffVoucher';
@@ -31,6 +32,7 @@ import BrandCategoryManagement from './Brand&CategoryManagement';
 import PackagingFormulationIngredientManagement from './PackagingFormulationIngredientManagement';
 import StaffAnalytics from './StaffAnalytics';
 import StaffSkinTest from './StaffSkinTest';
+import StaffRoutine from './StaffRoutine';
 
 const StaffManager = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -62,6 +64,7 @@ const StaffManager = () => {
     { id: 'orders', label: 'Orders', icon: <ShoppingCart /> },
     { id: 'blogs', label: 'Blogs', icon: <Article /> },
     { id: 'skintest', label: 'Skin Test', icon: <Face /> },
+    { id: 'routines', label: 'Routines', icon: <Schedule /> },
   ];
 
   return (
@@ -191,6 +194,7 @@ const StaffManager = () => {
           {activeTab === 'packaging & formulation & ingredient' && <PackagingFormulationIngredientManagement />}
           {activeTab === 'blogs' && <StaffBlogManagement />}
           {activeTab === 'skintest' && <StaffSkinTest />}
+          {activeTab === 'routines' && <StaffRoutine />}
         </Box>
       </Box>
     </Box>

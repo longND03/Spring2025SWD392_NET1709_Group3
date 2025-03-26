@@ -43,6 +43,7 @@ import {
   Cancel
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import cookieUtils from '../utils/cookies';
 
 const StaffOrder = () => {
   const { user } = useAuth();
@@ -68,7 +69,7 @@ const StaffOrder = () => {
       setLoading(true);
       const response = await fetch('http://localhost:5296/api/order/all', {
         headers: {
-          'Authorization': `Bearer ${user.token}`,
+          'Authorization': `Bearer ${cookieUtils.getCookie('token')}`,
         },
       });
       if (!response.ok) {
