@@ -10,6 +10,8 @@ const FinishOrderCash = () => {
   const [searchParams] = useSearchParams();
   const params = useParams();
   const [orderData, setOrderData] = useState(null);
+  const [voucherData, setVoucherData] = useState(null);
+  const [formattedAddress, setFormattedAddress] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -44,7 +46,18 @@ const FinishOrderCash = () => {
       if (location.state?.orderData) {
         console.log('Using order data from location state:', location.state.orderData);
         setOrderData(location.state.orderData.orderResponse); // Accessing orderResponse directly
-        setLoading(false);
+        
+        // Format the address
+        if (location.state.orderData.orderResponse.address) {
+          await formatAddress(location.state.orderData.orderResponse.address);
+        }
+        
+        // Check for voucher ID
+        if (location.state.orderData.orderResponse.voucherID) {
+          await fetchVoucherData(location.state.orderData.orderResponse.voucherID);
+        } else {
+          setLoading(false);
+        }
         return;
       }
       
@@ -87,10 +100,94 @@ const FinishOrderCash = () => {
       
       setOrderData(response.data.orderResponse); // Accessing orderResponse directly
       console.log('Order data set:', response.data.orderResponse);
+      
+      // Format the address
+      if (response.data.orderResponse.address) {
+        await formatAddress(response.data.orderResponse.address);
+      }
+      
+      // Check for voucher ID
+      if (response.data.orderResponse.voucherID) {
+        await fetchVoucherData(response.data.orderResponse.voucherID);
+      } else {
+        setLoading(false);
+      }
     } catch (err) {
       console.error('Error fetching order data:', err);
       setError(`Failed to load order details: ${err.message}`);
       toast.error('Failed to load order details.');
+      setLoading(false);
+    }
+  };
+
+  const formatAddress = async (addressString) => {
+    try {
+      if (!addressString) {
+        setFormattedAddress('N/A');
+        return;
+      }
+      
+      // Extract address parts
+      const addressParts = addressString.split('|');
+      if (addressParts.length < 4) {
+        setFormattedAddress(addressString);
+        return;
+      }
+      
+      const [specificAddress, wardCode, districtCode, provinceCode] = addressParts;
+      
+      // Fetch province, district, and ward names
+      let provinceName = '';
+      let districtName = '';
+      let wardName = '';
+      
+      try {
+        // Fetch province
+        const provinceResponse = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}`);
+        const provinceData = await provinceResponse.json();
+        provinceName = provinceData.name;
+        
+        // Fetch district
+        const districtResponse = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}`);
+        const districtData = await districtResponse.json();
+        districtName = districtData.name;
+        
+        // Fetch ward
+        const wardResponse = await fetch(`https://provinces.open-api.vn/api/w/${wardCode}`);
+        const wardData = await wardResponse.json();
+        wardName = wardData.name;
+      } catch (error) {
+        console.error('Error fetching location data:', error);
+      }
+      
+      // Format the full address
+      const fullAddress = [
+        specificAddress,
+        wardName,
+        districtName,
+        provinceName
+      ].filter(Boolean).join(', ');
+      
+      setFormattedAddress(fullAddress);
+    } catch (error) {
+      console.error('Error formatting address:', error);
+      setFormattedAddress(addressString || 'N/A');
+    }
+  };
+
+  const fetchVoucherData = async (voucherId) => {
+    try {
+      if (!voucherId) {
+        setLoading(false);
+        return;
+      }
+      
+      const response = await axios.get(`/api/voucher/${voucherId}`);
+      console.log('Voucher data fetched:', response.data);
+      setVoucherData(response.data);
+    } catch (err) {
+      console.error('Error fetching voucher data:', err);
+      toast.error('Failed to load voucher details.');
     } finally {
       setLoading(false);
     }
@@ -111,7 +208,17 @@ const FinishOrderCash = () => {
     return ((item.unitPrice || item.price || 0) * (item.quantity || 0)).toFixed(2);
   };
 
+  // Calculate discount amount if a voucher was used
+  const calculateDiscountAmount = () => {
+    if (!voucherData || !orderData) return 0;
+    
+    const subtotal = orderData.totalAmount || 0;
+    return (subtotal * voucherData.discountPercentage / 100).toFixed(2);
+  };
+
   console.log('Current order data state:', orderData);
+  console.log('Current voucher data state:', voucherData);
+  console.log('Formatted address:', formattedAddress);
   console.log('Loading state:', loading);
   console.log('Error state:', error);
 
@@ -153,6 +260,7 @@ const FinishOrderCash = () => {
     orderDate: orderData.orderDate,
     userName: orderData.userName,
     address: orderData.address,
+    formattedAddress: formattedAddress,
     shipAmount: orderData.shipAmount,
     finalAmount: orderData.finalAmount,
     totalAmount: orderData.totalAmount,
@@ -190,10 +298,23 @@ const FinishOrderCash = () => {
             <div>{orderData?.userName || 'N/A'}</div>
             
             <div className="font-semibold">Shipping Address:</div>
-            <div>{orderData?.address || 'N/A'}</div>
+            <div>{formattedAddress || 'N/A'}</div>
             
             <div className="font-semibold">Shipping Fee:</div>
             <div>${(orderData?.shipAmount || 0).toFixed(2)}</div>
+            
+            {voucherData && (
+              <>
+                <div className="font-semibold">Voucher Applied:</div>
+                <div className="text-green-600">{voucherData.discountPercentage}% OFF</div>
+                
+                <div className="font-semibold">Discount Amount:</div>
+                <div className="text-green-600">-${calculateDiscountAmount()}</div>
+              </>
+            )}
+            
+            <div className="font-semibold">Product Subtotal:</div>
+            <div>${(orderData?.totalAmount || 0).toFixed(2)}</div>
             
             <div className="font-semibold">Total Amount:</div>
             <div>${(orderData?.finalAmount || orderData?.totalAmount || 0).toFixed(2)}</div>
