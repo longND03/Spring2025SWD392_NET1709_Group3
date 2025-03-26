@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [loading, setLoading] = useState(true);
+  const [statusCheckInterval, setStatusCheckInterval] = useState(null);
 
   const { clearCart } = useCart();
 
@@ -30,6 +31,59 @@ export const AuthProvider = ({ children }) => {
     
     initAuth();
   }, []);
+
+  // Add interval to check user status every 10 seconds
+  useEffect(() => {
+    // Start interval when user is logged in, clear when logged out
+    if (user) {
+      const interval = setInterval(async () => {
+        try {
+          const token = getCookie('token');
+          if (!token) {
+            clearInterval(interval);
+            return;
+          }
+
+          const response = await fetch(`http://localhost:5296/api/user/${user.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch user status');
+          }
+
+          const userData = await response.json();
+          
+          // Check if status is false
+          if (userData.status === false) {
+            // Logout user
+            logout();
+            // Navigate to home page using window.location
+            window.location.href = '/';
+            // Show popup
+            alert('Something is wrong');
+          }
+        } catch (error) {
+          console.error('Error checking user status:', error);
+        }
+      }, 10000); // 10 seconds
+
+      setStatusCheckInterval(interval);
+      
+      // Cleanup interval when component unmounts or user logs out
+      return () => {
+        if (interval) clearInterval(interval);
+      };
+    } else {
+      // Clear the interval if user is null
+      if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+        setStatusCheckInterval(null);
+      }
+    }
+  }, [user]);
 
   // Lưu user vào localStorage khi có thay đổi
   useEffect(() => {
