@@ -70,20 +70,25 @@ const StaffRoutine = () => {
     description: '', 
     order: 1 
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const token = cookieUtils.getCookie('token');
     console.log('User token on load:', token);
-    fetchRoutines();
+    fetchRoutines(currentPage);
     fetchSkinTypes();
-  }, []);
+  }, [currentPage]);
 
-  const fetchRoutines = async () => {
+  const fetchRoutines = async (page) => {
     try {
-      const response = await fetch('http://localhost:5296/api/skincareroutine');
+      const response = await fetch(`http://localhost:5296/api/skincareroutine?PageNumber=${page}&PageSize=${itemsPerPage}&IsDeleted=false`);
       const data = await response.json();
+      console.log('Fetched Routines:', data);
       const activeRoutines = data.items.filter(routine => !routine.isDeleted);
       setRoutines(activeRoutines);
+      setTotalPages(data.totalPages);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching routines:', error);
@@ -106,15 +111,17 @@ const StaffRoutine = () => {
     try {
       const token = cookieUtils.getCookie('token');
 
-      // Validate required fields
+      // Kiểm tra giá trị của newRoutine
+      console.log('New Routine:', newRoutine);
+
+      // Xác thực các trường bắt buộc
       if (!newRoutine.Name || !newRoutine.Description || newRoutine.RoutineSkinTypes.length === 0) {
-        alert('Please fill in all required fields: Name, Description, and at least one Skin Type.');
+        alert('Vui lòng điền tất cả các trường bắt buộc: Tên, Mô tả và ít nhất một loại da.');
         return;
       }
 
-      // Kiểm tra RoutineSteps nếu cần
       if (newRoutine.RoutineSteps.length === 0) {
-        alert('Please add at least one step to the routine.');
+        alert('Vui lòng thêm ít nhất một bước vào quy trình.');
         return;
       }
 
@@ -139,20 +146,26 @@ const StaffRoutine = () => {
         }));
       });
 
-      console.log('Routine to create:', formData);
+      // Ghi lại nội dung FormData
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
 
       const response = await fetch('http://localhost:5296/api/skincareroutine', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          // Không đặt Content-Type khi sử dụng FormData
         },
         body: formData,
       });
 
       if (response.ok) {
-        fetchRoutines();
+        const createdRoutine = await response.json(); // Lấy dữ liệu quy trình vừa tạo
+        console.log('Created Routine:', createdRoutine); // Ghi lại quy trình vừa tạo
+        fetchRoutines(currentPage); // Gọi lại hàm để lấy danh sách quy trình
         setOpenAddDialog(false);
-        // Reset form
+        // Đặt lại biểu mẫu
         setNewRoutine({
           Name: '',
           Description: '',
@@ -161,11 +174,11 @@ const StaffRoutine = () => {
         });
       } else {
         const errorData = await response.json();
-        console.error('Failed to create routine:', response.statusText, errorData);
-        alert(`Error: ${errorData.title}\nDetails: ${JSON.stringify(errorData.errors)}`);
+        console.error('Tạo quy trình không thành công:', response.statusText, errorData);
+        alert(`Lỗi: ${errorData.title}\nChi tiết: ${JSON.stringify(errorData.errors)}`);
       }
     } catch (error) {
-      console.error('Error creating routine:', error);
+      console.error('Lỗi khi tạo quy trình:', error);
     }
   };
 
@@ -237,7 +250,7 @@ const StaffRoutine = () => {
       })
       .then(response => {
         if (response.ok) {
-          fetchRoutines();
+          fetchRoutines(currentPage);
         } else {
           console.error('Failed to delete routine:', response.statusText);
         }
@@ -426,6 +439,25 @@ const StaffRoutine = () => {
               </TableBody>
             </Table>
           </TableContainer>
+
+          {/* Pagination Controls */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+            <Button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <Typography>
+              Page {currentPage} of {totalPages}
+            </Typography>
+            <Button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </Box>
         </Box>
       </StyledPaper>
 
