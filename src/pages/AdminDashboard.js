@@ -451,7 +451,7 @@ const AdminDashboard = () => {
                                 {user.wallet !== undefined && (
                                   <div>
                                     <p className="text-sm font-medium text-gray-500">Wallet Balance:</p>
-                                    <p className="text-sm text-gray-900">${user.wallet.toFixed(2)}</p>
+                                    <p className="text-sm text-gray-900">${user?.wallet?.toFixed(2) || 0}</p>
                                   </div>
                                 )}
                               </div>
