@@ -37,7 +37,7 @@ const Products = () => {
         setBrands(response.data);
       } catch (error) {
         console.error("Error fetching brands:", error);
-        toast.error("Failed to load brands");
+        toast.error(messages.error.brands.load);
       }
     };
     fetchBrands();
@@ -50,7 +50,7 @@ const Products = () => {
         setSkinTypes(response.data.items);
       } catch (error) {
         console.error("Error fetching skin types:", error);
-        toast.error("Failed to load skin types");
+        toast.error(messages.error.skinTypes.load);
       }
     };
     fetchSkinTypes();
