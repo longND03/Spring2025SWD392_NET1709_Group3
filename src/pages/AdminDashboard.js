@@ -20,7 +20,6 @@ const AdminDashboard = () => {
   const [newUser, setNewUser] = useState({
     username: "",
     email: "",
-    password: "",
     phone: "",
     location: "",
     status: true,
@@ -102,7 +101,7 @@ const AdminDashboard = () => {
       if (!token) throw new Error("Token not found. Please log in again.");
 
       const response = await fetch(
-        "http://localhost:5296/api/auth/admin-create-account",
+        "http://localhost:5296/api/auth/admin/create-account",
         {
           method: "POST",
           headers: {
@@ -132,7 +131,6 @@ const AdminDashboard = () => {
       setNewUser({
         username: "",
         email: "",
-        password: "",
         phone: "",
         location: "",
         status: true,
@@ -272,25 +270,6 @@ const AdminDashboard = () => {
                   value={newUser.email}
                   onChange={(e) =>
                     setNewUser({ ...newUser, email: e.target.value })
-                  }
-                  required
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Enter password"
-                  value={newUser.password}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, password: e.target.value })
                   }
                   required
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
