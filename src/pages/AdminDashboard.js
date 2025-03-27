@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { getCookie } from '../utils/cookies';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { getCookie } from "../utils/cookies";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -15,21 +15,21 @@ const AdminDashboard = () => {
   // Expanded user state
   const [expandedUserId, setExpandedUserId] = useState(null);
   // Search and filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [newUser, setNewUser] = useState({
-    username: '',
-    email: '',
-    password: '',
-    phone: '',
-    location: '',
+    username: "",
+    email: "",
+    password: "",
+    phone: "",
+    location: "",
     status: true,
   });
 
   // Redirect if user is not an admin
   useEffect(() => {
-    if (!user || user.role[0].roleName !== 'Manager') {
-      navigate('/login');
+    if (!user || user.role[0].roleName !== "Manager") {
+      navigate("/login");
     } else {
       fetchUsers();
     }
@@ -39,21 +39,22 @@ const AdminDashboard = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const token = getCookie('token');
-      if (!token) throw new Error('Token not found. Please log in again.');
+      const token = getCookie("token");
+      if (!token) throw new Error("Token not found. Please log in again.");
 
-      const response = await fetch('http://localhost:5296/api/user', {
+      const response = await fetch("http://localhost:5296/api/user", {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) throw new Error(`Failed to load users: ${response.statusText}`);
+      if (!response.ok)
+        throw new Error(`Failed to load users: ${response.statusText}`);
       const data = await response.json();
       setUsers(data);
     } catch (error) {
       setError(error.message);
-      console.error('Error loading users:', error);
+      console.error("Error loading users:", error);
     } finally {
       setLoading(false);
     }
@@ -61,27 +62,33 @@ const AdminDashboard = () => {
 
   // Delete a user
   const handleDelete = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+    if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        const token = getCookie('token');
-        if (!token) throw new Error('Token không tìm thấy. Vui lòng đăng nhập lại.');
+        const token = getCookie("token");
+        if (!token)
+          throw new Error("Token không tìm thấy. Vui lòng đăng nhập lại.");
 
-        const response = await fetch(`http://localhost:5296/api/user/${userId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
+        const response = await fetch(
+          `http://localhost:5296/api/user/${userId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
         if (!response.ok) {
-          throw new Error(`Không thể xóa người dùng. Status: ${response.status}`);
+          throw new Error(
+            `Không thể xóa người dùng. Status: ${response.status}`
+          );
         }
 
         await fetchUsers();
         setError(null);
       } catch (error) {
         setError(`Error deleting user: ${error.message}`);
-        console.error('Chi tiết lỗi:', error);
+        console.error("Chi tiết lỗi:", error);
       }
     }
   };
@@ -91,34 +98,49 @@ const AdminDashboard = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const token = getCookie('token');
-      if (!token) throw new Error('Token not found. Please log in again.');
+      const token = getCookie("token");
+      if (!token) throw new Error("Token not found. Please log in again.");
 
-      const response = await fetch('http://localhost:5296/api/auth/admin-create-account', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(newUser),
-      });
+      const response = await fetch(
+        "http://localhost:5296/api/auth/admin-create-account",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newUser),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
         if (response.status === 403) {
-          throw new Error(errorData.message || 'You do not have permission to perform this action.');
+          throw new Error(
+            errorData.message ||
+              "You do not have permission to perform this action."
+          );
         } else {
-          throw new Error(errorData.message || 'An error occurred while creating the user.');
+          throw new Error(
+            errorData.message || "An error occurred while creating the user."
+          );
         }
       }
 
       const data = await response.json();
       setUsers([...users, data]);
-      setNewUser({ username: '', email: '', password: '', phone: '', location: '', status: true });
+      setNewUser({
+        username: "",
+        email: "",
+        password: "",
+        phone: "",
+        location: "",
+        status: true,
+      });
       setError(null);
     } catch (error) {
       setError(error.message);
-      console.error('Error creating user:', error);
+      console.error("Error creating user:", error);
     } finally {
       setLoading(false);
     }
@@ -142,11 +164,11 @@ const AdminDashboard = () => {
   };
 
   // Filter users based on search term and status filter
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user) => {
     // Status filter
-    if (statusFilter === 'active' && !user.status) return false;
-    if (statusFilter === 'inactive' && user.status) return false;
-    
+    if (statusFilter === "active" && !user.status) return false;
+    if (statusFilter === "inactive" && user.status) return false;
+
     // Search term filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -156,7 +178,7 @@ const AdminDashboard = () => {
         (user.phone && user.phone.toLowerCase().includes(term))
       );
     }
-    
+
     return true;
   });
 
@@ -170,7 +192,7 @@ const AdminDashboard = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Hide dashboard if user is not an admin
-  if (!user || user.role[0].roleName !== 'Manager') {
+  if (!user || user.role[0].roleName !== "Manager") {
     return null;
   }
 
@@ -179,13 +201,15 @@ const AdminDashboard = () => {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Manager Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Manager Dashboard
+          </h1>
           <div className="flex items-center">
             <span className="text-gray-700 mr-4">
               Welcome, <span className="font-semibold">{user.username}</span>
             </span>
-            <button 
-              onClick={() => navigate('/logout')} 
+            <button
+              onClick={() => navigate("/logout")}
               className="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-md transition duration-300 ease-in-out"
             >
               Logout
@@ -195,23 +219,31 @@ const AdminDashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        {/* Notification */}
+        {/* Notification
         {error && (
           <div className="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-sm" role="alert">
             <p className="font-medium">Lỗi</p>
             <p>{error}</p>
           </div>
-        )}
+        )} */}
 
         {/* Create User Form */}
         <div className="bg-white shadow-md rounded-lg mb-8 overflow-hidden">
           <div className="bg-gray-800 text-white px-6 py-4">
-            <h2 className="text-xl font-semibold">Create New Employee Account</h2>
+            <h2 className="text-xl font-semibold">
+              Create New Employee Account
+            </h2>
           </div>
           <div className="p-6">
-            <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <form
+              onSubmit={handleCreateUser}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   User Name
                 </label>
                 <input
@@ -219,13 +251,18 @@ const AdminDashboard = () => {
                   type="text"
                   placeholder="Enter username"
                   value={newUser.username}
-                  onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, username: e.target.value })
+                  }
                   required
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Email
                 </label>
                 <input
@@ -233,13 +270,18 @@ const AdminDashboard = () => {
                   type="email"
                   placeholder="Enter email"
                   value={newUser.email}
-                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, email: e.target.value })
+                  }
                   required
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Password
                 </label>
                 <input
@@ -247,13 +289,18 @@ const AdminDashboard = () => {
                   type="password"
                   placeholder="Enter password"
                   value={newUser.password}
-                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, password: e.target.value })
+                  }
                   required
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Phone number
                 </label>
                 <input
@@ -261,20 +308,27 @@ const AdminDashboard = () => {
                   type="text"
                   placeholder="Enter phone number"
                   value={newUser.phone}
-                  onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, phone: e.target.value })
+                  }
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                location
+                <label
+                  htmlFor="location"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  location
                 </label>
                 <input
                   id="location"
                   type="text"
                   placeholder="Enter address"
                   value={newUser.location}
-                  onChange={(e) => setNewUser({ ...newUser, location: e.target.value })}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, location: e.target.value })
+                  }
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -286,14 +340,28 @@ const AdminDashboard = () => {
                 >
                   {loading ? (
                     <span className="flex items-center justify-center">
-                      <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="animate-spin h-5 w-5 mr-3"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Creating...
                     </span>
                   ) : (
-                    'Create Account'
+                    "Create Account"
                   )}
                 </button>
               </div>
@@ -309,7 +377,7 @@ const AdminDashboard = () => {
               {filteredUsers.length} user
             </span>
           </div>
-          
+
           {/* Search and Filter Bar */}
           <div className="bg-gray-100 px-6 py-4 flex flex-col md:flex-row gap-4">
             <div className="flex-1">
@@ -333,14 +401,28 @@ const AdminDashboard = () => {
               </select>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <div className="flex flex-col items-center">
-                  <svg className="animate-spin h-10 w-10 text-blue-500 mb-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-10 w-10 text-blue-500 mb-4"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   <p className="text-gray-500">loading user</p>
                 </div>
@@ -349,16 +431,28 @@ const AdminDashboard = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Username
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Email
                     </th>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Status
                     </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Actions
                     </th>
                   </tr>
@@ -367,9 +461,15 @@ const AdminDashboard = () => {
                   {currentUsers.length > 0 ? (
                     currentUsers.map((user) => (
                       <React.Fragment key={user.userId || user.id}>
-                        <tr 
-                          className={`hover:bg-gray-50 cursor-pointer ${expandedUserId === (user.userId || user.id) ? 'bg-gray-50' : ''}`}
-                          onClick={() => toggleUserDetails(user.userId || user.id)}
+                        <tr
+                          className={`hover:bg-gray-50 cursor-pointer ${
+                            expandedUserId === (user.userId || user.id)
+                              ? "bg-gray-50"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            toggleUserDetails(user.userId || user.id)
+                          }
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -379,20 +479,26 @@ const AdminDashboard = () => {
                                 </span>
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {user.username}
+                                </div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{user.email}</div>
+                            <div className="text-sm text-gray-900">
+                              {user.email}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.status 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {user.status ? 'Active' : 'Inactive'}
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                user.status
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {user.status ? "Active" : "Inactive"}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -410,48 +516,87 @@ const AdminDashboard = () => {
                         </tr>
                         {expandedUserId === (user.userId || user.id) && (
                           <tr>
-                            <td colSpan="4" className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                            <td
+                              colSpan="4"
+                              className="px-6 py-4 bg-gray-50 border-t border-gray-200"
+                            >
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <p className="text-sm font-medium text-gray-500">Username:</p>
-                                  <p className="text-sm text-gray-900">{user.username}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-gray-500">Email:</p>
-                                  <p className="text-sm text-gray-900">{user.email}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-gray-500">Phone:</p>
-                                  <p className="text-sm text-gray-900">{user.phone || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-gray-500">Location:</p>
-                                  <p className="text-sm text-gray-900">{user.location || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-gray-500">Role:</p>
+                                  <p className="text-sm font-medium text-gray-500">
+                                    Username:
+                                  </p>
                                   <p className="text-sm text-gray-900">
-                                    {user.userRoles && user.userRoles.length > 0 
-                                      ? user.userRoles.map(role => role.roleName).join(', ')
-                                      : 'N/A'}
+                                    {user.username}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-sm font-medium text-gray-500">Status:</p>
-                                  <p className={`text-sm ${user.status ? 'text-green-600' : 'text-red-600'}`}>
-                                    {user.status ? 'Active' : 'Inactive'}
+                                  <p className="text-sm font-medium text-gray-500">
+                                    Email:
+                                  </p>
+                                  <p className="text-sm text-gray-900">
+                                    {user.email}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">
+                                    Phone:
+                                  </p>
+                                  <p className="text-sm text-gray-900">
+                                    {user.phone || "N/A"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">
+                                    Location:
+                                  </p>
+                                  <p className="text-sm text-gray-900">
+                                    {user.location || "N/A"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">
+                                    Role:
+                                  </p>
+                                  <p className="text-sm text-gray-900">
+                                    {user.userRoles && user.userRoles.length > 0
+                                      ? user.userRoles
+                                          .map((role) => role.roleName)
+                                          .join(", ")
+                                      : "N/A"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">
+                                    Status:
+                                  </p>
+                                  <p
+                                    className={`text-sm ${
+                                      user.status
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                    }`}
+                                  >
+                                    {user.status ? "Active" : "Inactive"}
                                   </p>
                                 </div>
                                 {user.skinTypeName && (
                                   <div>
-                                    <p className="text-sm font-medium text-gray-500">Skin Type:</p>
-                                    <p className="text-sm text-gray-900">{user.skinTypeName}</p>
+                                    <p className="text-sm font-medium text-gray-500">
+                                      Skin Type:
+                                    </p>
+                                    <p className="text-sm text-gray-900">
+                                      {user.skinTypeName}
+                                    </p>
                                   </div>
                                 )}
                                 {user.wallet !== undefined && (
                                   <div>
-                                    <p className="text-sm font-medium text-gray-500">Wallet Balance:</p>
-                                    <p className="text-sm text-gray-900">${user?.wallet?.toFixed(2) || 0}</p>
+                                    <p className="text-sm font-medium text-gray-500">
+                                      Wallet Balance:
+                                    </p>
+                                    <p className="text-sm text-gray-900">
+                                      ${user?.wallet?.toFixed(2) || 0}
+                                    </p>
                                   </div>
                                 )}
                               </div>
@@ -470,47 +615,57 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             )}
-            
+
             {/* Pagination */}
             {filteredUsers.length > 0 && (
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
                 <div className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{indexOfFirstUser + 1}</span> to <span className="font-medium">
-                    {indexOfLastUser > filteredUsers.length ? filteredUsers.length : indexOfLastUser}
-                  </span> of <span className="font-medium">{filteredUsers.length}</span> results
+                  Showing{" "}
+                  <span className="font-medium">{indexOfFirstUser + 1}</span> to{" "}
+                  <span className="font-medium">
+                    {indexOfLastUser > filteredUsers.length
+                      ? filteredUsers.length
+                      : indexOfLastUser}
+                  </span>{" "}
+                  of <span className="font-medium">{filteredUsers.length}</span>{" "}
+                  results
                 </div>
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1}
                     className={`px-3 py-1 rounded ${
-                      currentPage === 1 
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      currentPage === 1
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                     }`}
                   >
                     Previous
                   </button>
-                  {[...Array(totalPages).keys()].map(number => (
+                  {[...Array(totalPages).keys()].map((number) => (
                     <button
                       key={number + 1}
                       onClick={() => paginate(number + 1)}
                       className={`px-3 py-1 rounded ${
                         currentPage === number + 1
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                       }`}
                     >
                       {number + 1}
                     </button>
                   ))}
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages}
                     className={`px-3 py-1 rounded ${
                       currentPage === totalPages
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                     }`}
                   >
                     Next
