@@ -326,14 +326,6 @@ const AdminDashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        {/* Display error notification */}
-        {error && (
-          <div className="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-sm" role="alert">
-            <p className="font-medium">Error</p>
-            <p>{error}</p>
-          </div>
-        )}
-        
         {/* Display success notification */}
         {successMessage && (
           <div className="mb-6 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-sm" role="alert">
