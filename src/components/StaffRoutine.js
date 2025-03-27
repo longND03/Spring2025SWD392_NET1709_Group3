@@ -73,6 +73,8 @@ const StaffRoutine = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
+  const [dialogMode, setDialogMode] = useState('create');
+  const [updatingRoutineId, setUpdatingRoutineId] = useState(null);
 
   useEffect(() => {
     const token = cookieUtils.getCookie('token');
@@ -286,6 +288,99 @@ const StaffRoutine = () => {
     });
   };
 
+  const handleUpdateClick = (routine) => {
+    setNewRoutine({
+      Name: routine.name,
+      Description: routine.description,
+      RoutineSkinTypes: routine.skinTypes,
+      RoutineSteps: routine.routineSteps
+    });
+    setUpdatingRoutineId(routine.id);
+    setDialogMode('update');
+    setOpenAddDialog(true);
+  };
+
+  const handleOpenCreateDialog = () => {
+    setNewRoutine({
+      Name: '',
+      Description: '',
+      RoutineSkinTypes: [],
+      RoutineSteps: []
+    });
+    setDialogMode('create');
+    setOpenAddDialog(true);
+  };
+
+  const updateRoutine = async () => {
+    try {
+      const token = cookieUtils.getCookie('token');
+
+      // Validate required fields
+      if (!newRoutine.Name || !newRoutine.Description || newRoutine.RoutineSkinTypes.length === 0) {
+        alert('Please fill in all required fields: Name, Description, and at least one Skin Type.');
+        return;
+      }
+
+      if (newRoutine.RoutineSteps.length === 0) {
+        alert('Please add at least one step to the routine.');
+        return;
+      }
+
+      console.log('New Routine:', newRoutine);
+
+      const formData = new FormData();
+      formData.append('Name', newRoutine.Name.trim());
+      formData.append('Description', newRoutine.Description.trim());
+
+      // Add RoutineSkinTypes to FormData
+      newRoutine.RoutineSkinTypes.forEach(skinType => {
+        formData.append('RoutineSkinTypes', JSON.stringify({
+          skinTypeId: parseInt(skinType.skinTypeId, 10),
+          percentage: Math.max(1, Math.min(100, parseInt(skinType.percentage, 10)))
+        }));
+      });
+
+      // Add RoutineSteps to FormData
+      newRoutine.RoutineSteps.forEach((step, index) => {
+        formData.append('RoutineSteps', JSON.stringify({
+          title: step.title.trim(),
+          description: step.description.trim(),
+          order: index + 1
+        }));
+      });
+
+      const response = await fetch(`http://localhost:5296/api/skincareroutine/${updatingRoutineId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Do not set Content-Type when using FormData
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const updatedRoutine = await response.json();
+        console.log('Updated Routine:', updatedRoutine);
+        fetchRoutines(currentPage); // Refresh the routine list immediately after update
+        setOpenAddDialog(false); // Close the dialog
+        // Reset the form
+        setNewRoutine({
+          Name: '',
+          Description: '',
+          RoutineSkinTypes: [],
+          RoutineSteps: []
+        });
+        setUpdatingRoutineId(null);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to update routine:', response.statusText, errorData);
+        alert(`Error: ${errorData.title}\nDetails: ${JSON.stringify(errorData.errors)}`);
+      }
+    } catch (error) {
+      console.error('Error updating routine:', error);
+    }
+  };
+
   return (
     <Box sx={{ 
       p: 4, 
@@ -327,7 +422,7 @@ const StaffRoutine = () => {
                 variant="contained"
                 color="primary"
                 startIcon={<AddIcon />}
-                onClick={() => setOpenAddDialog(true)}
+                onClick={handleOpenCreateDialog}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -432,6 +527,7 @@ const StaffRoutine = () => {
                         >
                           Delete
                         </Button>
+                        <Button onClick={() => handleUpdateClick(routine)}>Update Routine</Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -468,7 +564,7 @@ const StaffRoutine = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Create New Skincare Routine</DialogTitle>
+        <DialogTitle>{dialogMode === 'create' ? "Create New Skincare Routine" : "Update Skincare Routine"}</DialogTitle>
         <DialogContent>
           <TextField
             label="Routine Name"
@@ -604,11 +700,11 @@ const StaffRoutine = () => {
             Cancel
           </Button>
           <Button 
-            onClick={createRoutine} 
+            onClick={dialogMode === 'create' ? createRoutine : updateRoutine} 
             color="primary" 
             variant="contained"
           >
-            Create Routine
+            {dialogMode === 'create' ? "Create Routine" : "Update Routine"}
           </Button>
         </DialogActions>
       </Dialog>
