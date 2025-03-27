@@ -55,10 +55,10 @@ const StaffRoutine = () => {
   const [loading, setLoading] = useState(true);
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [newRoutine, setNewRoutine] = useState({
-    name: '',
-    description: '',
-    routineSkinTypes: [],
-    routineSteps: []
+    Name: '',
+    Description: '',
+    RoutineSkinTypes: [],
+    RoutineSteps: []
   });
   const [skinTypes, setSkinTypes] = useState([]);
   const [selectedSkinType, setSelectedSkinType] = useState({ 
@@ -82,7 +82,8 @@ const StaffRoutine = () => {
     try {
       const response = await fetch('http://localhost:5296/api/skincareroutine');
       const data = await response.json();
-      setRoutines(data.items);
+      const activeRoutines = data.items.filter(routine => !routine.isDeleted);
+      setRoutines(activeRoutines);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching routines:', error);
@@ -105,36 +106,47 @@ const StaffRoutine = () => {
     try {
       const token = cookieUtils.getCookie('token');
 
-
       // Validate required fields
-      if (!newRoutine.name || !newRoutine.description || newRoutine.routineSkinTypes.length === 0) {
+      if (!newRoutine.Name || !newRoutine.Description || newRoutine.RoutineSkinTypes.length === 0) {
         alert('Please fill in all required fields: Name, Description, and at least one Skin Type.');
         return;
       }
 
-      const routineToCreate = {
-        name: newRoutine.name.trim(),
-        description: newRoutine.description.trim(),
-        skinTypes: newRoutine.routineSkinTypes.map(skinType => ({
-            skinTypeId: parseInt(skinType.skinTypeId, 10),
-            percentage: Math.max(1, Math.min(100, parseInt(skinType.percentage, 10)))
-        })),
-        routineSteps: newRoutine.routineSteps.map((step, index) => ({
-            title: step.title.trim(),
-            description: step.description.trim(),
-            order: index + 1
-        }))
-      };
+      // Kiểm tra RoutineSteps nếu cần
+      if (newRoutine.RoutineSteps.length === 0) {
+        alert('Please add at least one step to the routine.');
+        return;
+      }
 
-      console.log('Routine to create:', routineToCreate);
+      const formData = new FormData();
+      formData.append('Name', newRoutine.Name.trim());
+      formData.append('Description', newRoutine.Description.trim());
+
+      // Thêm RoutineSkinTypes vào FormData
+      newRoutine.RoutineSkinTypes.forEach(skinType => {
+        formData.append('RoutineSkinTypes', JSON.stringify({
+          skinTypeId: parseInt(skinType.skinTypeId, 10),
+          percentage: Math.max(1, Math.min(100, parseInt(skinType.percentage, 10)))
+        }));
+      });
+
+      // Thêm RoutineSteps vào FormData
+      newRoutine.RoutineSteps.forEach((step, index) => {
+        formData.append('RoutineSteps', JSON.stringify({
+          title: step.title.trim(),
+          description: step.description.trim(),
+          order: index + 1
+        }));
+      });
+
+      console.log('Routine to create:', formData);
 
       const response = await fetch('http://localhost:5296/api/skincareroutine', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(routineToCreate),
+        body: formData,
       });
 
       if (response.ok) {
@@ -142,14 +154,15 @@ const StaffRoutine = () => {
         setOpenAddDialog(false);
         // Reset form
         setNewRoutine({
-          name: '',
-          description: '',
-          routineSkinTypes: [],
-          routineSteps: []
+          Name: '',
+          Description: '',
+          RoutineSkinTypes: [],
+          RoutineSteps: []
         });
       } else {
         const errorData = await response.json();
         console.error('Failed to create routine:', response.statusText, errorData);
+        alert(`Error: ${errorData.title}\nDetails: ${JSON.stringify(errorData.errors)}`);
       }
     } catch (error) {
       console.error('Error creating routine:', error);
@@ -193,8 +206,8 @@ const StaffRoutine = () => {
     // Update routine with new skin type
     setNewRoutine(prev => ({
         ...prev,
-        routineSkinTypes: [
-            ...prev.routineSkinTypes, 
+        RoutineSkinTypes: [
+            ...prev.RoutineSkinTypes, 
             newSkinTypeEntry
         ]
     }));
@@ -213,16 +226,20 @@ const StaffRoutine = () => {
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this routine?")) {
+      const token = cookieUtils.getCookie('token');
+
       fetch(`http://localhost:5296/api/skincareroutine/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${cookieUtils.getCookie('userToken')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       })
       .then(response => {
         if (response.ok) {
           fetchRoutines();
+        } else {
+          console.error('Failed to delete routine:', response.statusText);
         }
       })
       .catch(error => console.error('Error deleting routine:', error));
@@ -239,11 +256,11 @@ const StaffRoutine = () => {
     // Add new step to routine
     setNewRoutine(prev => ({
       ...prev,
-      routineSteps: [
-        ...prev.routineSteps, 
+      RoutineSteps: [
+        ...prev.RoutineSteps, 
         { 
           ...newStep, 
-          order: prev.routineSteps.length + 1 
+          order: prev.RoutineSteps.length + 1 
         }
       ]
     }));
@@ -423,16 +440,16 @@ const StaffRoutine = () => {
         <DialogContent>
           <TextField
             label="Routine Name"
-            name="name"
-            value={newRoutine.name}
+            name="Name"
+            value={newRoutine.Name}
             onChange={handleInputChange}
             fullWidth
             sx={{ mb: 2, mt: 2 }}
           />
           <TextField
             label="Description"
-            name="description"
-            value={newRoutine.description}
+            name="Description"
+            value={newRoutine.Description}
             onChange={handleInputChange}
             fullWidth
             multiline
@@ -486,7 +503,7 @@ const StaffRoutine = () => {
 
           {/* Selected Skin Types */}
           <Box sx={{ mb: 2 }}>
-            {newRoutine.routineSkinTypes.map((skinType, index) => (
+            {newRoutine.RoutineSkinTypes.map((skinType, index) => (
               <Chip 
                 key={index}
                 label={`${skinType.skinTypeName} (${skinType.percentage}%)`}
@@ -494,7 +511,7 @@ const StaffRoutine = () => {
                   // Remove skin type
                   setNewRoutine(prev => ({
                     ...prev,
-                    routineSkinTypes: prev.routineSkinTypes.filter((_, i) => i !== index)
+                    RoutineSkinTypes: prev.RoutineSkinTypes.filter((_, i) => i !== index)
                   }));
                 }}
                 sx={{ m: 1 }}
@@ -534,7 +551,7 @@ const StaffRoutine = () => {
           </Box>
 
           {/* Added Steps */}
-          {newRoutine.routineSteps.map((step, index) => (
+          {newRoutine.RoutineSteps.map((step, index) => (
             <Card key={index} sx={{ mb: 1 }}>
               <CardContent>
                 <Typography variant="subtitle2">
