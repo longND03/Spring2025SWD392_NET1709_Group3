@@ -56,7 +56,7 @@ const StaffUpdateBlog = ({ open, onClose, onSave, post }) => {
             
             // Handle existing image if available
             if (post.imageUrls && post.imageUrls.length > 0) {
-                setImagePreview(post.imageUrls[0]);
+                setImagePreview(post.imageUrls[post.imageUrls.length - 1]);
             } else {
                 setImagePreview('');
             }
