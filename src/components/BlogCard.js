@@ -54,7 +54,7 @@ const BlogCard = ({ post }) => {
       Array.isArray(post.imageUrls) &&
       post.imageUrls.length > 0
     ) {
-      const imageUrl = post.imageUrls[0];
+      const imageUrl = post.imageUrls[post.imageUrls.length - 1];
 
       // If it's already a complete URL (either http/https or data:image)
       if (imageUrl.startsWith("http") || imageUrl.startsWith("data:")) {

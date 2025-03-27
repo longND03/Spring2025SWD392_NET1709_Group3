@@ -322,7 +322,7 @@ const BlogDetail = () => {
       Array.isArray(item.imageUrls) &&
       item.imageUrls.length > 0
     ) {
-      const imageUrl = item.imageUrls[0];
+      const imageUrl = item.imageUrls[item.imageUrls.length - 1];
 
       // If it's already a complete URL (either http/https or data:image)
       if (imageUrl.startsWith("http") || imageUrl.startsWith("data:")) {
