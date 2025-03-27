@@ -3,6 +3,7 @@ import axios from '../api/axios';
 import { Divider, Accordion, AccordionSummary, AccordionDetails, Tabs, Tab, Pagination, CircularProgress } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Link } from 'react-router-dom';
 import { getSkinTestResults } from '../utils/cookies';
 import ProductCard from './ProductCard';
@@ -23,12 +24,20 @@ const SkinRoutineBox = ({ userInfo }) => {
   const [savedRoutines, setSavedRoutines] = useState({ items: [], totalPages: 1 });
   const [loadingSaved, setLoadingSaved] = useState(true);
   const [savingRoutineId, setSavingRoutineId] = useState(null);
+  const [removingRoutineId, setRemovingRoutineId] = useState(null);
   const [savedPage, setSavedPage] = useState(1);
   const [recommendedPage, setRecommendedPage] = useState(1);
   const ITEMS_PER_PAGE = 5; // Number of recommended routines per page
   const [expandedRoutines, setExpandedRoutines] = useState({});
   const [routineProducts, setRoutineProducts] = useState({});
   const [loadingProducts, setLoadingProducts] = useState({});
+  const [confirmationDialog, setConfirmationDialog] = useState({
+    open: false,
+    id: null,
+    action: null,
+    title: '',
+    message: ''
+  });
 
   useEffect(() => {
     // Get skin test results from cookies
@@ -157,6 +166,38 @@ const SkinRoutineBox = ({ userInfo }) => {
     } finally {
       setSavingRoutineId(null);
     }
+  };
+
+  // Remove a routine from saved routines
+  const removeRoutine = async (routineId) => {
+    setConfirmationDialog({
+      open: true,
+      id: routineId,
+      action: 'remove',
+      title: 'Remove Routine',
+      message: 'Do you want to remove this routine? You can add it again later.'
+    });
+  };
+
+  // Handle confirmation dialog actions
+  const handleConfirmationAction = async () => {
+    const { id, action } = confirmationDialog;
+    
+    if (action === 'remove') {
+      setRemovingRoutineId(id);
+      try {
+        await axios.delete(`/api/skincareroutine/${id}/save`);
+        fetchSavedRoutines(); // Refresh the saved routines list
+      } catch (err) {
+        console.error('Error removing routine:', err);
+        setError('Failed to remove routine. Please try again.');
+      } finally {
+        setRemovingRoutineId(null);
+      }
+    }
+    
+    // Close the dialog
+    setConfirmationDialog({ open: false, id: null, action: null, title: '', message: '' });
   };
 
   const handlePercentageChange = (id, value) => {
@@ -464,6 +505,30 @@ const SkinRoutineBox = ({ userInfo }) => {
           <h2 className="text-2xl font-semibold">Skin Type Analysis</h2>
           <Divider />
           
+          {/* Confirmation Dialog */}
+          {confirmationDialog.open && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+              <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+                <h3 className="text-lg font-semibold mb-4">{confirmationDialog.title}</h3>
+                <p className="text-gray-600 mb-6">{confirmationDialog.message}</p>
+                <div className="flex justify-end gap-4">
+                  <button
+                    onClick={() => setConfirmationDialog({ open: false, id: null, action: null, title: '', message: '' })}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmationAction}
+                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Skin Test Results Accordion */}
           <Accordion className="mt-4">
             <AccordionSummary 
@@ -744,16 +809,35 @@ const SkinRoutineBox = ({ userInfo }) => {
                             className="bg-gradient-to-r from-pink-50 to-white"
                           >
                             <div className="flex-1">
-                              <h3 className="text-lg font-medium text-gray-800">{routine.name}</h3>
-                              <p className="text-sm text-gray-600 mt-1">{routine.description}</p>
-                              
-                              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                                {routine.skinTypes.map(type => (
-                                  <div key={type.skinTypeId} className="flex items-center text-xs">
-                                    <span className="font-medium text-pink-700 mr-1">{type.skinTypeName}:</span>
-                                    <span className="text-gray-700">{type.percentage}%</span>
+                              <div className="flex justify-between items-start w-full pr-8">
+                                <div>
+                                  <h3 className="text-lg font-medium text-gray-800">{routine.name}</h3>
+                                  <p className="text-sm text-gray-600 mt-1">{routine.description}</p>
+                                  
+                                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                                    {routine.skinTypes.map(type => (
+                                      <div key={type.skinTypeId} className="flex items-center text-xs">
+                                        <span className="font-medium text-pink-700 mr-1">{type.skinTypeName}:</span>
+                                        <span className="text-gray-700">{type.percentage}%</span>
+                                      </div>
+                                    ))}
                                   </div>
-                                ))}
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeRoutine(routine.id);
+                                  }}
+                                  disabled={removingRoutineId === routine.id}
+                                  className={`px-3 py-1.5 text-white text-sm rounded-lg flex items-center ${
+                                    removingRoutineId === routine.id
+                                      ? 'bg-gray-400 cursor-not-allowed'
+                                      : 'bg-red-500 hover:bg-red-600'
+                                  }`}
+                                >
+                                  <DeleteOutlineIcon fontSize="small" className="mr-1" />
+                                  {removingRoutineId === routine.id ? 'Removing...' : 'Remove'}
+                                </button>
                               </div>
                             </div>
                           </AccordionSummary>

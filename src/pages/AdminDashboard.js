@@ -9,6 +9,16 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(10);
+  // Expanded user state
+  const [expandedUserId, setExpandedUserId] = useState(null);
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  // Formatted locations
+  const [formattedLocations, setFormattedLocations] = useState({});
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
@@ -43,11 +53,71 @@ const AdminDashboard = () => {
       if (!response.ok) throw new Error(`Failed to load users: ${response.statusText}`);
       const data = await response.json();
       setUsers(data);
+      
+      // Format locations for all users who have a location
+      const locationPromises = data
+        .filter(user => user.location)
+        .map(user => formatLocation(user.location, user.userId || user.id));
+      
+      await Promise.all(locationPromises);
     } catch (error) {
       setError(error.message);
       console.error('Error loading users:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Format location string similar to FinishOrder components
+  const formatLocation = async (locationString, userId) => {
+    try {
+      if (!locationString) return;
+      
+      // Check if format appears to be address|ward|district|province
+      const addressParts = locationString.split('|');
+      if (addressParts.length < 4) {
+        setFormattedLocations(prev => ({...prev, [userId]: locationString}));
+        return;
+      }
+      
+      const [specificAddress, wardCode, districtCode, provinceCode] = addressParts;
+      
+      // Fetch province, district, and ward names
+      let provinceName = '';
+      let districtName = '';
+      let wardName = '';
+      
+      try {
+        // Fetch province
+        const provinceResponse = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}`);
+        const provinceData = await provinceResponse.json();
+        provinceName = provinceData.name;
+        
+        // Fetch district
+        const districtResponse = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}`);
+        const districtData = await districtResponse.json();
+        districtName = districtData.name;
+        
+        // Fetch ward
+        const wardResponse = await fetch(`https://provinces.open-api.vn/api/w/${wardCode}`);
+        const wardData = await wardResponse.json();
+        wardName = wardData.name;
+      } catch (error) {
+        console.error('Error fetching location data:', error);
+      }
+      
+      // Format the full address
+      const fullAddress = [
+        specificAddress,
+        wardName,
+        districtName,
+        provinceName
+      ].filter(Boolean).join(', ');
+      
+      setFormattedLocations(prev => ({...prev, [userId]: fullAddress}));
+    } catch (error) {
+      console.error('Error formatting location:', error);
+      setFormattedLocations(prev => ({...prev, [userId]: locationString}));
     }
   };
 
@@ -116,6 +186,51 @@ const AdminDashboard = () => {
     }
   };
 
+  // Toggle expanded user details
+  const toggleUserDetails = (userId) => {
+    setExpandedUserId(expandedUserId === userId ? null : userId);
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
+
+  // Handle status filter change
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+
+  // Filter users based on search term and status filter
+  const filteredUsers = users.filter(user => {
+    // Status filter
+    if (statusFilter === 'active' && !user.status) return false;
+    if (statusFilter === 'inactive' && user.status) return false;
+    
+    // Search term filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      return (
+        (user.username && user.username.toLowerCase().includes(term)) ||
+        (user.email && user.email.toLowerCase().includes(term)) ||
+        (user.phone && user.phone.toLowerCase().includes(term))
+      );
+    }
+    
+    return true;
+  });
+
+  // Calculate pagination indices
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   // Hide dashboard if user is not an admin
   if (!user || user.role[0].roleName !== 'Manager') {
     return null;
@@ -126,7 +241,7 @@ const AdminDashboard = () => {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Manager Dashboard</h1>
           <div className="flex items-center">
             <span className="text-gray-700 mr-4">
               Welcome, <span className="font-semibold">{user.username}</span>
@@ -253,9 +368,34 @@ const AdminDashboard = () => {
           <div className="bg-gray-800 text-white px-6 py-4 flex justify-between items-center">
             <h2 className="text-xl font-semibold">User Management</h2>
             <span className="bg-blue-500 text-white text-sm font-medium px-3 py-1 rounded-full">
-              {users.length} user
+              {filteredUsers.length} user
             </span>
           </div>
+          
+          {/* Search and Filter Bar */}
+          <div className="bg-gray-100 px-6 py-4 flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search by username, email, or phone..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <select
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Users</option>
+                <option value="active">Active Users</option>
+                <option value="inactive">Inactive Users</option>
+              </select>
+            </div>
+          </div>
+          
           <div className="overflow-x-auto">
             {loading ? (
               <div className="flex justify-center items-center py-12">
@@ -277,50 +417,170 @@ const AdminDashboard = () => {
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Email
                     </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {users.length > 0 ? (
-                    users.map((user) => (
-                      <tr key={user.userId || user.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
-                              <span className="text-gray-500 font-medium text-sm">
-                                {user.username.charAt(0).toUpperCase()}
-                              </span>
+                  {currentUsers.length > 0 ? (
+                    currentUsers.map((user) => (
+                      <React.Fragment key={user.userId || user.id}>
+                        <tr 
+                          className={`hover:bg-gray-50 cursor-pointer ${expandedUserId === (user.userId || user.id) ? 'bg-gray-50' : ''}`}
+                          onClick={() => toggleUserDetails(user.userId || user.id)}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                <span className="text-gray-500 font-medium text-sm">
+                                  {user.username.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                              </div>
                             </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{user.email}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => handleDelete(user.userId || user.id)}
-                            className="text-red-600 hover:text-red-800 transition duration-300 ease-in-out"
-                            disabled={loading}
-                          >
-                            Deactive
-                          </button>
-                        </td>
-                      </tr>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{user.email}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.status 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {user.status ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(user.userId || user.id);
+                              }}
+                              className="text-red-600 hover:text-red-800 transition duration-300 ease-in-out"
+                              disabled={loading}
+                            >
+                              Deactive
+                            </button>
+                          </td>
+                        </tr>
+                        {expandedUserId === (user.userId || user.id) && (
+                          <tr>
+                            <td colSpan="4" className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">Username:</p>
+                                  <p className="text-sm text-gray-900">{user.username}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">Email:</p>
+                                  <p className="text-sm text-gray-900">{user.email}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">Phone:</p>
+                                  <p className="text-sm text-gray-900">{user.phone || 'N/A'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">Location:</p>
+                                  <p className="text-sm text-gray-900">
+                                    {formattedLocations[user.userId || user.id] || user.location || 'N/A'}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">Role:</p>
+                                  <p className="text-sm text-gray-900">
+                                    {user.userRoles && user.userRoles.length > 0 
+                                      ? user.userRoles.map(role => role.roleName).join(', ')
+                                      : 'N/A'}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-500">Status:</p>
+                                  <p className={`text-sm ${user.status ? 'text-green-600' : 'text-red-600'}`}>
+                                    {user.status ? 'Active' : 'Inactive'}
+                                  </p>
+                                </div>
+                                {user.skinTypeName && (
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-500">Skin Type:</p>
+                                    <p className="text-sm text-gray-900">{user.skinTypeName}</p>
+                                  </div>
+                                )}
+                                {user.wallet !== undefined && (
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-500">Wallet Balance:</p>
+                                    <p className="text-sm text-gray-900">${user.wallet.toFixed(2)}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="3" className="px-6 py-12 text-center">
+                      <td colSpan="4" className="px-6 py-12 text-center">
                         <p className="text-gray-500">No users found.</p>
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+            )}
+            
+            {/* Pagination */}
+            {filteredUsers.length > 0 && (
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+                <div className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{indexOfFirstUser + 1}</span> to <span className="font-medium">
+                    {indexOfLastUser > filteredUsers.length ? filteredUsers.length : indexOfLastUser}
+                  </span> of <span className="font-medium">{filteredUsers.length}</span> results
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === 1 
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  {[...Array(totalPages).keys()].map(number => (
+                    <button
+                      key={number + 1}
+                      onClick={() => paginate(number + 1)}
+                      className={`px-3 py-1 rounded ${
+                        currentPage === number + 1
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      }`}
+                    >
+                      {number + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === totalPages
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
