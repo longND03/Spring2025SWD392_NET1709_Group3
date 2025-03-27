@@ -17,8 +17,6 @@ const AdminDashboard = () => {
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  // Formatted locations
-  const [formattedLocations, setFormattedLocations] = useState({});
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
@@ -53,71 +51,11 @@ const AdminDashboard = () => {
       if (!response.ok) throw new Error(`Failed to load users: ${response.statusText}`);
       const data = await response.json();
       setUsers(data);
-      
-      // Format locations for all users who have a location
-      const locationPromises = data
-        .filter(user => user.location)
-        .map(user => formatLocation(user.location, user.userId || user.id));
-      
-      await Promise.all(locationPromises);
     } catch (error) {
       setError(error.message);
       console.error('Error loading users:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Format location string similar to FinishOrder components
-  const formatLocation = async (locationString, userId) => {
-    try {
-      if (!locationString) return;
-      
-      // Check if format appears to be address|ward|district|province
-      const addressParts = locationString.split('|');
-      if (addressParts.length < 4) {
-        setFormattedLocations(prev => ({...prev, [userId]: locationString}));
-        return;
-      }
-      
-      const [specificAddress, wardCode, districtCode, provinceCode] = addressParts;
-      
-      // Fetch province, district, and ward names
-      let provinceName = '';
-      let districtName = '';
-      let wardName = '';
-      
-      try {
-        // Fetch province
-        const provinceResponse = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}`);
-        const provinceData = await provinceResponse.json();
-        provinceName = provinceData.name;
-        
-        // Fetch district
-        const districtResponse = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}`);
-        const districtData = await districtResponse.json();
-        districtName = districtData.name;
-        
-        // Fetch ward
-        const wardResponse = await fetch(`https://provinces.open-api.vn/api/w/${wardCode}`);
-        const wardData = await wardResponse.json();
-        wardName = wardData.name;
-      } catch (error) {
-        console.error('Error fetching location data:', error);
-      }
-      
-      // Format the full address
-      const fullAddress = [
-        specificAddress,
-        wardName,
-        districtName,
-        provinceName
-      ].filter(Boolean).join(', ');
-      
-      setFormattedLocations(prev => ({...prev, [userId]: fullAddress}));
-    } catch (error) {
-      console.error('Error formatting location:', error);
-      setFormattedLocations(prev => ({...prev, [userId]: locationString}));
     }
   };
 
@@ -488,9 +426,7 @@ const AdminDashboard = () => {
                                 </div>
                                 <div>
                                   <p className="text-sm font-medium text-gray-500">Location:</p>
-                                  <p className="text-sm text-gray-900">
-                                    {formattedLocations[user.userId || user.id] || user.location || 'N/A'}
-                                  </p>
+                                  <p className="text-sm text-gray-900">{user.location || 'N/A'}</p>
                                 </div>
                                 <div>
                                   <p className="text-sm font-medium text-gray-500">Role:</p>
