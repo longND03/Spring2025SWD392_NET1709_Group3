@@ -229,7 +229,7 @@ const AdminDashboard = () => {
         <div className="bg-white shadow-md rounded-lg mb-8 overflow-hidden">
           <div className="bg-gray-800 text-white px-6 py-4">
             <h2 className="text-xl font-semibold">
-              Create New Employee Account
+              Create New Manager Account
             </h2>
           </div>
           <div className="p-6">
