@@ -321,12 +321,6 @@ const AdminDashboard = () => {
             <span className="text-gray-700 mr-4">
               Welcome, <span className="font-semibold">{user.username}</span>
             </span>
-            <button
-              onClick={() => navigate("/logout")}
-              className="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-md transition duration-300 ease-in-out"
-            >
-              Logout
-            </button>
           </div>
         </div>
       </header>
