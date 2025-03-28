@@ -113,7 +113,6 @@ const ProductDetail = () => {
 
     try {
       await addToCart(product, quantity);
-      toast.success(messages.success.addToCart.replace('{productName}', product.name));
     } catch (error) {
       console.error('Error adding to cart:', error);
     }

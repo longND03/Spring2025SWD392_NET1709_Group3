@@ -661,7 +661,6 @@ const BlogDetail = () => {
                 Related Products
               </Typography>
               <Divider sx={{ mb: 2 }} />
-
               {relatedProducts.length > 0 ? (
                 relatedProducts.map((product) => (
                   <Card
@@ -707,23 +706,6 @@ const BlogDetail = () => {
                   No related products found.
                 </Typography>
               )}
-
-              {/* Thay đổi phần Newsletter Signup */}
-              <Box mt={4} p={3} bgcolor="#f8f0ff" borderRadius={2}>
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{ fontWeight: "bold" }}
-                >
-                  Subscribe to Our News
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  Get the latest skincare tips and product recommendations.
-                </Typography>
-
-                {/* Thay thế TextField và Button bằng component SubscribePopup */}
-                <SubscribePopup buttonLabel="Subscribe" />
-              </Box>
             </Box>
           </Box>
         </Box>
